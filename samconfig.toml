@@ -1,0 +1,13 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "student-requests-dev"
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+s3_prefix = "student-requests-dev"
+region = "us-east-1"
+disable_rollback = true
+image_repositories = []
+
+[default.global.parameters]
+region = "us-east-1"

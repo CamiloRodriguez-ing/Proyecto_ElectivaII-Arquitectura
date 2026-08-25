@@ -1,0 +1,1 @@
+{"version":"2.0","rawPath":"/v1/reviews/evaluate","headers":{"content-type":"application/json"},"body":"{\"request\":{\"request_id\":\"11111111-1111-4111-8111-111111111111\",\"status\":\"UNDER_REVIEW\",\"version\":2},\"evaluation\":{\"decision\":\"APPROVE\",\"observation\":\"The request meets all requirements\",\"actor\":{\"id\":\"admin-demo\",\"role\":\"ADMINISTRATOR\"}}}"}

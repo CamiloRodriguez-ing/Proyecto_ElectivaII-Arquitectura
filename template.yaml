@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Runtime: python3.11
+    Architectures: [x86_64]
+    Timeout: 10
+    MemorySize: 256
+    Environment:
+      Variables:
+        APP_ENV: dev
+        DEMO_MODE: "true"
+        FRONTEND_ORIGIN: "*"
+
+Resources:
+  AcademicRequestsApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+      CorsConfiguration:
+        AllowOrigins: ["*"]
+        AllowMethods: [GET, POST, OPTIONS]
+        AllowHeaders: [Content-Type, X-Request-Id]
+
+  HealthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.functions.health.handler.lambda_handler
+      Events:
+        Health:
+          Type: HttpApi
+          Properties: {ApiId: !Ref AcademicRequestsApi, Path: /v1/health, Method: GET, PayloadFormatVersion: "2.0"}
+  RequestsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.functions.requests.handler.lambda_handler
+      Events:
+        Validate: {Type: HttpApi, Properties: {ApiId: !Ref AcademicRequestsApi, Path: /v1/requests/validate, Method: POST, PayloadFormatVersion: "2.0"}}
+        Prepare: {Type: HttpApi, Properties: {ApiId: !Ref AcademicRequestsApi, Path: /v1/requests/prepare, Method: POST, PayloadFormatVersion: "2.0"}}
+  ReviewsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.functions.reviews.handler.lambda_handler
+      Events:
+        Evaluate: {Type: HttpApi, Properties: {ApiId: !Ref AcademicRequestsApi, Path: /v1/reviews/evaluate, Method: POST, PayloadFormatVersion: "2.0"}}
+  NotificationsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.functions.notifications.handler.lambda_handler
+      Events:
+        Preview: {Type: HttpApi, Properties: {ApiId: !Ref AcademicRequestsApi, Path: /v1/notifications/preview, Method: POST, PayloadFormatVersion: "2.0"}}
+  AnalyticsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.functions.analytics.handler.lambda_handler
+      Events:
+        Summary: {Type: HttpApi, Properties: {ApiId: !Ref AcademicRequestsApi, Path: /v1/analytics/summary, Method: POST, PayloadFormatVersion: "2.0"}}
+
+Outputs:
+  ApiUrl:
+    Value: !Sub "https://${AcademicRequestsApi}.execute-api.${AWS::Region}.amazonaws.com"

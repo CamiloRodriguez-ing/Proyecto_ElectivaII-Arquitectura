@@ -1,0 +1,1 @@
+{"version":"2.0","rawPath":"/v1/analytics/summary","headers":{"content-type":"application/json"},"body":"{\"requests\":[{\"type\":\"CREDIT_TRANSFER\",\"status\":\"APPROVED\"},{\"type\":\"CREDIT_TRANSFER\",\"status\":\"CHANGES_REQUESTED\"}]}"}
