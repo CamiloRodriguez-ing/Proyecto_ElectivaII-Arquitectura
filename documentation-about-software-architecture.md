@@ -24,7 +24,7 @@ La arquitectura original del documento menciona bases de datos, archivos adjunto
 - Un monorepositorio para el backend.
 - Un frontend que puede residir en otro repositorio.
 
-No se incorporan actualmente S3, Cognito, SQS, bases de datos, Kafka, RabbitMQ, SES, WebSockets, cachés ni integraciones institucionales.
+No se incorporan actualmente S3, Cognito, SQS, bases de datos de la aplicación, Kafka, RabbitMQ, SES, WebSockets, cachés ni integraciones institucionales. La arquitectura objetivo de identidad con Keycloak se documenta por separado en `docs/authentication-keycloak.md`; aún no está implementada en el código ni en la plantilla SAM.
 
 ## 2. Consecuencia técnica de no tener persistencia
 
@@ -120,7 +120,7 @@ Se recomienda **API Gateway HTTP API** con integración Lambda proxy y formato d
 | `notifications-service` | Construir una notificación a partir de un evento | `POST /v1/notifications/preview` |
 | `analytics-service` | Calcular indicadores desde un conjunto recibido en el cuerpo | `POST /v1/analytics/summary` |
 
-No se propone todavía una Lambda de usuarios o autenticación. Sin una fuente confiable de identidades y sin almacenamiento, solo podría ser una simulación insegura. Durante desarrollo se pueden usar cabeceras como `X-Demo-User-Id` y `X-Demo-Role`, pero únicamente en modo local o académico y nunca como mecanismo de seguridad.
+No se propone una Lambda de usuarios ni almacenar identidades en el backend. Keycloak será la fuente externa de identidades en el siguiente incremento, según `docs/authentication-keycloak.md`. Hasta que la validación de tokens y la autorización por ruta estén desplegadas, cualquier cabecera o actor enviado en el cuerpo sigue siendo solo dato de demostración y nunca un mecanismo de seguridad.
 
 ## 6. Modelo de dominio mínimo
 

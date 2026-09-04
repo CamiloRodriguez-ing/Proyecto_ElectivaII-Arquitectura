@@ -29,3 +29,12 @@ sam local start-api
 - `POST /v1/analytics/summary`
 
 This first stage is intentionally stateless. Prepared requests and events are returned to the caller but are not persisted, and documents are represented only by metadata.
+
+## Documentation
+
+- [Architecture](docs/architecture.md)
+- [Deployment](docs/deployment.md)
+- [Keycloak authentication and route authorization](docs/authentication-keycloak.md)
+- [OpenAPI contract](docs/openapi.yaml)
+
+Authentication is currently a documented target and is not enforced by the deployed frontend or API yet.
