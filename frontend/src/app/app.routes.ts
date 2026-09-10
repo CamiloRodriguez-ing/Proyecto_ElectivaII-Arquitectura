@@ -9,4 +9,16 @@ export const routes: Routes = [
     path: 'reports',
     loadChildren: () => import('./report/report.routes').then((r) => r.REPORT_ROUTES),
   },
+  {
+    path: 'requests',
+    loadChildren: () => import('./request/request.routes').then((r) => r.REQUEST_ROUTES),
+  },
+  {
+    path: 'notifications',
+    loadChildren: () => import('./notification/notification.routes').then((r) => r.NOTIFICATION_ROUTES),
+  },
+  {
+    path: 'validation',
+    loadChildren: () => import('./validation/validation.routes').then((r) => r.VALIDATION_ROUTES),
+  },
 ];
