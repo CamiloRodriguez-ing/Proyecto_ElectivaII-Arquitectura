@@ -4,3 +4,17 @@
 __pycache__/
 .pytest_cache/
 *.pyc
+
+# Node.js
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+npm-shrinkwrap.json
+.npm/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
