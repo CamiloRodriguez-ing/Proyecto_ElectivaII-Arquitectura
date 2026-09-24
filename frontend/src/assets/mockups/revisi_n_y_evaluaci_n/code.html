@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-tint":"#0053db","on-background":"#121b2e","inverse-on-surface":"#edf0ff","on-primary":"#ffffff","surface":"#f9f9ff","on-tertiary":"#ffffff","on-tertiary-fixed-variant":"#264774","surface-variant":"#d9e2fc","on-tertiary-container":"#eaf0ff","surface-container-highest":"#d9e2fc","tertiary":"#355683","inverse-surface":"#273044","tertiary-fixed-dim":"#a8c8fc","outline":"#737686","outline-variant":"#c3c6d7","surface-bright":"#f9f9ff","on-surface-variant":"#434655","on-primary-container":"#eeefff","secondary-fixed-dim":"#80d5cb","inverse-primary":"#b4c5ff","surface-container-high":"#e1e8ff","background":"#f9f9ff","primary":"#004ac6","primary-container":"#2563eb","primary-fixed":"#dbe1ff","secondary-container":"#99efe5","on-tertiary-fixed":"#001c3b","on-error-container":"#93000a","surface-dim":"#d1daf4","secondary":"#006a63","error-container":"#ffdad6","on-secondary-container":"#006f67","tertiary-fixed":"#d5e3ff","primary-fixed-dim":"#b4c5ff","on-error":"#ffffff","surface-container":"#e9edff","surface-container-low":"#f1f3ff","secondary-fixed":"#9cf2e8","error":"#ba1a1a","surface-container-lowest":"#ffffff","on-primary-fixed-variant":"#003ea8","on-surface":"#121b2e","on-secondary-fixed-variant":"#00504a","on-primary-fixed":"#00174b","on-secondary-fixed":"#00201d","on-secondary":"#ffffff","tertiary-container":"#4e6e9d"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"gutter":"1.5rem","space-sm":"0.5rem","space-lg":"1.5rem","margin":"2rem","space-xs":"0.25rem","space-md":"1rem","space-xl":"2rem"},fontFamily:{"headline-lg":["Inter"],"headline-xl-mobile":["Inter"],"label-sm":["Inter"],"code-tabular":["Inter"],"display-lg-mobile":["Inter"],"display-lg":["Inter"],"body-lg":["Inter"],"body-md":["Inter"],"headline-md":["Inter"],"headline-xl":["Inter"],"label-lg":["Inter"],"label-md":["Inter"],"headline-sm":["Inter"],"body-sm":["Inter"]},fontSize:{"headline-lg":["22px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-xl-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.03em","fontWeight":"500"}],"code-tabular":["13px",{"lineHeight":"18px","letterSpacing":"0.02em","fontWeight":"500"}],"display-lg-mobile":["28px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"700"}],"display-lg":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"headline-md":["18px",{"lineHeight":"24px","letterSpacing":"-0.005em","fontWeight":"600"}],"headline-xl":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"700"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"0.01em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"headline-sm":["16px",{"lineHeight":"22px","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}]}}}};</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[260px] bg-tertiary-container text-on-tertiary z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.08)]"><div class="flex flex-col"><div class="flex items-center gap-3 px-6 py-5 bg-tertiary"><img alt="Logo Portal de Solicitudes Académicas" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UQjp7PW3TYIJtAOGoLV1rOLYJhq8nG9vWxulSc__5aVG607PvT7yD5j88X6GlbmOYaI9IBeB6KrDyv2vz3r9F1G8D2QOmIdmN9ITZZTfm516A0U-0zKWmq-IW-FIK8Wf5XgRRMC40rHksGmZwzY0brvrxBRMmfTYywU497wq-YZLgZjmi4586DuVkTwsZLm1Xeikk1UsV9zlTCSt9UyiabHGmqalKWaTzJC5OGjJ1NUR4dmE9K69C-mw"/><div class="flex flex-col overflow-hidden"><span class="font-headline-sm text-headline-sm text-on-tertiary tracking-tight leading-snug truncate">Solicitudes Académicas</span><span class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase tracking-wider">Portal Universitario</span></div></div><div class="px-4 py-3"><span class="font-label-sm text-label-sm uppercase tracking-wider text-tertiary-fixed-dim px-3">Navegación</span></div><nav class="flex flex-col gap-1 px-3" data-active-classes="bg-primary-container text-on-primary font-label-md rounded-lg shadow-sm border-l-4 border-surface-container-lowest"><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="mis-solicitudes" href="#"><span class="material-symbols-outlined text-[20px]">folder_open</span><span>Mis solicitudes</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="nueva-solicitud" href="#"><span class="material-symbols-outlined text-[20px]">post_add</span><span>Nueva solicitud</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="revision-solicitudes" href="#"><span class="material-symbols-outlined text-[20px]">fact_check</span><span>Revisión de solicitudes</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="previsualizaciones" href="#"><span class="material-symbols-outlined text-[20px]">visibility</span><span>Previsualizaciones</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="reportes" href="#"><span class="material-symbols-outlined text-[20px]">query_stats</span><span>Reportes</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="administracion" href="#"><span class="material-symbols-outlined text-[20px]">admin_panel_settings</span><span>Administración</span></a></nav></div><div class="p-4 bg-tertiary/60 flex flex-col gap-3"><div class="flex items-center justify-between px-2 py-1.5 rounded bg-tertiary text-on-tertiary text-code-tabular font-code-tabular"><div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-secondary-fixed"></span><span class="font-label-sm text-label-sm text-on-tertiary">API OK</span></div><span class="font-label-sm text-label-sm text-tertiary-fixed-dim">v1.0-demo</span></div><a class="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg bg-tertiary hover:bg-primary-container text-on-tertiary transition-colors font-label-md text-label-md" data-path="centro-ayuda" href="#"><span class="material-symbols-outlined text-[18px]">help_outline</span><span>Centro de Ayuda</span></a></div></aside><div class="pl-[260px]"><header class="fixed top-0 left-[260px] right-0 z-40 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="bg-surface-container text-primary font-body-sm text-body-sm px-6 py-1.5 flex items-center justify-between"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-primary">info</span><span>Modo demostración: los datos se conservan únicamente durante esta sesión y no se almacenan de forma permanente.</span></div><button class="font-label-sm text-label-sm text-primary hover:underline" type="button">Restablecer datos</button></div><div class="h-16 px-6 flex items-center justify-between"><div class="flex items-center gap-4"><img alt="Logo Portal de Solicitudes Académicas" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UQjp7PW3TYIJtAOGoLV1rOLYJhq8nG9vWxulSc__5aVG607PvT7yD5j88X6GlbmOYaI9IBeB6KrDyv2vz3r9F1G8D2QOmIdmN9ITZZTfm516A0U-0zKWmq-IW-FIK8Wf5XgRRMC40rHksGmZwzY0brvrxBRMmfTYywU497wq-YZLgZjmi4586DuVkTwsZLm1Xeikk1UsV9zlTCSt9UyiabHGmqalKWaTzJC5OGjJ1NUR4dmE9K69C-mw"/><nav class="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant"><span class="hover:text-on-surface cursor-pointer">Portal</span><span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span><span class="text-on-surface font-headline-sm">Expedientes y Trámites</span></nav></div><div class="flex items-center gap-4"><div class="flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-lg"><span class="font-label-sm text-label-sm text-on-surface-variant">Rol demo:</span><select class="bg-transparent font-label-md text-label-md text-on-surface focus:outline-none cursor-pointer"><option value="student">Estudiante (Laura Martínez)</option><option value="reviewer">Revisor (Andrés Ramírez)</option><option value="analyst">Analista Curricular</option><option value="admin">Administrador</option></select></div><button class="relative p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-error"></span></button><div class="flex items-center gap-3 pl-3"><div class="flex flex-col text-right hidden sm:flex"><span class="font-label-md text-label-md text-on-surface">Laura Martínez</span><span class="font-label-sm text-label-sm text-on-surface-variant">l.martinez@universidad.edu</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-24 bg-surface min-h-screen"><div class="max-w-[1440px] mx-auto p-space-lg"><div class="flex flex-col w-full">
+<!-- Cabecera de Página y Trazabilidad de Breadcrumb -->
+<section class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6">
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center gap-2 font-code-tabular text-code-tabular text-tertiary">
+<span>Revisión</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>Solicitudes</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-code-tabular text-[12px] font-semibold">SOL · 8A41F2C9</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Revisión de solicitud</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Verifica la información académica y registra una decisión colegiada.</p>
+</div>
+<div class="flex items-center gap-3 self-start md:self-auto">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high text-primary font-label-md text-label-md shadow-sm">
+<span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+<span>En revisión</span>
+</div>
+<span class="px-2.5 py-1 rounded bg-surface-container text-on-surface-variant font-code-tabular text-code-tabular font-medium">
+        Versión 1
+      </span>
+<div class="hidden xl:flex items-center gap-2 px-3 py-1 rounded bg-surface-variant text-on-surface font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">shield_person</span>
+<span>Modo Evaluador</span>
+</div>
+</div>
+</section>
+<!-- Contenedor Principal: Layout Asimétrico Dos Paneles (65% / 35%) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start w-full">
+<!-- PANEL IZQUIERDO: Expediente y Evidencias (65% ~ 8 cols) -->
+<div class="lg:col-span-8 flex flex-col gap-space-lg">
+<!-- Ficha Resumen Estudiante -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex items-start gap-4">
+<div class="relative">
+<img class="w-14 h-14 rounded-full object-cover shadow-sm" data-alt="Fotografía institucional de perfil de Laura Martínez, estudiante universitaria con expresión profesional y amable, vestida formal, iluminación de estudio suave, fondo neutro con tenue tonalidad azul institucional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaMdZj6WjP-4YqkJwnQpBcuHMG8zuZnOeqovcYvwa4u1Q2WLZTFhZI89DRPXIdOhSI8aCOkB4YI5AfpYx42gRVBJSIEcRPgc1mPtGXIEAMg7nsPx7665yQ7-pBghratXW5KFvpsmbEGwIqUu6X-o8dhNf9YmlGx1AVzXmWPH98tRQWB2NkA72F_DzDJMh-iu4P8gDFrLiPMCkdYsMyThOMKlOS1Ev4EjlglV7xWtK2aovJe1dUD63n"/>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-secondary rounded-full ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h2 class="font-headline-sm text-headline-sm text-on-surface truncate">Laura Martínez</h2>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Estudiante Regular</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Ingeniería de Sistemas · Facultad de Ingeniería y Ciencias Aplicadas</p>
+<div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-on-surface-variant font-code-tabular text-code-tabular">
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">badge</span> 202012345</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">mail</span> laura.martinez@universidad.edu.co</span>
+</div>
+</div>
+</div>
+<div class="flex md:flex-col items-end justify-between md:justify-center gap-1 bg-surface-container-low p-3 rounded-lg">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Promedio Acumulado</span>
+<span class="font-headline-md text-headline-md text-primary font-code-tabular">4.62 <span class="text-body-sm text-outline">/ 5.0</span></span>
+</div>
+</div>
+<!-- Comparador Académico Visual Detallado -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">compare_arrows</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Matriz de Homologación Curricular</h3>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm flex items-center gap-1.5">
+<span class="h-1.5 w-1.5 rounded-full bg-secondary"></span>
+            Proyección automatizada
+          </span>
+</div>
+<!-- Bloque de Comparación Frente a Frente -->
+<div class="grid grid-cols-1 md:grid-cols-11 gap-4 items-center">
+<!-- Asignatura Origen -->
+<div class="md:col-span-5 bg-surface-container-low p-5 rounded-xl flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider">Universidad Externa (Origen)</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-code-tabular text-[11px]">CALC-101</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Cálculo I</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Universidad Pontificia Bolivariana</p>
+</div>
+<div class="grid grid-cols-3 gap-2 pt-2 bg-surface-container-lowest p-3 rounded-lg font-code-tabular">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Créditos</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">3.0</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Horas Teoría</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">64 h</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Calificación</span>
+<span class="font-headline-sm text-headline-sm text-secondary font-semibold">4.5 <span class="text-[11px] text-outline font-normal">/5.0</span></span>
+</div>
+</div>
+</div>
+<!-- Indicador Central de Afinidad / Porcentaje -->
+<div class="md:col-span-1 flex flex-col items-center justify-center py-2 md:py-0">
+<div class="w-12 h-12 rounded-full bg-primary-fixed text-primary flex items-center justify-center shadow-sm relative group cursor-help">
+<span class="font-code-tabular font-bold text-[13px]">88%</span>
+<div class="absolute -bottom-8 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-inverse-surface text-inverse-on-surface px-2 py-1 rounded text-body-sm pointer-events-none z-10">
+                Afinidad algorítmica
+              </div>
+</div>
+<span class="material-symbols-outlined text-primary text-[20px] hidden md:block mt-1">arrow_forward</span>
+<span class="material-symbols-outlined text-primary text-[20px] block md:hidden mt-1">arrow_downward</span>
+</div>
+<!-- Asignatura Destino -->
+<div class="md:col-span-5 bg-surface-container-high p-5 rounded-xl flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Malla Curricular Institucional</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest text-primary font-code-tabular text-[11px] font-semibold">MAT-101</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Cálculo Diferencial</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Ciclo Básico de Ingeniería</p>
+</div>
+<div class="grid grid-cols-3 gap-2 pt-2 bg-surface-container-lowest p-3 rounded-lg font-code-tabular">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Créditos Requeridos</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">3.0</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Horas Semestre</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">64 h</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Nota Mínima</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">3.0 <span class="text-[11px] text-outline font-normal">/5.0</span></span>
+</div>
+</div>
+</div>
+</div>
+<!-- Desglose de Análisis de Equivalencia Temática y Prerrequisitos -->
+<div class="flex flex-col gap-3 bg-surface-container-low p-4 rounded-xl">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">verified</span>
+              Análisis temático cruzado y prerrequisitos
+            </span>
+<span class="text-body-sm font-code-tabular text-on-surface-variant">3 de 3 núcleos validados</span>
+</div>
+<div class="space-y-2">
+<!-- Item 1: Límites -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-lowest text-body-md">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[20px]">check_circle</span>
+<div>
+<span class="font-medium text-on-surface">Límites y Continuidad</span>
+<span class="text-body-sm text-on-surface-variant block md:inline md:ml-2">Teorema del valor intermedio, límites laterales y al infinito.</span>
+</div>
+</div>
+<span class="font-code-tabular text-secondary font-semibold text-body-sm px-2 py-0.5 rounded bg-secondary-container/30">95% coincidencia</span>
+</div>
+<!-- Item 2: Derivadas -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-lowest text-body-md">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[20px]">check_circle</span>
+<div>
+<span class="font-medium text-on-surface">Cálculo de Derivadas</span>
+<span class="text-body-sm text-on-surface-variant block md:inline md:ml-2">Regla de la cadena, derivación implícita y funciones trascendentes.</span>
+</div>
+</div>
+<span class="font-code-tabular text-secondary font-semibold text-body-sm px-2 py-0.5 rounded bg-secondary-container/30">90% coincidencia</span>
+</div>
+<!-- Item 3: Aplicaciones -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-lowest text-body-md">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[20px]">check_circle</span>
+<div>
+<span class="font-medium text-on-surface">Aplicaciones de la Derivada</span>
+<span class="text-body-sm text-on-surface-variant block md:inline md:ml-2">Razones de cambio afines, problemas de optimización y trazado de curvas.</span>
+</div>
+</div>
+<span class="font-code-tabular text-secondary font-semibold text-body-sm px-2 py-0.5 rounded bg-secondary-container/30">80% coincidencia</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Tarjeta de Documento Adjunto (Metadatos) -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-xl bg-error-container text-error flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[28px]">picture_as_pdf</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">contenido-programatico-calculo.pdf</h4>
+<span class="material-symbols-outlined text-secondary text-[18px]" title="Firma digital válida">verified</span>
+</div>
+<div class="flex items-center gap-3 font-code-tabular text-code-tabular text-on-surface-variant mt-1">
+<span>1.2 MB</span>
+<span>•</span>
+<span>application/pdf</span>
+<span>•</span>
+<span>32 páginas digitalizadas</span>
+</div>
+<p class="font-body-sm text-body-sm text-outline mt-1 italic">Metadatos analizados; archivo temporal de sesión verificado con sello del decanato de origen.</p>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<button class="px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors font-label-md text-label-md flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+<span>Previsualizar</span>
+</button>
+<button class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors" title="Descargar copia" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<!-- Stepper de Trazabilidad Visual -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col gap-4">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Línea de Vida del Trámite</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3 relative">
+<!-- Hito 1: Enviada -->
+<div class="flex flex-col p-3 rounded-lg bg-surface-container-low">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm text-outline uppercase">Fase 1</span>
+<span class="font-code-tabular text-code-tabular text-on-surface-variant">10:24 AM</span>
+</div>
+<div class="flex items-center gap-2 text-secondary font-headline-sm text-[15px]">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span>Enviada por estudiante</span>
+</div>
+<span class="font-body-sm text-body-sm text-outline mt-1">Radicación formal de formulario</span>
+</div>
+<!-- Hito 2: En revisión (Activa) -->
+<div class="flex flex-col p-3 rounded-lg bg-surface-container-high">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold">Fase 2 (En curso)</span>
+<span class="font-code-tabular text-code-tabular text-primary">10:35 AM</span>
+</div>
+<div class="flex items-center gap-2 text-primary font-headline-sm text-[15px]">
+<span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+<span>En revisión por evaluador</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-1">Asignado a Prof. Andrés Ramírez</span>
+</div>
+<!-- Hito 3: Decisión Pendiente -->
+<div class="flex flex-col p-3 rounded-lg bg-surface-container-lowest">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm text-outline uppercase">Fase 3</span>
+<span class="font-code-tabular text-code-tabular text-outline">Pendiente</span>
+</div>
+<div class="flex items-center gap-2 text-outline font-headline-sm text-[15px]">
+<span class="material-symbols-outlined text-[18px]">gavel</span>
+<span>Decisión del comité</span>
+</div>
+<span class="font-body-sm text-body-sm text-outline mt-1">Esperando resolución colegiada</span>
+</div>
+</div>
+</div>
+<!-- Bloque Colapsable "Información técnica de auditoría" -->
+<details class="group rounded-xl bg-surface-container-lowest p-space-md shadow-sm transition-all">
+<summary class="flex items-center justify-between cursor-pointer list-none font-label-md text-label-md text-on-surface-variant hover:text-on-surface select-none">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[20px]">terminal</span>
+<span>Información técnica de auditoría y hash criptográfico</span>
+</div>
+<span class="material-symbols-outlined text-[20px] transition-transform duration-200 group-open:rotate-180">expand_more</span>
+</summary>
+<div class="mt-4 pt-3 flex flex-col gap-2 font-code-tabular text-code-tabular text-on-surface-variant bg-surface-container-low p-4 rounded-lg">
+<div class="flex flex-col sm:flex-row sm:justify-between py-1">
+<span class="text-outline">UUID Expediente:</span>
+<span class="text-on-surface select-all">8a41f2c9-3e91-49b2-a42e-18e472091a11</span>
+</div>
+<div class="flex flex-col sm:flex-row sm:justify-between py-1">
+<span class="text-outline">Versión de Registro:</span>
+<span class="text-on-surface">1 (Estado mutable)</span>
+</div>
+<div class="flex flex-col sm:flex-row sm:justify-between py-1">
+<span class="text-outline">Hash de Sesión Temporal:</span>
+<span class="text-on-surface truncate select-all">sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</span>
+</div>
+<div class="flex flex-col sm:flex-row sm:justify-between py-1">
+<span class="text-outline">Nodo Evaluador:</span>
+<span class="text-on-surface">srv-colegiado-04.universidad.local (IP: 10.14.22.89)</span>
+</div>
+</div>
+</details>
+</div>
+<!-- PANEL DERECHO: Formulario de Decisión Académica (35% ~ 4 cols - Sticky) -->
+<div class="lg:col-span-4 sticky top-24 flex flex-col gap-space-md">
+<!-- Contenedor Principal de la Decisión -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-md flex flex-col gap-5">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Emitir decisión académica</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">El dictamen es vinculante para el consejo de facultad.</p>
+</div>
+<!-- Selector de las 3 Opciones de Decisión -->
+<fieldset class="flex flex-col gap-2.5" id="decisionOptions">
+<legend class="sr-only">Seleccionar decisión colegiada</legend>
+<!-- Opción 1: Aprobar (Default Checked) -->
+<label class="decision-card relative flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all bg-secondary-container/20 shadow-sm" data-decision="aprobar">
+<input checked="" class="mt-1 text-secondary focus:ring-0" name="academic_decision" type="radio" value="aprobar"/>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[20px]">task_alt</span>
+<span class="font-label-lg text-label-lg text-on-surface">Aprobar solicitud</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Cumple con el 80%+ de equivalencia de contenidos y créditos requeridos.</p>
+</div>
+</label>
+<!-- Opción 2: Solicitar Ajustes -->
+<label class="decision-card relative flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all bg-surface-container-low hover:bg-surface-container" data-decision="ajustes">
+<input class="mt-1 text-tertiary focus:ring-0" name="academic_decision" type="radio" value="ajustes"/>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[#B45309] text-[20px]">rule</span>
+<span class="font-label-lg text-label-lg text-on-surface">Solicitar ajustes</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Requiere programa firmado, aclaración de intensidad o sello consular.</p>
+</div>
+</label>
+<!-- Opción 3: Rechazar -->
+<label class="decision-card relative flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all bg-surface-container-low hover:bg-surface-container" data-decision="rechazar">
+<input class="mt-1 text-error focus:ring-0" name="academic_decision" type="radio" value="rechazar"/>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-error text-[20px]">cancel</span>
+<span class="font-label-lg text-label-lg text-on-surface">Rechazar homologación</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Contenidos sustancialmente divergentes o intensidad horaria insuficiente.</p>
+</div>
+</label>
+</fieldset>
+<!-- Campo Textarea Obligatorio "Observación Académica" -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-on-surface flex items-center gap-1" for="reviewObservation">
+              Observación académica
+              <span class="text-error">*</span>
+</label>
+<span class="font-code-tabular text-code-tabular text-outline" id="charCounter">142 / 500</span>
+</div>
+<textarea class="w-full p-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-colors resize-none" id="reviewObservation" maxlength="500" placeholder="Escriba los fundamentos técnicos de la decisión..." rows="4">Se verificaron los temas de límites, razones de cambio y optimización. Cumple a cabalidad con el plan de estudios institucional.</textarea>
+<span class="font-body-sm text-body-sm text-outline">Este texto será incluido íntegramente en la resolución de homologación oficial.</span>
+</div>
+<!-- Ficha del Evaluador Autenticado -->
+<div class="flex items-center gap-3 p-3 rounded-lg bg-surface-container-low">
+<div class="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-md text-label-md shrink-0">
+            AR
+          </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-label-md text-label-md text-on-surface truncate">Prof. Andrés Ramírez</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container-high text-primary font-code-tabular text-[10px]">revisor-024</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Depto. de Ciencias Básicas</span>
+</div>
+</div>
+<!-- Acciones Principales -->
+<div class="flex flex-col gap-2 pt-1">
+<button class="w-full py-2.5 px-4 rounded-lg bg-secondary hover:bg-secondary/90 text-on-secondary font-label-lg text-label-lg transition-colors flex items-center justify-center gap-2 shadow-sm" id="btnEmitirDecision" type="button">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span id="actionBtnText">Aprobar solicitud</span>
+</button>
+<button class="w-full py-2 px-4 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors text-center" type="button">
+            Cancelar / Descartar
+          </button>
+</div>
+<!-- Banner informativo: Estado resuelto (oculto por defecto para solicitudes pendientes) -->
+<div class="hidden p-3 rounded-lg bg-surface-container text-on-surface-variant font-body-sm text-body-sm flex items-start gap-2" id="resolvedStateAlert">
+<span class="material-symbols-outlined text-[18px] text-tertiary shrink-0">lock</span>
+<span>Esta solicitud no admite nuevas evaluaciones en su estado actual (<strong>Aprobada</strong>).</span>
+</div>
+</div>
+<!-- Ayuda Contextual / Soporte Normativo -->
+<div class="p-3.5 rounded-xl bg-surface-container-low flex items-center justify-between text-on-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">menu_book</span>
+<span class="font-body-sm text-body-sm">Reglamento Estudiantil Art. 48-B</span>
+</div>
+<a class="font-label-sm text-label-sm text-primary hover:underline flex items-center gap-1" href="#">
+<span>Consultar</span>
+<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Modal de Confirmación de Transición Colegiada -->
+<div class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-tertiary/45 backdrop-blur-[2px]" id="confirmModal">
+<div class="rounded-xl bg-surface-container-lowest max-w-lg w-full p-space-lg shadow-xl flex flex-col gap-5 transform transition-all">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-secondary flex items-center justify-center" id="modalIconContainer">
+<span class="material-symbols-outlined text-[24px]">verified</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Confirmar decisión colegiada</h3>
+<p class="font-code-tabular text-code-tabular text-on-surface-variant">Trámite SOL · 8A41F2C9</p>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface p-1 rounded-md" id="closeModalBtn" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Detalle de la Transición -->
+<div class="p-4 rounded-xl bg-surface-container-low flex flex-col gap-3 font-body-md text-body-md">
+<div class="flex items-center justify-between font-label-md text-label-md">
+<span class="text-on-surface-variant">Transición de estado:</span>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-surface-container text-primary text-[12px]">En revisión</span>
+<span class="material-symbols-outlined text-[14px] text-outline">arrow_forward</span>
+<span class="px-2 py-0.5 rounded bg-secondary-container text-secondary text-[12px] font-bold" id="modalTargetBadge">Aprobada</span>
+</div>
+</div>
+<div class="flex flex-col gap-1 text-on-surface">
+<span class="font-label-sm text-label-sm text-outline">Observación registrada:</span>
+<blockquote class="p-2.5 rounded bg-surface-container-lowest italic text-on-surface text-body-sm" id="modalObsPreview">
+            "Se verificaron los temas de límites, razones de cambio y optimización. Cumple a cabalidad con el plan de estudios institucional."
+          </blockquote>
+</div>
+<div class="flex items-start gap-2 text-outline text-body-sm pt-1">
+<span class="material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5">info</span>
+<span>Al confirmar, el expediente pasará irreversiblemente a <strong>Versión 2</strong>, se notificará a Laura Martínez y se generará un evento de auditoría en <code class="font-code-tabular text-primary">/notifications</code>.</span>
+</div>
+</div>
+<!-- Botones de Acción del Modal -->
+<div class="flex items-center justify-end gap-3 pt-2">
+<button class="px-4 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors" id="cancelModalBtn" type="button">
+          Revisar nuevamente
+        </button>
+<button class="px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/90 text-on-secondary font-label-md text-label-md transition-colors flex items-center gap-2 shadow-sm" id="commitDecisionBtn" type="button">
+<span class="material-symbols-outlined text-[18px]">check</span>
+<span>Registrar y Notificar</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Micro-interacción: Manejo Reactivo de la Decisión y Modal -->
+<script>
+    (function initValidationScreen() {
+      const radios = document.querySelectorAll('input[name="academic_decision"]');
+      const actionBtn = document.getElementById('btnEmitirDecision');
+      const actionText = document.getElementById('actionBtnText');
+      const cards = document.querySelectorAll('.decision-card');
+      const textarea = document.getElementById('reviewObservation');
+      const counter = document.getElementById('charCounter');
+      
+      const modal = document.getElementById('confirmModal');
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      const cancelModalBtn = document.getElementById('cancelModalBtn');
+      const commitDecisionBtn = document.getElementById('commitDecisionBtn');
+      const modalObsPreview = document.getElementById('modalObsPreview');
+      const modalTargetBadge = document.getElementById('modalTargetBadge');
+      const modalIconContainer = document.getElementById('modalIconContainer');
+      const resolvedAlert = document.getElementById('resolvedStateAlert');
+
+      // Actualizar contador de caracteres
+      if (textarea && counter) {
+        textarea.addEventListener('input', () => {
+          counter.textContent = `${textarea.value.length} / 500`;
+        });
+      }
+
+      // Estilos y comportamiento según radio seleccionado
+      radios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          const val = e.target.value;
+          
+          cards.forEach(card => {
+            card.classList.remove('bg-secondary-container/20', 'bg-tertiary-fixed/30', 'bg-error-container/30', 'shadow-sm');
+            card.classList.add('bg-surface-container-low');
+          });
+
+          const currentCard = document.querySelector(`.decision-card[data-decision="${val}"]`);
+          
+          if (val === 'aprobar') {
+            if (currentCard) {
+              currentCard.classList.remove('bg-surface-container-low');
+              currentCard.classList.add('bg-secondary-container/20', 'shadow-sm');
+            }
+            actionBtn.className = "w-full py-2.5 px-4 rounded-lg bg-secondary hover:bg-secondary/90 text-on-secondary font-label-lg text-label-lg transition-colors flex items-center justify-center gap-2 shadow-sm";
+            actionText.textContent = "Aprobar solicitud";
+          } else if (val === 'ajustes') {
+            if (currentCard) {
+              currentCard.classList.remove('bg-surface-container-low');
+              currentCard.classList.add('bg-tertiary-fixed/30', 'shadow-sm');
+            }
+            actionBtn.className = "w-full py-2.5 px-4 rounded-lg bg-tertiary hover:bg-tertiary/90 text-on-tertiary font-label-lg text-label-lg transition-colors flex items-center justify-center gap-2 shadow-sm";
+            actionText.textContent = "Requerir ajustes al estudiante";
+          } else if (val === 'rechazar') {
+            if (currentCard) {
+              currentCard.classList.remove('bg-surface-container-low');
+              currentCard.classList.add('bg-error-container/30', 'shadow-sm');
+            }
+            actionBtn.className = "w-full py-2.5 px-4 rounded-lg bg-error hover:bg-error/90 text-on-error font-label-lg text-label-lg transition-colors flex items-center justify-center gap-2 shadow-sm";
+            actionText.textContent = "Rechazar solicitud";
+          }
+        });
+      });
+
+      // Apertura de modal de confirmación
+      if (actionBtn && modal) {
+        actionBtn.addEventListener('click', () => {
+          const selected = document.querySelector('input[name="academic_decision"]:checked')?.value || 'aprobar';
+          modalObsPreview.textContent = `"${textarea.value.trim() || 'Sin observaciones adicionales registradas.'}"`;
+          
+          if (selected === 'aprobar') {
+            modalTargetBadge.textContent = 'Aprobada';
+            modalTargetBadge.className = 'px-2 py-0.5 rounded bg-secondary-container text-secondary text-[12px] font-bold';
+            commitDecisionBtn.className = 'px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/90 text-on-secondary font-label-md text-label-md transition-colors flex items-center gap-2 shadow-sm';
+            modalIconContainer.className = 'w-10 h-10 rounded-full bg-secondary-container text-secondary flex items-center justify-center';
+            modalIconContainer.innerHTML = '<span class="material-symbols-outlined text-[24px]">verified</span>';
+          } else if (selected === 'ajustes') {
+            modalTargetBadge.textContent = 'Requiere ajustes';
+            modalTargetBadge.className = 'px-2 py-0.5 rounded bg-surface-container-high text-tertiary text-[12px] font-bold';
+            commitDecisionBtn.className = 'px-4 py-2 rounded-lg bg-tertiary hover:bg-tertiary/90 text-on-tertiary font-label-md text-label-md transition-colors flex items-center gap-2 shadow-sm';
+            modalIconContainer.className = 'w-10 h-10 rounded-full bg-surface-container-high text-tertiary flex items-center justify-center';
+            modalIconContainer.innerHTML = '<span class="material-symbols-outlined text-[24px]">edit_note</span>';
+          } else {
+            modalTargetBadge.textContent = 'Rechazada';
+            modalTargetBadge.className = 'px-2 py-0.5 rounded bg-error-container text-error text-[12px] font-bold';
+            commitDecisionBtn.className = 'px-4 py-2 rounded-lg bg-error hover:bg-error/90 text-on-error font-label-md text-label-md transition-colors flex items-center gap-2 shadow-sm';
+            modalIconContainer.className = 'w-10 h-10 rounded-full bg-error-container text-error flex items-center justify-center';
+            modalIconContainer.innerHTML = '<span class="material-symbols-outlined text-[24px]">block</span>';
+          }
+
+          modal.classList.remove('hidden');
+        });
+      }
+
+      function hideModal() {
+        if (modal) modal.classList.add('hidden');
+      }
+
+      if (closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
+      if (cancelModalBtn) cancelModalBtn.addEventListener('click', hideModal);
+
+      // Confirmación de la decisión
+      if (commitDecisionBtn) {
+        commitDecisionBtn.addEventListener('click', () => {
+          hideModal();
+          // Bloquear campos para simular estado consolidado
+          actionBtn.disabled = true;
+          actionBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          textarea.disabled = true;
+          textarea.classList.add('opacity-75', 'bg-surface-container');
+          radios.forEach(r => r.disabled = true);
+          if (resolvedAlert) resolvedAlert.classList.remove('hidden');
+        });
+      }
+    })();
+  </script>
+</div></div></main></div></body></html>

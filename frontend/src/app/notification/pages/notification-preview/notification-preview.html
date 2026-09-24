@@ -1,0 +1,49 @@
+<app-main-layout>
+  <div class="flex flex-col w-full gap-space-lg">
+    
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm relative overflow-hidden">
+      <div class="absolute -right-16 -top-16 w-56 h-56 bg-gradient-to-br from-primary/10 via-surface-variant/30 to-transparent rounded-full blur-2xl pointer-events-none"></div>
+      <div class="flex flex-col gap-1 z-10">
+        <div class="flex items-center gap-3">
+          <span class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Previsualizaciones de notificaciones</span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#FEF3C7] text-[#B45309] font-label-md text-label-md font-semibold">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#B45309] animate-pulse"></span>
+            Solo previsualización
+          </span>
+        </div>
+        <p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+          Revisa el mensaje generado por la evaluación. El sistema no enviará correos en esta etapa. Este módulo permite a revisores y administradores certificar la redacción antes de su emisión oficial.
+        </p>
+      </div>
+      <!-- Quick Role / Security Indicator -->
+      <div class="flex items-center gap-3 self-start md:self-auto z-10">
+        <div class="flex items-center gap-2 bg-surface-container-low px-3 py-2 rounded-lg text-tertiary">
+          <span class="material-symbols-outlined text-[20px]">verified_user</span>
+          <span class="font-label-md text-label-md text-on-surface">Vigencia: Periodo 2025-1</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Main 2-Column Responsive Bento Layout (35% / 65%) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+      <!-- LEFT COLUMN -->
+      <div class="lg:col-span-4 flex flex-col gap-space-md">
+        <app-notification-list 
+          [isLoading]="isLoading()"
+          [notifications]="notifications()"
+          [selectedId]="selectedNotification()?.id || null"
+          (selectNotification)="selectNotification($event)">
+        </app-notification-list>
+      </div>
+      
+      <!-- RIGHT COLUMN -->
+      <div class="lg:col-span-8 flex flex-col gap-space-md">
+        <app-notification-viewer
+          [notification]="selectedNotification()">
+        </app-notification-viewer>
+      </div>
+    </div>
+
+  </div>
+</app-main-layout>

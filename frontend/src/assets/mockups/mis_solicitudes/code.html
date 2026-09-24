@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-tint":"#0053db","on-background":"#121b2e","inverse-on-surface":"#edf0ff","on-primary":"#ffffff","surface":"#f9f9ff","on-tertiary":"#ffffff","on-tertiary-fixed-variant":"#264774","surface-variant":"#d9e2fc","on-tertiary-container":"#eaf0ff","surface-container-highest":"#d9e2fc","tertiary":"#355683","inverse-surface":"#273044","tertiary-fixed-dim":"#a8c8fc","outline":"#737686","outline-variant":"#c3c6d7","surface-bright":"#f9f9ff","on-surface-variant":"#434655","on-primary-container":"#eeefff","secondary-fixed-dim":"#80d5cb","inverse-primary":"#b4c5ff","surface-container-high":"#e1e8ff","background":"#f9f9ff","primary":"#004ac6","primary-container":"#2563eb","primary-fixed":"#dbe1ff","secondary-container":"#99efe5","on-tertiary-fixed":"#001c3b","on-error-container":"#93000a","surface-dim":"#d1daf4","secondary":"#006a63","error-container":"#ffdad6","on-secondary-container":"#006f67","tertiary-fixed":"#d5e3ff","primary-fixed-dim":"#b4c5ff","on-error":"#ffffff","surface-container":"#e9edff","surface-container-low":"#f1f3ff","secondary-fixed":"#9cf2e8","error":"#ba1a1a","surface-container-lowest":"#ffffff","on-primary-fixed-variant":"#003ea8","on-surface":"#121b2e","on-secondary-fixed-variant":"#00504a","on-primary-fixed":"#00174b","on-secondary-fixed":"#00201d","on-secondary":"#ffffff","tertiary-container":"#4e6e9d"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"gutter":"1.5rem","space-sm":"0.5rem","space-lg":"1.5rem","margin":"2rem","space-xs":"0.25rem","space-md":"1rem","space-xl":"2rem"},fontFamily:{"headline-lg":["Inter"],"headline-xl-mobile":["Inter"],"label-sm":["Inter"],"code-tabular":["Inter"],"display-lg-mobile":["Inter"],"display-lg":["Inter"],"body-lg":["Inter"],"body-md":["Inter"],"headline-md":["Inter"],"headline-xl":["Inter"],"label-lg":["Inter"],"label-md":["Inter"],"headline-sm":["Inter"],"body-sm":["Inter"]},fontSize:{"headline-lg":["22px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-xl-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.03em","fontWeight":"500"}],"code-tabular":["13px",{"lineHeight":"18px","letterSpacing":"0.02em","fontWeight":"500"}],"display-lg-mobile":["28px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"700"}],"display-lg":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"headline-md":["18px",{"lineHeight":"24px","letterSpacing":"-0.005em","fontWeight":"600"}],"headline-xl":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"700"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"0.01em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"headline-sm":["16px",{"lineHeight":"22px","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}]}}}};</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[260px] bg-tertiary-container text-on-tertiary z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.08)]"><div class="flex flex-col"><div class="flex items-center gap-3 px-6 py-5 bg-tertiary"><img alt="Logo Portal de Solicitudes Académicas" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UQjp7PW3TYIJtAOGoLV1rOLYJhq8nG9vWxulSc__5aVG607PvT7yD5j88X6GlbmOYaI9IBeB6KrDyv2vz3r9F1G8D2QOmIdmN9ITZZTfm516A0U-0zKWmq-IW-FIK8Wf5XgRRMC40rHksGmZwzY0brvrxBRMmfTYywU497wq-YZLgZjmi4586DuVkTwsZLm1Xeikk1UsV9zlTCSt9UyiabHGmqalKWaTzJC5OGjJ1NUR4dmE9K69C-mw"/><div class="flex flex-col overflow-hidden"><span class="font-headline-sm text-headline-sm text-on-tertiary tracking-tight leading-snug truncate">Solicitudes Académicas</span><span class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase tracking-wider">Portal Universitario</span></div></div><div class="px-4 py-3"><span class="font-label-sm text-label-sm uppercase tracking-wider text-tertiary-fixed-dim px-3">Navegación</span></div><nav class="flex flex-col gap-1 px-3" data-active-classes="bg-primary-container text-on-primary font-label-md rounded-lg shadow-sm border-l-4 border-surface-container-lowest"><a aria-current="page" class="flex items-center gap-3 px-3 py-2.5 transition-colors bg-primary-container text-on-primary font-label-md rounded-lg shadow-sm border-l-4 border-surface-container-lowest" data-path="mis-solicitudes" href="#"><span class="material-symbols-outlined text-[20px]">folder_open</span><span>Mis solicitudes</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="nueva-solicitud" href="#"><span class="material-symbols-outlined text-[20px]">post_add</span><span>Nueva solicitud</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="revision-solicitudes" href="#"><span class="material-symbols-outlined text-[20px]">fact_check</span><span>Revisión de solicitudes</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="previsualizaciones" href="#"><span class="material-symbols-outlined text-[20px]">visibility</span><span>Previsualizaciones</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="reportes" href="#"><span class="material-symbols-outlined text-[20px]">query_stats</span><span>Reportes</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="administracion" href="#"><span class="material-symbols-outlined text-[20px]">admin_panel_settings</span><span>Administración</span></a></nav></div><div class="p-4 bg-tertiary/60 flex flex-col gap-3"><div class="flex items-center justify-between px-2 py-1.5 rounded bg-tertiary text-on-tertiary text-code-tabular font-code-tabular"><div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-secondary-fixed"></span><span class="font-label-sm text-label-sm text-on-tertiary">API OK</span></div><span class="font-label-sm text-label-sm text-tertiary-fixed-dim">v1.0-demo</span></div><a class="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg bg-tertiary hover:bg-primary-container text-on-tertiary transition-colors font-label-md text-label-md" data-path="centro-ayuda" href="#"><span class="material-symbols-outlined text-[18px]">help_outline</span><span>Centro de Ayuda</span></a></div></aside><div class="pl-[260px]"><header class="fixed top-0 left-[260px] right-0 z-40 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="bg-surface-container text-primary font-body-sm text-body-sm px-6 py-1.5 flex items-center justify-between"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-primary">info</span><span>Modo demostración: los datos se conservan únicamente durante esta sesión y no se almacenan de forma permanente.</span></div><button class="font-label-sm text-label-sm text-primary hover:underline" type="button">Restablecer datos</button></div><div class="h-16 px-6 flex items-center justify-between"><div class="flex items-center gap-4"><img alt="Logo Portal de Solicitudes Académicas" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UQjp7PW3TYIJtAOGoLV1rOLYJhq8nG9vWxulSc__5aVG607PvT7yD5j88X6GlbmOYaI9IBeB6KrDyv2vz3r9F1G8D2QOmIdmN9ITZZTfm516A0U-0zKWmq-IW-FIK8Wf5XgRRMC40rHksGmZwzY0brvrxBRMmfTYywU497wq-YZLgZjmi4586DuVkTwsZLm1Xeikk1UsV9zlTCSt9UyiabHGmqalKWaTzJC5OGjJ1NUR4dmE9K69C-mw"/><nav class="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant"><span class="hover:text-on-surface cursor-pointer">Portal</span><span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span><span class="text-on-surface font-headline-sm">Expedientes y Trámites</span></nav></div><div class="flex items-center gap-4"><div class="flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-lg"><span class="font-label-sm text-label-sm text-on-surface-variant">Rol demo:</span><select class="bg-transparent font-label-md text-label-md text-on-surface focus:outline-none cursor-pointer"><option value="student">Estudiante (Laura Martínez)</option><option value="reviewer">Revisor (Andrés Ramírez)</option><option value="analyst">Analista Curricular</option><option value="admin">Administrador</option></select></div><button class="relative p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-error"></span></button><div class="flex items-center gap-3 pl-3"><div class="flex flex-col text-right hidden sm:flex"><span class="font-label-md text-label-md text-on-surface">Laura Martínez</span><span class="font-label-sm text-label-sm text-on-surface-variant">l.martinez@universidad.edu</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-24 bg-surface min-h-screen"><div class="max-w-[1440px] mx-auto p-space-lg"><div class="flex flex-col w-full gap-space-lg">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<nav class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm tracking-wide uppercase">
+<span class="hover:text-primary transition-colors cursor-pointer">Inicio</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-headline-sm">Mis solicitudes</span>
+</nav>
+<div class="flex items-center gap-3">
+<h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Mis solicitudes</h1>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container text-on-surface-variant">
+          Sesión Activa
+        </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+        Consulta y gestiona las solicitudes de homologación preparadas durante esta sesión académica.
+      </p>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span>Historial local</span>
+</button>
+<button class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-container hover:bg-primary text-on-primary font-label-lg text-label-lg shadow-sm hover:shadow-md transition-all transform active:scale-95" type="button">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+<span>+ Nueva solicitud</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
+<div class="relative overflow-hidden rounded-2xl bg-surface-container-lowest p-space-lg shadow-sm hover:shadow transition-shadow flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Total preparadas</span>
+<span class="font-display-lg text-display-lg text-primary tracking-tight mt-1">4</span>
+</div>
+<div class="h-12 w-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[26px]">folder_copy</span>
+</div>
+</div>
+<div class="mt-4 flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant">
+<span class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> 100% validadas localmente
+        </span>
+<span class="font-code-tabular text-code-tabular text-on-surface-variant">SES-ID #9214</span>
+</div>
+<div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-container to-secondary"></div>
+</div>
+<div class="relative overflow-hidden rounded-2xl bg-surface-container-lowest p-space-lg shadow-sm hover:shadow transition-shadow flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">En revisión técnica</span>
+<span class="font-display-lg text-display-lg text-tertiary tracking-tight mt-1">2</span>
+</div>
+<div class="h-12 w-12 rounded-xl bg-tertiary-fixed flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[26px]">hourglass_top</span>
+</div>
+</div>
+<div class="mt-4 flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant">
+<span class="flex items-center gap-1.5 text-tertiary">
+<span class="h-2 w-2 rounded-full bg-tertiary animate-ping"></span> 50% de la carga actual
+        </span>
+<span class="font-label-sm text-label-sm">Comité Curricular</span>
+</div>
+<div class="absolute bottom-0 left-0 right-0 h-1 bg-tertiary"></div>
+</div>
+<div class="relative overflow-hidden rounded-2xl bg-surface-container-lowest p-space-lg shadow-sm hover:shadow transition-shadow flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Requieren atención</span>
+<span class="font-display-lg text-display-lg text-error tracking-tight mt-1">1</span>
+</div>
+<div class="h-12 w-12 rounded-xl bg-error-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[26px]">assignment_late</span>
+</div>
+</div>
+<div class="mt-4 flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant">
+<span class="flex items-center gap-1.5 text-error font-label-sm">
+<span class="material-symbols-outlined text-[16px]">priority_high</span> Acción prioritaria requerida
+        </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Syllabus incompleto</span>
+</div>
+<div class="absolute bottom-0 left-0 right-0 h-1 bg-error"></div>
+</div>
+</div>
+<div class="flex flex-col gap-space-md bg-surface-container-lowest p-space-md rounded-2xl shadow-sm">
+<div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-space-md">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] text-outline">search</span>
+<input class="w-full pl-11 pr-4 py-2.5 rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary-container transition-all" id="search-input" placeholder="Buscar por código, asignatura o identificador..." type="text"/>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm">
+<div class="flex items-center bg-surface-container-low rounded-xl px-3 py-1.5">
+<span class="material-symbols-outlined text-[18px] text-outline mr-2">filter_alt</span>
+<select class="bg-transparent text-on-surface font-label-md text-label-md focus:outline-none cursor-pointer" id="filter-status">
+<option value="all">Todos los estados</option>
+<option value="draft">Borrador</option>
+<option value="sent">Enviada</option>
+<option value="review">En revisión</option>
+<option value="approved">Aprobada</option>
+<option value="action">Requiere ajustes</option>
+<option value="rejected">Rechazada</option>
+</select>
+</div>
+<div class="flex items-center bg-surface-container-low rounded-xl px-3 py-1.5">
+<select class="bg-transparent text-on-surface font-label-md text-label-md focus:outline-none cursor-pointer" id="filter-type">
+<option value="all">Tipo: Homologación de asignatura</option>
+<option value="transfer">Transferencia de créditos</option>
+<option value="external">Estudio previo internacional</option>
+</select>
+</div>
+<button class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low font-label-md text-label-md transition-colors" id="btn-clear" type="button">
+<span class="material-symbols-outlined text-[18px]">filter_list_off</span>
+<span>Limpiar filtros</span>
+</button>
+<div class="h-6 w-[1px] bg-surface-variant mx-1 hidden sm:block"></div>
+<div class="flex items-center bg-surface-container-low p-1 rounded-xl">
+<button class="px-3 py-1 rounded-lg bg-surface-container-lowest shadow-sm text-primary font-label-md text-label-md flex items-center gap-1.5 transition-all" id="view-cards-btn" type="button">
+<span class="material-symbols-outlined text-[18px]">grid_view</span>
+<span class="hidden sm:inline">Tarjetas</span>
+</button>
+<button class="px-3 py-1 rounded-lg text-on-surface-variant hover:text-on-surface font-label-md text-label-md flex items-center gap-1.5 transition-all" id="view-table-btn" type="button">
+<span class="material-symbols-outlined text-[18px]">table_rows</span>
+<span class="hidden sm:inline">Tabla</span>
+</button>
+</div>
+<button class="px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-variant text-tertiary font-label-sm text-label-sm transition-all" id="toggle-empty-state" title="Alternar vista previa vacía" type="button">
+          Simular vacío
+        </button>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg" id="requests-grid">
+<div class="flex flex-col justify-between bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm hover:shadow-md transition-all">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-start justify-between gap-2">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-code-tabular text-code-tabular text-primary font-bold tracking-wide">SOL · 8A41F2C9</span>
+<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Homologación de asignatura</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">schedule</span> Hoy, 10:24 AM
+            </span>
+</div>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-md font-label-md bg-tertiary-fixed text-on-tertiary-fixed shadow-xs">
+<span class="h-2 w-2 rounded-full bg-tertiary animate-pulse"></span> En revisión
+          </span>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-2">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Origen (Univ. Nacional)</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Cálculo I</span>
+<span class="font-code-tabular text-code-tabular text-outline">3 Créditos · Nota 4.5/5.0</span>
+</div>
+<div class="flex items-center justify-center h-8 w-8 rounded-full bg-surface-container text-primary self-center">
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+<div class="flex flex-col sm:text-right">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Destino Propuesto</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Cálculo diferencial</span>
+<span class="font-code-tabular text-code-tabular text-outline">3 Créditos · Código MAT-101</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-lowest">
+<div class="flex items-center gap-2 min-w-0">
+<div class="h-9 w-9 rounded-lg bg-error-container text-error flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface truncate">contenido-programatico-calculo.pdf</span>
+<span class="font-code-tabular text-code-tabular text-on-surface-variant">1.2 MB · Versión v1</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-label-sm font-label-sm bg-secondary-container text-on-secondary-container">
+            Hash OK
+          </span>
+</div>
+</div>
+<div class="mt-space-md pt-3 flex items-center justify-between">
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-fixed hover:bg-primary text-on-primary-fixed hover:text-on-primary font-label-md text-label-md transition-all" onclick="openDetailDrawer('SOL · 8A41F2C9')" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+<span>Ver resumen</span>
+</button>
+<div class="relative inline-block text-left">
+<button class="p-2 rounded-xl hover:bg-surface-container text-on-surface-variant transition-colors" onclick="toggleDropdown('menu-1')" type="button">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+<div class="hidden absolute right-0 bottom-10 w-48 rounded-xl bg-surface-container-lowest shadow-xl p-1 z-30" id="menu-1">
+<a class="flex items-center gap-2 px-3 py-2 rounded-lg text-body-md font-body-md text-on-surface hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined text-[18px]">edit_note</span> Revisar datos
+            </a>
+<a class="flex items-center gap-2 px-3 py-2 rounded-lg text-body-md font-body-md text-error hover:bg-error-container" href="#">
+<span class="material-symbols-outlined text-[18px]">delete</span> Eliminar sesión
+            </a>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col justify-between bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm hover:shadow-md transition-all">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-start justify-between gap-2">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-code-tabular text-code-tabular text-primary font-bold tracking-wide">SOL · 5F21B904</span>
+<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Homologación de asignatura</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span> 12 Mar 2025
+            </span>
+</div>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-md font-label-md bg-secondary-fixed text-on-secondary-fixed shadow-xs">
+<span class="material-symbols-outlined text-[16px]">verified</span> Aprobada
+          </span>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-2">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Origen (Univ. de los Andes)</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Programación I</span>
+<span class="font-code-tabular text-code-tabular text-outline">4 Créditos · Java Standard</span>
+</div>
+<div class="flex items-center justify-center h-8 w-8 rounded-full bg-surface-container text-primary self-center">
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+<div class="flex flex-col sm:text-right">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Destino Propuesto</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Fundamentos de programación</span>
+<span class="font-code-tabular text-code-tabular text-outline">4 Créditos · Código SIS-102</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-lowest">
+<div class="flex items-center gap-2 min-w-0">
+<div class="h-9 w-9 rounded-lg bg-error-container text-error flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface truncate">syllabus-prog-1.pdf</span>
+<span class="font-code-tabular text-code-tabular text-on-surface-variant">2.4 MB · Versión v2</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-label-sm font-label-sm bg-secondary-fixed-dim text-on-secondary-fixed-variant">
+            Resolución #412
+          </span>
+</div>
+</div>
+<div class="mt-space-md pt-3 flex items-center justify-between">
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-all" onclick="openDetailDrawer('SOL · 5F21B904')" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+<span>Ver resolución</span>
+</button>
+<button class="p-2 rounded-xl hover:bg-surface-container text-on-surface-variant transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</div>
+</div>
+<div class="flex flex-col justify-between bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm hover:shadow-md transition-all">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-start justify-between gap-2">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-code-tabular text-code-tabular text-primary font-bold tracking-wide">SOL · 1D88E3A2</span>
+<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Homologación de asignatura</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">update</span> 10 Mar 2025
+            </span>
+</div>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-label-md font-label-md bg-error-container text-on-error-container shadow-xs">
+<span class="material-symbols-outlined text-[16px]">warning</span> Requiere ajustes
+          </span>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-2">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Origen (Univ. del Valle)</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Estadística básica</span>
+<span class="font-code-tabular text-code-tabular text-outline">3 Créditos</span>
+</div>
+<div class="flex items-center justify-center h-8 w-8 rounded-full bg-surface-container text-primary self-center">
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+<div class="flex flex-col sm:text-right">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Destino Propuesto</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Probabilidad y estadística</span>
+<span class="font-code-tabular text-code-tabular text-outline">4 Créditos · Código EST-201</span>
+</div>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-error-container/40 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-[20px] text-error shrink-0 mt-0.5">announcement</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-error font-bold">Observación del evaluador:</span>
+<p class="font-body-sm text-body-sm text-on-surface">
+              "El programa no detalla el módulo de inferencia bayesiana ni las horas prácticas de laboratorio requeridas para los 4 créditos."
+            </p>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-3 flex items-center justify-between">
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md shadow-sm transition-all" onclick="openDetailDrawer('SOL · 1D88E3A2')" type="button">
+<span class="material-symbols-outlined text-[18px]">edit_document</span>
+<span>Corregir y anexar</span>
+</button>
+<span class="font-label-sm text-label-sm text-error">Vence en 3 días</span>
+</div>
+</div>
+<div class="flex flex-col justify-between bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm hover:shadow-md transition-all">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-start justify-between gap-2">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-code-tabular text-code-tabular text-primary font-bold tracking-wide">SOL · 3C90FA11</span>
+<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Homologación de asignatura</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 08 Mar 2025
+            </span>
+</div>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-md font-label-md bg-primary-fixed text-on-primary-fixed shadow-xs">
+<span class="material-symbols-outlined text-[16px]">send</span> Enviada
+          </span>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-2">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Origen (Univ. de Antioquia)</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Álgebra lineal</span>
+<span class="font-code-tabular text-code-tabular text-outline">3 Créditos</span>
+</div>
+<div class="flex items-center justify-center h-8 w-8 rounded-full bg-surface-container text-primary self-center">
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+<div class="flex flex-col sm:text-right">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Destino Propuesto</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Matemáticas matriciales</span>
+<span class="font-code-tabular text-code-tabular text-outline">3 Créditos · Código MAT-104</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-lowest">
+<div class="flex items-center gap-2 min-w-0">
+<div class="h-9 w-9 rounded-lg bg-error-container text-error flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface truncate">contenido-analitico-algebra.pdf</span>
+<span class="font-code-tabular text-code-tabular text-on-surface-variant">1.8 MB · Radicado oficial</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-label-sm font-label-sm bg-surface-container text-on-surface-variant">
+            En cola
+          </span>
+</div>
+</div>
+<div class="mt-space-md pt-3 flex items-center justify-between">
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-all" onclick="openDetailDrawer('SOL · 3C90FA11')" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+<span>Ver estado</span>
+</button>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Recepción confirmada</span>
+</div>
+</div>
+</div>
+<div class="hidden flex-col items-center justify-center p-12 bg-surface-container-lowest rounded-3xl text-center shadow-sm" id="empty-state-view">
+<div class="h-28 w-28 rounded-full bg-surface-container flex items-center justify-center text-outline mb-6">
+<span class="material-symbols-outlined text-[54px]">folder_off</span>
+</div>
+<h3 class="font-headline-xl text-headline-xl text-on-surface mb-2">Aún no tienes solicitudes en esta sesión</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg mb-6">
+      Prepara tu primera solicitud de homologación cargando los programas académicos de tu institución de origen.
+    </p>
+<button class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-on-primary hover:bg-primary-container font-label-lg text-label-lg shadow-md transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">post_add</span>
+<span>Crear mi primera solicitud</span>
+</button>
+</div>
+<div class="fixed inset-0 z-50 hidden" id="detail-drawer">
+<div class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-xs transition-opacity" onclick="closeDetailDrawer()"></div>
+<div class="fixed right-0 top-0 bottom-0 w-full max-w-xl bg-surface-container-lowest shadow-2xl flex flex-col justify-between overflow-y-auto z-50">
+<div class="flex flex-col">
+<div class="p-6 bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Detalle del expediente local</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface" id="drawer-uuid">SOL · 8A41F2C9</h2>
+</div>
+<button class="h-10 w-10 rounded-full hover:bg-surface-variant flex items-center justify-center text-on-surface-variant transition-colors" onclick="closeDetailDrawer()">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</button>
+</div>
+<div class="p-6 flex flex-col gap-6">
+<div class="p-4 rounded-xl bg-secondary-container/40 flex items-start gap-3">
+<span class="material-symbols-outlined text-[22px] text-secondary shrink-0">database</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-secondary-container">Almacenamiento Temporal</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                Esta representación existe únicamente en la sesión actual y se almacena en <code>sessionStorage</code>.
+              </p>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Datos del solicitante</h4>
+<div class="grid grid-cols-2 gap-3 p-4 rounded-xl bg-surface-container-low text-body-md font-body-md">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Estudiante:</span>
+<span class="text-on-surface font-label-md text-label-md">Laura Martínez</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Código estudiantil:</span>
+<span class="font-code-tabular text-code-tabular text-on-surface">202012345</span>
+</div>
+<div class="col-span-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Correo institucional:</span>
+<span class="text-on-surface font-body-sm text-body-sm">laura.martinez@universidad.edu.co</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Comparación Curricular</h4>
+<div class="flex flex-col gap-2 p-4 rounded-xl bg-surface-container">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Asignatura Acreditada</span>
+<span class="font-label-sm text-label-sm text-secondary font-bold">94% Coincidencia</span>
+</div>
+<div class="flex items-center justify-between text-body-md font-body-md">
+<span class="font-headline-sm text-headline-sm text-on-surface">Cálculo I (3 cr.)</span>
+<span class="material-symbols-outlined text-[18px] text-primary">arrow_forward</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Cálculo diferencial (3 cr.)</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Expediente Digital Anexo</h4>
+<div class="p-4 rounded-xl bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface">contenido-programatico-calculo.pdf</span>
+<span class="font-code-tabular text-code-tabular text-on-surface-variant">1.2 MB</span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant">
+<span>Tipo MIME: <code>application/pdf</code></span>
+<span>Firma SHA-256: 4e8a...12c8</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-6 bg-surface-container-low flex items-center justify-between">
+<button class="px-4 py-2 rounded-xl text-on-surface hover:bg-surface-variant font-label-md text-label-md transition-colors" onclick="closeDetailDrawer()" type="button">
+          Cerrar
+        </button>
+<button class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md shadow-sm transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>Descargar comprobante</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function openDetailDrawer(uuid) {
+    const drawer = document.getElementById('detail-drawer');
+    const drawerUuid = document.getElementById('drawer-uuid');
+    if (drawer && drawerUuid) {
+      drawerUuid.innerText = uuid;
+      drawer.classList.remove('hidden');
+    }
+  }
+
+  function closeDetailDrawer() {
+    const drawer = document.getElementById('detail-drawer');
+    if (drawer) {
+      drawer.classList.add('hidden');
+    }
+  }
+
+  function toggleDropdown(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.toggle('hidden');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleEmptyBtn = document.getElementById('toggle-empty-state');
+    const grid = document.getElementById('requests-grid');
+    const emptyState = document.getElementById('empty-state-view');
+
+    if (toggleEmptyBtn && grid && emptyState) {
+      toggleEmptyBtn.addEventListener('click', () => {
+        const isHidden = emptyState.classList.contains('hidden');
+        if (isHidden) {
+          emptyState.classList.remove('hidden');
+          emptyState.classList.add('flex');
+          grid.classList.add('hidden');
+          toggleEmptyBtn.innerText = 'Ver solicitudes';
+        } else {
+          emptyState.classList.add('hidden');
+          emptyState.classList.remove('flex');
+          grid.classList.remove('hidden');
+          toggleEmptyBtn.innerText = 'Simular vacío';
+        }
+      });
+    }
+
+    const clearBtn = document.getElementById('btn-clear');
+    const searchInput = document.getElementById('search-input');
+    const filterStatus = document.getElementById('filter-status');
+    const filterType = document.getElementById('filter-type');
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        if (searchInput) searchInput.value = '';
+        if (filterStatus) filterStatus.value = 'all';
+        if (filterType) filterType.selectedIndex = 0;
+      });
+    }
+  });
+</script></div></main></div></body></html>

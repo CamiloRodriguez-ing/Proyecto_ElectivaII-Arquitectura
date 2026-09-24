@@ -1,1 +1,99 @@
-<p>report-table works!</p>
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col gap-5 relative min-h-[400px]">
+  <div *ngIf="isLoading" class="absolute inset-0 bg-surface-container-lowest/80 backdrop-blur-sm z-10 rounded-xl flex items-center justify-center">
+     <span class="material-symbols-outlined text-primary text-4xl animate-spin">progress_activity</span>
+  </div>
+
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h2 class="font-headline-md text-headline-md text-on-surface">Detalle de solicitudes procesadas en la sesión</h2>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Listado dinámico y trazabilidad directa de los casos evaluados</p>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div class="relative flex items-center">
+        <span class="material-symbols-outlined absolute left-3 text-outline text-[18px]">search</span>
+        <input 
+          class="h-10 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface placeholder:text-outline text-body-md font-body-md focus:outline-none focus:bg-surface-container transition-colors w-full sm:w-64" 
+          placeholder="Buscar por estudiante o materia..." 
+          type="text"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)" />
+      </div>
+      <div class="flex items-center gap-2 bg-surface-container-low px-3 h-10 rounded-lg">
+        <span class="font-label-sm text-label-sm text-on-surface-variant">Estado:</span>
+        <select 
+          class="bg-transparent font-label-md text-label-md text-on-surface focus:outline-none cursor-pointer"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="statusFilter.set($event)">
+          <option value="ALL">Todos los estados</option>
+          <option value="APPROVED">Aprobada</option>
+          <option value="UNDER_REVIEW">En revisión</option>
+          <option value="ACTION_REQUIRED">Requiere ajustes</option>
+          <option value="REJECTED">Rechazada</option>
+          <option value="SUBMITTED">Enviada</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  
+  <div class="overflow-x-auto">
+    <table class="w-full text-left font-body-md text-body-md text-on-surface">
+      <thead>
+        <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md">
+          <th class="py-3 px-4 rounded-l-lg">Identificador</th>
+          <th class="py-3 px-4">Estudiante</th>
+          <th class="py-3 px-4">Tipo</th>
+          <th class="py-3 px-4">Asignatura origen</th>
+          <th class="py-3 px-4">Asignatura destino</th>
+          <th class="py-3 px-4">Estado</th>
+          <th class="py-3 px-4 rounded-r-lg text-right">Versión</th>
+        </tr>
+      </thead>
+      
+      <tbody class="divide-y-0">
+        <tr *ngFor="let req of filteredRequests()" class="hover:bg-surface-container-low/70 transition-colors">
+          <td class="py-3.5 px-4 font-code-tabular text-code-tabular text-primary font-label-md">SOL-{{ req.request_id.slice(0,4) | uppercase }}</td>
+          <td class="py-3.5 px-4 font-label-md">{{ req.student.name }}</td>
+          <td class="py-3.5 px-4">
+            <span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-code-tabular text-[11px]">{{ req.type }}</span>
+          </td>
+          <td class="py-3.5 px-4 text-on-surface-variant">{{ req.academic_data.source_course }}</td>
+          <td class="py-3.5 px-4 font-label-md text-on-surface">{{ req.academic_data.target_course }}</td>
+          <td class="py-3.5 px-4">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-label-sm font-semibold" [ngClass]="getStatusBadgeClasses(req.status)">
+              <span *ngIf="req.status !== 'ACTION_REQUIRED'" class="w-1.5 h-1.5 rounded-full" [ngClass]="getStatusIconColor(req.status)"></span>
+              <span *ngIf="req.status === 'ACTION_REQUIRED'" class="material-symbols-outlined text-[14px]" [ngClass]="getStatusIconColor(req.status)">warning</span>
+              {{ req.status }}
+            </span>
+          </td>
+          <td class="py-3.5 px-4 text-right font-code-tabular text-body-sm text-on-surface-variant">v{{ req.version }}.0</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div *ngIf="filteredRequests().length === 0" class="py-12 flex flex-col items-center justify-center text-center gap-3">
+      <div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-outline">
+        <span class="material-symbols-outlined text-[24px]">folder_off</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="font-headline-sm text-headline-sm text-on-surface">Agrega solicitudes a la sesión para calcular los indicadores.</span>
+        <span class="font-body-sm text-body-sm text-on-surface-variant mt-1">No se encontraron expedientes con los criterios seleccionados.</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="flex items-center justify-between pt-3 font-body-sm text-body-sm text-on-surface-variant">
+    <span>Mostrando registros de la sesión de evaluación</span>
+    <div class="flex items-center gap-2">
+      <button class="p-1 rounded hover:bg-surface-container disabled:opacity-40" disabled type="button">
+        <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+      </button>
+      <span class="font-code-tabular text-label-md font-label-md text-on-surface">
+        {{ filteredRequests().length > 0 ? '1 - ' + filteredRequests().length : 0 }} de {{ filteredRequests().length }}
+      </span>
+      <button class="p-1 rounded hover:bg-surface-container disabled:opacity-40" disabled type="button">
+        <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,1 +1,172 @@
-<p>request-list works!</p>
+<app-main-layout>
+  <div class="flex flex-col w-full gap-space-lg">
+    
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+      <div class="flex flex-col gap-space-xs">
+        <nav class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm tracking-wide uppercase">
+          <span class="hover:text-primary transition-colors cursor-pointer">Inicio</span>
+          <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+          <span class="text-primary font-headline-sm">Mis solicitudes</span>
+        </nav>
+        <div class="flex items-center gap-3">
+          <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Mis solicitudes</h1>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container text-on-surface-variant">
+            Sesión Activa
+          </span>
+        </div>
+        <p class="font-body-md text-body-md text-on-surface-variant">
+          Consulta y gestiona las solicitudes de homologación preparadas durante esta sesión académica.
+        </p>
+      </div>
+      <div class="flex items-center gap-space-sm">
+        <button class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-all" type="button">
+          <span class="material-symbols-outlined text-[18px]">history</span>
+          <span>Historial local</span>
+        </button>
+        <a routerLink="/requests/new" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-container hover:bg-primary text-on-primary font-label-lg text-label-lg shadow-sm hover:shadow-md transition-all transform active:scale-95">
+          <span class="material-symbols-outlined text-[20px]">add_circle</span>
+          <span>+ Nueva solicitud</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Counters (Static for demo) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg" *ngIf="!isLoading() && requests().length > 0">
+      <div class="relative overflow-hidden rounded-2xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col justify-between">
+        <div class="flex items-start justify-between">
+          <div class="flex flex-col">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Total preparadas</span>
+            <span class="font-display-lg text-display-lg text-primary tracking-tight mt-1">{{ requests().length }}</span>
+          </div>
+          <div class="h-12 w-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
+            <span class="material-symbols-outlined text-[26px]">folder_copy</span>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant">
+          <span class="flex items-center gap-1.5 text-secondary">
+            <span class="material-symbols-outlined text-[16px]">check_circle</span> 100% validadas localmente
+          </span>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-container to-secondary"></div>
+      </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="flex flex-col gap-space-md bg-surface-container-lowest p-space-md rounded-2xl shadow-sm">
+      <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-space-md">
+        <div class="relative flex-1">
+          <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] text-outline">search</span>
+          <input class="w-full pl-11 pr-4 py-2.5 rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary-container transition-all" placeholder="Buscar por código, asignatura o identificador..." type="text"/>
+        </div>
+        <div class="flex flex-wrap items-center gap-space-sm">
+          <button (click)="forceEmptyState()" class="px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-variant text-tertiary font-label-sm text-label-sm transition-all" title="Alternar vista previa vacía" type="button">
+            Simular vacío
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Skeleton -->
+    <div *ngIf="isLoading()" class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+      <div *ngFor="let i of [1, 2]" class="bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm flex flex-col gap-space-md animate-pulse">
+        <div class="flex justify-between">
+          <div class="h-6 bg-surface-container w-1/3 rounded"></div>
+          <div class="h-6 bg-surface-container w-1/4 rounded-full"></div>
+        </div>
+        <div class="bg-surface-container-low rounded-xl h-24"></div>
+        <div class="bg-surface-container-lowest border border-surface-container rounded-xl h-14"></div>
+      </div>
+    </div>
+
+    <!-- Data Grid -->
+    <div *ngIf="!isLoading() && requests().length > 0" class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+      <app-request-card 
+        *ngFor="let req of requests()" 
+        [request]="req"
+        (viewDetails)="openDrawer($event)">
+      </app-request-card>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading() && requests().length === 0" class="flex flex-col items-center justify-center p-12 bg-surface-container-lowest rounded-3xl text-center shadow-sm">
+      <div class="h-28 w-28 rounded-full bg-surface-container flex items-center justify-center text-outline mb-6">
+        <span class="material-symbols-outlined text-[54px]">folder_off</span>
+      </div>
+      <h3 class="font-headline-xl text-headline-xl text-on-surface mb-2">Aún no tienes solicitudes en esta sesión</h3>
+      <p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg mb-6">
+        Prepara tu primera solicitud de homologación cargando los programas académicos de tu institución de origen.
+      </p>
+      <a routerLink="/requests/new" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-on-primary hover:bg-primary-container font-label-lg text-label-lg shadow-md transition-all">
+        <span class="material-symbols-outlined text-[20px]">post_add</span>
+        <span>Crear mi primera solicitud</span>
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Detail Drawer -->
+  <div *ngIf="drawerOpen() && selectedRequest()" class="fixed inset-0 z-50 flex">
+    <div class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-xs transition-opacity" (click)="closeDrawer()"></div>
+    <div class="fixed right-0 top-0 bottom-0 w-full max-w-xl bg-surface-container-lowest shadow-2xl flex flex-col justify-between overflow-y-auto z-50">
+      <div class="flex flex-col">
+        <div class="p-6 bg-surface-container-low flex items-center justify-between">
+          <div class="flex flex-col">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Detalle del expediente local</span>
+            <h2 class="font-headline-lg text-headline-lg text-on-surface">SOL · {{ selectedRequest()?.request_id?.slice(0,8) | uppercase }}</h2>
+          </div>
+          <button class="h-10 w-10 rounded-full hover:bg-surface-variant flex items-center justify-center text-on-surface-variant transition-colors" (click)="closeDrawer()">
+            <span class="material-symbols-outlined text-[24px]">close</span>
+          </button>
+        </div>
+        
+        <div class="p-6 flex flex-col gap-6">
+          <div class="p-4 rounded-xl bg-secondary-container/40 flex items-start gap-3">
+            <span class="material-symbols-outlined text-[22px] text-secondary shrink-0">database</span>
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-on-secondary-container">Almacenamiento Temporal</span>
+              <p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                Esta representación existe únicamente en la sesión actual y se almacena en <code>sessionStorage</code>.
+              </p>
+            </div>
+          </div>
+          
+          <div class="flex flex-col gap-3">
+            <h4 class="font-headline-sm text-headline-sm text-on-surface">Datos del solicitante</h4>
+            <div class="grid grid-cols-2 gap-3 p-4 rounded-xl bg-surface-container-low text-body-md font-body-md">
+              <div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant block">Estudiante:</span>
+                <span class="text-on-surface font-label-md text-label-md">{{ selectedRequest()?.student?.name }}</span>
+              </div>
+              <div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant block">Código estudiantil:</span>
+                <span class="font-code-tabular text-code-tabular text-on-surface">{{ selectedRequest()?.student?.student_code }}</span>
+              </div>
+              <div class="col-span-2">
+                <span class="font-label-sm text-label-sm text-on-surface-variant block">Correo institucional:</span>
+                <span class="text-on-surface font-body-sm text-body-sm">{{ selectedRequest()?.student?.email }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex flex-col gap-3">
+            <h4 class="font-headline-sm text-headline-sm text-on-surface">Comparación Curricular</h4>
+            <div class="flex flex-col gap-2 p-4 rounded-xl bg-surface-container">
+              <div class="flex items-center justify-between text-body-md font-body-md">
+                <span class="font-headline-sm text-headline-sm text-on-surface">{{ selectedRequest()?.academic_data?.source_course }}</span>
+                <span class="material-symbols-outlined text-[18px] text-primary">arrow_forward</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface">{{ selectedRequest()?.academic_data?.target_course }}</span>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      <div class="p-6 bg-surface-container-low flex items-center justify-between">
+        <button class="px-4 py-2 rounded-xl text-on-surface hover:bg-surface-variant font-label-md text-label-md transition-colors" (click)="closeDrawer()" type="button">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</app-main-layout>

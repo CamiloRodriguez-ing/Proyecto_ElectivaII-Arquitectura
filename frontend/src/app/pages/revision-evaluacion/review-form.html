@@ -1,0 +1,286 @@
+<div class="max-w-[1440px] mx-auto p-space-lg">
+        @if(isLoading()) {
+          <div class="flex items-center justify-center p-20 animate-pulse">
+            <div class="h-8 w-8 rounded-full border-4 border-surface-container border-t-primary animate-spin"></div>
+          </div>
+        } @else if(request()) {
+          <div class="flex flex-col w-full">
+            <!-- Page Header -->
+            <section class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6">
+              <div class="flex flex-col gap-1.5">
+                <div class="flex items-center gap-2 font-code-tabular text-code-tabular text-tertiary">
+                  <span>Revisión</span>
+                  <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                  <span>Solicitudes</span>
+                  <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                  <span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-code-tabular text-[12px] font-semibold">SOL · {{ request()!.request_id }}</span>
+                </div>
+                <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Revisión de solicitud</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">Verifica la información académica y registra una decisión colegiada.</p>
+              </div>
+              <div class="flex items-center gap-3 self-start md:self-auto">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high text-primary font-label-md text-label-md shadow-sm">
+                  <span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                  <span>{{ hasEvaluated() ? 'Evaluada' : 'En revisión' }}</span>
+                </div>
+                <span class="px-2.5 py-1 rounded bg-surface-container text-on-surface-variant font-code-tabular text-code-tabular font-medium">Versión {{ request()!.version }}</span>
+                <div class="hidden xl:flex items-center gap-2 px-3 py-1 rounded bg-surface-variant text-on-surface font-label-sm text-label-sm">
+                  <span class="material-symbols-outlined text-[16px] text-tertiary">shield_person</span>
+                  <span>Modo Evaluador</span>
+                </div>
+              </div>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start w-full">
+              <!-- Left Panel -->
+              <div class="lg:col-span-8 flex flex-col gap-space-lg">
+                <!-- Student -->
+                <div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div class="flex items-start gap-4">
+                    <div class="relative">
+                      <div class="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-on-primary font-headline-sm">
+                        LM
+                      </div>
+                      <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-secondary rounded-full ring-2 ring-surface-container-lowest"></span>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                      <div class="flex items-center gap-2">
+                        <h2 class="font-headline-sm text-headline-sm text-on-surface truncate">{{ request()!.student.name }}</h2>
+                        <span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Estudiante Regular</span>
+                      </div>
+                      <p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Facultad de Ingeniería y Ciencias Aplicadas</p>
+                      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-on-surface-variant font-code-tabular text-code-tabular">
+                        <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">badge</span> {{ request()!.student.student_code }}</span>
+                        <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">mail</span> {{ request()!.student.email }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Academic Match -->
+                <div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col gap-6">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-outlined text-primary text-[22px]">compare_arrows</span>
+                      <h3 class="font-headline-md text-headline-md text-on-surface">Matriz de Homologación Curricular</h3>
+                    </div>
+                  </div>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-11 gap-4 items-center">
+                    <div class="md:col-span-5 bg-surface-container-low p-5 rounded-xl flex flex-col gap-3">
+                      <div class="flex items-center justify-between">
+                        <span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider">Universidad Externa</span>
+                      </div>
+                      <div>
+                        <h4 class="font-headline-sm text-headline-sm text-on-surface">{{ request()!.academic_data.source_course }}</h4>
+                        <p class="font-body-sm text-body-sm text-on-surface-variant">{{ request()!.academic_data.source_university }}</p>
+                      </div>
+                      <div class="grid grid-cols-3 gap-2 pt-2 bg-surface-container-lowest p-3 rounded-lg font-code-tabular">
+                        <div class="flex flex-col">
+                          <span class="font-label-sm text-label-sm text-outline">Créditos</span>
+                          <span class="font-headline-sm text-headline-sm text-on-surface">{{ request()!.academic_data.source_credits }}.0</span>
+                        </div>
+                        <div class="flex flex-col">
+                          <span class="font-label-sm text-label-sm text-outline">Calificación</span>
+                          <span class="font-headline-sm text-headline-sm text-secondary font-semibold">{{ request()!.academic_data.source_grade?.split('/')[0] || 'N/A' }} <span class="text-[11px] text-outline font-normal">/5.0</span></span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="md:col-span-1 flex flex-col items-center justify-center py-2 md:py-0">
+                      <div class="w-12 h-12 rounded-full bg-primary-fixed text-primary flex items-center justify-center shadow-sm">
+                        <span class="font-code-tabular font-bold text-[13px]">88%</span>
+                      </div>
+                      <span class="material-symbols-outlined text-primary text-[20px] hidden md:block mt-1">arrow_forward</span>
+                    </div>
+
+                    <div class="md:col-span-5 bg-surface-container-high p-5 rounded-xl flex flex-col gap-3">
+                      <div class="flex items-center justify-between">
+                        <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Malla Curricular</span>
+                        <span class="px-2 py-0.5 rounded bg-surface-container-lowest text-primary font-code-tabular text-[11px] font-semibold">{{ request()!.academic_data.target_code }}</span>
+                      </div>
+                      <div>
+                        <h4 class="font-headline-sm text-headline-sm text-on-surface">{{ request()!.academic_data.target_course }}</h4>
+                      </div>
+                      <div class="grid grid-cols-3 gap-2 pt-2 bg-surface-container-lowest p-3 rounded-lg font-code-tabular">
+                        <div class="flex flex-col">
+                          <span class="font-label-sm text-label-sm text-outline">Créditos</span>
+                          <span class="font-headline-sm text-headline-sm text-on-surface">{{ request()!.academic_data.target_credits }}.0</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Document -->
+                <div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-error-container text-error flex items-center justify-center shrink-0">
+                      <span class="material-symbols-outlined text-[28px]">picture_as_pdf</span>
+                    </div>
+                    <div class="flex flex-col">
+                      <div class="flex items-center gap-2">
+                        <h4 class="font-headline-sm text-headline-sm text-on-surface">{{ request()!.documents[0].name }}</h4>
+                        <span class="material-symbols-outlined text-secondary text-[18px]">verified</span>
+                      </div>
+                      <div class="flex items-center gap-3 font-code-tabular text-code-tabular text-on-surface-variant mt-1">
+                        <span>{{ (request()!.documents[0].size_bytes / 1024 / 1024).toFixed(1) }} MB</span>
+                        <span>•</span>
+                        <span>{{ request()!.documents[0].mime_type }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <button class="px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors font-label-md text-label-md flex items-center gap-2" type="button">
+                      <span class="material-symbols-outlined text-[18px]">visibility</span>
+                      <span>Previsualizar</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Panel: Formulario de Evaluación -->
+              <div class="lg:col-span-4 sticky top-24 flex flex-col gap-space-md">
+                <div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-md flex flex-col gap-5">
+                  <div>
+                    <h3 class="font-headline-md text-headline-md text-on-surface">Emitir decisión académica</h3>
+                    <p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">El dictamen es vinculante para el consejo de facultad.</p>
+                  </div>
+
+                  <fieldset class="flex flex-col gap-2.5" [disabled]="hasEvaluated()">
+                    <!-- Aprobar -->
+                    <label (click)="setDecision('aprobar')" class="relative flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all"
+                           [ngClass]="decision() === 'aprobar' ? 'bg-secondary-container/20 shadow-sm' : 'bg-surface-container-low hover:bg-surface-container'">
+                      <input type="radio" class="mt-1 text-secondary focus:ring-0" [checked]="decision() === 'aprobar'"/>
+                      <div class="flex flex-col">
+                        <div class="flex items-center gap-1.5">
+                          <span class="material-symbols-outlined text-secondary text-[20px]">task_alt</span>
+                          <span class="font-label-lg text-label-lg text-on-surface">Aprobar solicitud</span>
+                        </div>
+                        <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Cumple con el 80%+ de equivalencia.</p>
+                      </div>
+                    </label>
+
+                    <!-- Ajustes -->
+                    <label (click)="setDecision('ajustes')" class="relative flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all"
+                           [ngClass]="decision() === 'ajustes' ? 'bg-tertiary-fixed/30 shadow-sm' : 'bg-surface-container-low hover:bg-surface-container'">
+                      <input type="radio" class="mt-1 text-tertiary focus:ring-0" [checked]="decision() === 'ajustes'"/>
+                      <div class="flex flex-col">
+                        <div class="flex items-center gap-1.5">
+                          <span class="material-symbols-outlined text-[#B45309] text-[20px]">rule</span>
+                          <span class="font-label-lg text-label-lg text-on-surface">Solicitar ajustes</span>
+                        </div>
+                        <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Requiere documentación adicional.</p>
+                      </div>
+                    </label>
+
+                    <!-- Rechazar -->
+                    <label (click)="setDecision('rechazar')" class="relative flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all"
+                           [ngClass]="decision() === 'rechazar' ? 'bg-error-container/30 shadow-sm' : 'bg-surface-container-low hover:bg-surface-container'">
+                      <input type="radio" class="mt-1 text-error focus:ring-0" [checked]="decision() === 'rechazar'"/>
+                      <div class="flex flex-col">
+                        <div class="flex items-center gap-1.5">
+                          <span class="material-symbols-outlined text-error text-[20px]">cancel</span>
+                          <span class="font-label-lg text-label-lg text-on-surface">Rechazar homologación</span>
+                        </div>
+                        <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Contenidos sustancialmente divergentes.</p>
+                      </div>
+                    </label>
+                  </fieldset>
+
+                  <div class="flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between">
+                      <label class="font-label-md text-label-md text-on-surface flex items-center gap-1">Observación académica <span class="text-error">*</span></label>
+                      <span class="font-code-tabular text-code-tabular text-outline">{{ charsCount() }} / 500</span>
+                    </div>
+                    <textarea [(ngModel)]="observation" [disabled]="hasEvaluated()" maxlength="500" rows="4"
+                              class="w-full p-3 rounded-lg text-on-surface font-body-md text-body-md focus:outline-none transition-colors resize-none disabled:opacity-75"
+                              [ngClass]="hasEvaluated() ? 'bg-surface-container' : 'bg-surface-container-low focus:bg-surface-container-lowest'"></textarea>
+                  </div>
+
+                  <div class="flex flex-col gap-2 pt-1">
+                    <button (click)="openModal()" [disabled]="hasEvaluated() || isSubmitting() || charsCount() === 0"
+                      class="w-full py-2.5 px-4 rounded-lg font-label-lg text-label-lg transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      [ngClass]="decision() === 'aprobar' ? 'bg-secondary hover:bg-secondary/90 text-on-secondary' : decision() === 'ajustes' ? 'bg-tertiary hover:bg-tertiary/90 text-on-tertiary' : 'bg-error hover:bg-error/90 text-on-error'">
+                      @if(isSubmitting()) {
+                        <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span> Procesando...
+                      } @else {
+                        <span class="material-symbols-outlined text-[18px]">verified</span> 
+                        {{ decision() === 'aprobar' ? 'Aprobar solicitud' : decision() === 'ajustes' ? 'Requerir ajustes' : 'Rechazar solicitud' }}
+                      }
+                    </button>
+                  </div>
+
+                  @if(hasEvaluated()) {
+                    <div class="p-3 rounded-lg bg-surface-container text-on-surface-variant font-body-sm text-body-sm flex items-start gap-2">
+                      <span class="material-symbols-outlined text-[18px] text-tertiary shrink-0">lock</span>
+                      <span>Esta solicitud no admite nuevas evaluaciones en su estado actual (<strong>{{ request()!.status }}</strong>).</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    <!-- Confirmation Modal -->
+  @if(showConfirmModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-tertiary/45 backdrop-blur-[2px]">
+      <div class="rounded-xl bg-surface-container-lowest max-w-lg w-full p-space-lg shadow-xl flex flex-col gap-5 transform transition-all">
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center"
+                 [ngClass]="decision() === 'aprobar' ? 'bg-secondary-container text-secondary' : decision() === 'ajustes' ? 'bg-surface-container-high text-tertiary' : 'bg-error-container text-error'">
+              <span class="material-symbols-outlined text-[24px]">{{ decision() === 'aprobar' ? 'verified' : decision() === 'ajustes' ? 'edit_note' : 'block' }}</span>
+            </div>
+            <div>
+              <h3 class="font-headline-sm text-headline-sm text-on-surface">Confirmar decisión colegiada</h3>
+              <p class="font-code-tabular text-code-tabular text-on-surface-variant">Trámite SOL · {{ request()!.request_id }}</p>
+            </div>
+          </div>
+          <button (click)="closeModal()" class="text-on-surface-variant hover:text-on-surface p-1 rounded-md">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+        
+        <div class="p-4 rounded-xl bg-surface-container-low flex flex-col gap-3 font-body-md text-body-md">
+          <div class="flex items-center justify-between font-label-md text-label-md">
+            <span class="text-on-surface-variant">Transición de estado:</span>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-surface-container text-primary text-[12px]">En revisión</span>
+              <span class="material-symbols-outlined text-[14px] text-outline">arrow_forward</span>
+              <span class="px-2 py-0.5 rounded text-[12px] font-bold"
+                    [ngClass]="decision() === 'aprobar' ? 'bg-secondary-container text-secondary' : decision() === 'ajustes' ? 'bg-surface-container-high text-tertiary' : 'bg-error-container text-error'">
+                {{ targetStatus() }}
+              </span>
+            </div>
+          </div>
+          <div class="flex flex-col gap-1 text-on-surface">
+            <span class="font-label-sm text-label-sm text-outline">Observación registrada:</span>
+            <blockquote class="p-2.5 rounded bg-surface-container-lowest italic text-on-surface text-body-sm">
+              "{{ observation() }}"
+            </blockquote>
+          </div>
+          <div class="flex items-start gap-2 text-outline text-body-sm pt-1">
+            <span class="material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5">info</span>
+            <span>Al confirmar, el expediente pasará irreversiblemente a <strong>Versión {{ request()!.version + 1 }}</strong> y se notificará.</span>
+          </div>
+        </div>
+        
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button (click)="closeModal()" [disabled]="isSubmitting()" class="px-4 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors disabled:opacity-50">
+            Revisar nuevamente
+          </button>
+          <button (click)="submitDecision()" [disabled]="isSubmitting()" class="px-4 py-2 rounded-lg font-label-md text-label-md transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
+                  [ngClass]="decision() === 'aprobar' ? 'bg-secondary hover:bg-secondary/90 text-on-secondary' : decision() === 'ajustes' ? 'bg-tertiary hover:bg-tertiary/90 text-on-tertiary' : 'bg-error hover:bg-error/90 text-on-error'">
+            @if(isSubmitting()) {
+              <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span> Procesando...
+            } @else {
+              <span class="material-symbols-outlined text-[18px]">check</span> Registrar y Notificar
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-tint":"#0053db","on-background":"#121b2e","inverse-on-surface":"#edf0ff","on-primary":"#ffffff","surface":"#f9f9ff","on-tertiary":"#ffffff","on-tertiary-fixed-variant":"#264774","surface-variant":"#d9e2fc","on-tertiary-container":"#eaf0ff","surface-container-highest":"#d9e2fc","tertiary":"#355683","inverse-surface":"#273044","tertiary-fixed-dim":"#a8c8fc","outline":"#737686","outline-variant":"#c3c6d7","surface-bright":"#f9f9ff","on-surface-variant":"#434655","on-primary-container":"#eeefff","secondary-fixed-dim":"#80d5cb","inverse-primary":"#b4c5ff","surface-container-high":"#e1e8ff","background":"#f9f9ff","primary":"#004ac6","primary-container":"#2563eb","primary-fixed":"#dbe1ff","secondary-container":"#99efe5","on-tertiary-fixed":"#001c3b","on-error-container":"#93000a","surface-dim":"#d1daf4","secondary":"#006a63","error-container":"#ffdad6","on-secondary-container":"#006f67","tertiary-fixed":"#d5e3ff","primary-fixed-dim":"#b4c5ff","on-error":"#ffffff","surface-container":"#e9edff","surface-container-low":"#f1f3ff","secondary-fixed":"#9cf2e8","error":"#ba1a1a","surface-container-lowest":"#ffffff","on-primary-fixed-variant":"#003ea8","on-surface":"#121b2e","on-secondary-fixed-variant":"#00504a","on-primary-fixed":"#00174b","on-secondary-fixed":"#00201d","on-secondary":"#ffffff","tertiary-container":"#4e6e9d"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"gutter":"1.5rem","space-sm":"0.5rem","space-lg":"1.5rem","margin":"2rem","space-xs":"0.25rem","space-md":"1rem","space-xl":"2rem"},fontFamily:{"headline-lg":["Inter"],"headline-xl-mobile":["Inter"],"label-sm":["Inter"],"code-tabular":["Inter"],"display-lg-mobile":["Inter"],"display-lg":["Inter"],"body-lg":["Inter"],"body-md":["Inter"],"headline-md":["Inter"],"headline-xl":["Inter"],"label-lg":["Inter"],"label-md":["Inter"],"headline-sm":["Inter"],"body-sm":["Inter"]},fontSize:{"headline-lg":["22px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-xl-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.03em","fontWeight":"500"}],"code-tabular":["13px",{"lineHeight":"18px","letterSpacing":"0.02em","fontWeight":"500"}],"display-lg-mobile":["28px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"700"}],"display-lg":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"headline-md":["18px",{"lineHeight":"24px","letterSpacing":"-0.005em","fontWeight":"600"}],"headline-xl":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"700"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"0.01em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"headline-sm":["16px",{"lineHeight":"22px","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}]}}}};</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[260px] bg-tertiary-container text-on-tertiary z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.08)]"><div class="flex flex-col"><div class="flex items-center gap-3 px-6 py-5 bg-tertiary"><img alt="Logo Portal de Solicitudes Académicas" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UQjp7PW3TYIJtAOGoLV1rOLYJhq8nG9vWxulSc__5aVG607PvT7yD5j88X6GlbmOYaI9IBeB6KrDyv2vz3r9F1G8D2QOmIdmN9ITZZTfm516A0U-0zKWmq-IW-FIK8Wf5XgRRMC40rHksGmZwzY0brvrxBRMmfTYywU497wq-YZLgZjmi4586DuVkTwsZLm1Xeikk1UsV9zlTCSt9UyiabHGmqalKWaTzJC5OGjJ1NUR4dmE9K69C-mw"/><div class="flex flex-col overflow-hidden"><span class="font-headline-sm text-headline-sm text-on-tertiary tracking-tight leading-snug truncate">Solicitudes Académicas</span><span class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase tracking-wider">Portal Universitario</span></div></div><div class="px-4 py-3"><span class="font-label-sm text-label-sm uppercase tracking-wider text-tertiary-fixed-dim px-3">Navegación</span></div><nav class="flex flex-col gap-1 px-3" data-active-classes="bg-primary-container text-on-primary font-label-md rounded-lg shadow-sm border-l-4 border-surface-container-lowest"><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="mis-solicitudes" href="#"><span class="material-symbols-outlined text-[20px]">folder_open</span><span>Mis solicitudes</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="nueva-solicitud" href="#"><span class="material-symbols-outlined text-[20px]">post_add</span><span>Nueva solicitud</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="revision-solicitudes" href="#"><span class="material-symbols-outlined text-[20px]">fact_check</span><span>Revisión de solicitudes</span></a><a aria-current="page" class="flex items-center gap-3 px-3 py-2.5 transition-colors bg-primary-container text-on-primary font-label-md rounded-lg shadow-sm border-l-4 border-surface-container-lowest" data-path="previsualizaciones" href="#"><span class="material-symbols-outlined text-[20px]">visibility</span><span>Previsualizaciones</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="reportes" href="#"><span class="material-symbols-outlined text-[20px]">query_stats</span><span>Reportes</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md" data-path="administracion" href="#"><span class="material-symbols-outlined text-[20px]">admin_panel_settings</span><span>Administración</span></a></nav></div><div class="p-4 bg-tertiary/60 flex flex-col gap-3"><div class="flex items-center justify-between px-2 py-1.5 rounded bg-tertiary text-on-tertiary text-code-tabular font-code-tabular"><div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-secondary-fixed"></span><span class="font-label-sm text-label-sm text-on-tertiary">API OK</span></div><span class="font-label-sm text-label-sm text-tertiary-fixed-dim">v1.0-demo</span></div><a class="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg bg-tertiary hover:bg-primary-container text-on-tertiary transition-colors font-label-md text-label-md" data-path="centro-ayuda" href="#"><span class="material-symbols-outlined text-[18px]">help_outline</span><span>Centro de Ayuda</span></a></div></aside><div class="pl-[260px]"><header class="fixed top-0 left-[260px] right-0 z-40 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="bg-surface-container text-primary font-body-sm text-body-sm px-6 py-1.5 flex items-center justify-between"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-primary">info</span><span>Modo demostración: los datos se conservan únicamente durante esta sesión y no se almacenan de forma permanente.</span></div><button class="font-label-sm text-label-sm text-primary hover:underline" type="button">Restablecer datos</button></div><div class="h-16 px-6 flex items-center justify-between"><div class="flex items-center gap-4"><img alt="Logo Portal de Solicitudes Académicas" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UQjp7PW3TYIJtAOGoLV1rOLYJhq8nG9vWxulSc__5aVG607PvT7yD5j88X6GlbmOYaI9IBeB6KrDyv2vz3r9F1G8D2QOmIdmN9ITZZTfm516A0U-0zKWmq-IW-FIK8Wf5XgRRMC40rHksGmZwzY0brvrxBRMmfTYywU497wq-YZLgZjmi4586DuVkTwsZLm1Xeikk1UsV9zlTCSt9UyiabHGmqalKWaTzJC5OGjJ1NUR4dmE9K69C-mw"/><nav class="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant"><span class="hover:text-on-surface cursor-pointer">Portal</span><span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span><span class="text-on-surface font-headline-sm">Expedientes y Trámites</span></nav></div><div class="flex items-center gap-4"><div class="flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-lg"><span class="font-label-sm text-label-sm text-on-surface-variant">Rol demo:</span><select class="bg-transparent font-label-md text-label-md text-on-surface focus:outline-none cursor-pointer"><option value="student">Estudiante (Laura Martínez)</option><option value="reviewer">Revisor (Andrés Ramírez)</option><option value="analyst">Analista Curricular</option><option value="admin">Administrador</option></select></div><button class="relative p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-error"></span></button><div class="flex items-center gap-3 pl-3"><div class="flex flex-col text-right hidden sm:flex"><span class="font-label-md text-label-md text-on-surface">Laura Martínez</span><span class="font-label-sm text-label-sm text-on-surface-variant">l.martinez@universidad.edu</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-24 bg-surface min-h-screen"><div class="max-w-[1440px] mx-auto p-space-lg"><div class="flex flex-col w-full gap-space-lg">
+<!-- Header Section with Distinct Academic Institutional Accent -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm relative overflow-hidden">
+<div class="absolute -right-16 -top-16 w-56 h-56 bg-gradient-to-br from-primary/10 via-surface-variant/30 to-transparent rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex flex-col gap-1 z-10">
+<div class="flex items-center gap-3">
+<span class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Previsualizaciones de notificaciones</span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#FEF3C7] text-[#B45309] font-label-md text-label-md font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-[#B45309] animate-pulse"></span>
+          Solo previsualización
+        </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+        Revisa el mensaje generado por la evaluación. El sistema no enviará correos en esta etapa. Este módulo permite a revisores y administradores certificar la redacción antes de su emisión oficial.
+      </p>
+</div>
+<!-- Quick Role / Security Indicator -->
+<div class="flex items-center gap-3 self-start md:self-auto z-10">
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-2 rounded-lg text-tertiary">
+<span class="material-symbols-outlined text-[20px]">verified_user</span>
+<span class="font-label-md text-label-md text-on-surface">Vigencia: Periodo 2025-1</span>
+</div>
+</div>
+</div>
+<!-- Main 2-Column Responsive Bento Layout (35% / 65%) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- LEFT COLUMN: Audit Log / Session Events (lg:col-span-4 or 35%) -->
+<div class="lg:col-span-4 flex flex-col gap-space-md">
+<!-- Search & Filters Module -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col gap-space-sm">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[20px]">search</span>
+<input class="w-full h-10 pl-10 pr-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest transition-all" id="event-search" placeholder="Buscar por radicado o email..." type="text"/>
+</div>
+<div class="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5">
+<button class="filter-chip active px-3 py-1 rounded-full font-label-sm text-label-sm bg-primary text-on-primary whitespace-nowrap transition-colors" type="button">
+            Todos (3)
+          </button>
+<button class="filter-chip px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant hover:bg-surface-container whitespace-nowrap transition-colors" type="button">
+            Aprobada
+          </button>
+<button class="filter-chip px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant hover:bg-surface-container whitespace-nowrap transition-colors" type="button">
+            Requiere ajustes
+          </button>
+<button class="filter-chip px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant hover:bg-surface-container whitespace-nowrap transition-colors" type="button">
+            Rechazada
+          </button>
+</div>
+</div>
+<!-- Events List Header with Meta Counters -->
+<div class="flex items-center justify-between px-2 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<span>Sesión actual (3 notificaciones)</span>
+<span class="font-code-tabular text-code-tabular">SYNC LIVE</span>
+</div>
+<!-- Event Items Container -->
+<div class="flex flex-col gap-2.5" id="events-list">
+<!-- Event 1 (Selected State) -->
+<div class="event-card cursor-pointer p-space-md rounded-xl bg-surface-container-lowest shadow-sm transition-all relative overflow-hidden bg-primary/[0.03]" id="item-approved" onclick="selectNotification('approved')">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary"></div>
+<div class="flex items-start justify-between gap-2 pl-1 mb-1.5">
+<div class="flex items-center gap-2">
+<span class="font-code-tabular text-code-tabular font-bold text-on-surface">SOL · 8A41F2C9</span>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-sm text-label-sm font-semibold bg-[#DCFCE7] text-[#15803D]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#15803D]"></span>
+              Aprobada
+            </span>
+</div>
+<div class="pl-1 flex flex-col gap-1">
+<span class="font-body-md text-body-md text-on-surface font-medium truncate">laura.martinez@universidad.edu.co</span>
+<div class="flex items-center justify-between mt-1 text-on-surface-variant font-body-sm text-body-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+<span>Hace 10 min</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+                Previsualización
+              </span>
+</div>
+</div>
+</div>
+<!-- Event 2 (Requiere ajustes) -->
+<div class="event-card cursor-pointer p-space-md rounded-xl bg-surface-container-lowest shadow-sm transition-all hover:bg-surface-container-low relative" id="item-adjustments" onclick="selectNotification('adjustments')">
+<div class="flex items-start justify-between gap-2 mb-1.5">
+<div class="flex items-center gap-2">
+<span class="font-code-tabular text-code-tabular font-bold text-on-surface">SOL · 1D88E3A2</span>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-sm text-label-sm font-semibold bg-[#FFFBEB] text-[#B45309]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#B45309]"></span>
+              Requiere ajustes
+            </span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-body-md text-body-md text-on-surface font-medium truncate">carlos.gomez@universidad.edu.co</span>
+<div class="flex items-center justify-between mt-1 text-on-surface-variant font-body-sm text-body-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+<span>Hace 35 min</span>
+</div>
+<span class="font-code-tabular text-code-tabular text-[11px] text-outline">Syllabus incompleto</span>
+</div>
+</div>
+</div>
+<!-- Event 3 (Rechazada) -->
+<div class="event-card cursor-pointer p-space-md rounded-xl bg-surface-container-lowest shadow-sm transition-all hover:bg-surface-container-low relative" id="item-rejected" onclick="selectNotification('rejected')">
+<div class="flex items-start justify-between gap-2 mb-1.5">
+<div class="flex items-center gap-2">
+<span class="font-code-tabular text-code-tabular font-bold text-on-surface">SOL · 9E33B712</span>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-sm text-label-sm font-semibold bg-[#FEE2E2] text-[#B91C1C]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#B91C1C]"></span>
+              Rechazada
+            </span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-body-md text-body-md text-on-surface font-medium truncate">maria.torres@universidad.edu.co</span>
+<div class="flex items-center justify-between mt-1 text-on-surface-variant font-body-sm text-body-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+<span>Ayer</span>
+</div>
+<span class="font-code-tabular text-code-tabular text-[11px] text-outline">Contenido diferido</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Session Stats Panel -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex items-center justify-between mt-2">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">mark_email_read</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Disparador de notificaciones</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Modo simulado activo</span>
+</div>
+</div>
+<span class="font-code-tabular text-code-tabular text-secondary font-semibold">ESTABLE</span>
+</div>
+</div>
+<!-- RIGHT COLUMN: High-Fidelity Email Client & Technical Inspector (65% / lg:col-span-8) -->
+<div class="lg:col-span-8 flex flex-col gap-space-md">
+<!-- Action Toolbar (Strictly NO send button as required) -->
+<div class="flex items-center justify-between bg-surface-container-lowest px-space-lg py-3 rounded-xl shadow-sm flex-wrap gap-space-sm">
+<div class="flex items-center gap-2">
+<span class="flex h-2.5 w-2.5 rounded-full bg-secondary"></span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Renderizador HTML v2.4</span>
+<span class="text-outline font-body-sm text-body-sm">•</span>
+<span class="font-code-tabular text-code-tabular text-on-surface-variant">RFC-5322 Compliant</span>
+</div>
+<div class="flex items-center gap-2">
+<!-- Copy HTML Button -->
+<button class="relative inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-all active:scale-[0.98]" id="copy-html-btn" onclick="copyHTMLPreview()" title="Copiar código HTML de la plantilla" type="button">
+<span class="material-symbols-outlined text-[18px]">code</span>
+<span>Copiar contenido HTML</span>
+<!-- Ephemeral Tooltip Indicator -->
+<span class="hidden absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-inverse-surface text-inverse-on-surface font-label-sm text-label-sm rounded shadow-md whitespace-nowrap" id="copy-tooltip">
+              ¡Copiado al portapapeles!
+            </span>
+</button>
+<!-- Export Plain Text Button -->
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-all active:scale-[0.98]" onclick="exportPlainText()" title="Descargar versión en texto plano (.txt)" type="button">
+<span class="material-symbols-outlined text-[18px]">description</span>
+<span>Exportar texto plano</span>
+</button>
+</div>
+</div>
+<!-- Simulated Email Client Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col">
+<!-- Email Metadata Header (Simulated Mail Reader Chrome) -->
+<div class="bg-surface-container-low p-space-lg flex flex-col gap-3">
+<div class="flex flex-col gap-2">
+<!-- Subject Line -->
+<div class="flex items-start justify-between gap-4">
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold" id="email-subject">
+                [Aprobada] Solicitud de homologación de asignatura - SOL · 8A41F2C9
+              </h1>
+<div class="flex items-center gap-1 text-on-surface-variant flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">attachment</span>
+<span class="font-code-tabular text-code-tabular">1 pdf</span>
+</div>
+</div>
+<!-- Envelope Addressing Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-y-1 gap-x-4 pt-1 text-body-sm font-body-sm text-on-surface-variant">
+<div class="flex items-center gap-2 truncate">
+<span class="font-label-md text-label-md text-outline min-w-[48px]">De:</span>
+<span class="text-on-surface font-medium truncate" id="email-sender">Sistema de Solicitudes Académicas <notificaciones@universidad.edu.co></span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md text-outline min-w-[48px]">Fecha:</span>
+<span class="text-on-surface" id="email-date">12 de marzo de 2025, 10:45 AM</span>
+</div>
+<div class="flex items-center gap-2 truncate">
+<span class="font-label-md text-label-md text-outline min-w-[48px]">Para:</span>
+<span class="text-on-surface font-medium truncate" id="email-recipient">Laura Martínez <laura.martinez@universidad.edu.co></span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md text-outline min-w-[48px]">Prioridad:</span>
+<span class="text-primary font-medium">Normal / Institucional</span>
+</div>
+</div>
+</div>
+<!-- Superior Warning Banner required in design -->
+<div class="mt-1 flex items-center gap-3 px-4 py-2.5 rounded-lg bg-[#FEF3C7] text-[#92400E]">
+<span class="material-symbols-outlined text-[20px] text-[#B45309] flex-shrink-0">info</span>
+<span class="font-body-sm text-body-sm leading-snug">
+<strong>Aviso:</strong> Este mensaje es una vista previa de la plantilla institucional. No se enviará ningún correo real al estudiante durante el modo demostración.
+            </span>
+</div>
+</div>
+<!-- Rendered Email Body Canvas (Pure White Sheet with Institutional Frame) -->
+<div class="p- space-lg sm:p-8 md:p-12 bg-surface-container/30 flex justify-center">
+<div class="w-full max-w-2xl bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col" id="email-canvas">
+<!-- Email Header with University Branding & Deep Blue Welcome Bar -->
+<div class="bg-tertiary px-8 py-6 text-on-tertiary flex items-center justify-between relative overflow-hidden">
+<div class="flex items-center gap-3 z-10">
+<div class="w-10 h-10 rounded bg-surface-container-lowest/15 flex items-center justify-center p-1.5">
+<span class="material-symbols-outlined text-surface-container-lowest text-[26px]">account_balance</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm tracking-tight text-surface-container-lowest">Universidad Nacional</span>
+<span class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase tracking-wider">Vicerrectoría Académica • Registro</span>
+</div>
+</div>
+<div class="hidden sm:block text-right z-10">
+<span class="font-code-tabular text-code-tabular text-tertiary-fixed-dim">NOTIF-2025-09</span>
+</div>
+<!-- Decorative graphic accent -->
+<div class="absolute right-0 top-0 bottom-0 w-32 bg-primary/20 -skew-x-12 pointer-events-none"></div>
+</div>
+<!-- Welcome Ribbon -->
+<div class="bg-primary px-8 py-2.5 flex items-center justify-between text-on-primary">
+<span class="font-label-md text-label-md font-medium">Resolución Oficial de Solicitud Curricular</span>
+<span class="font-code-tabular text-code-tabular text-primary-fixed">Dictamen Académico</span>
+</div>
+<!-- Email Text & Main Body Flow -->
+<div class="p-8 flex flex-col gap-6">
+<!-- Salutation -->
+<div class="flex flex-col gap-2">
+<p class="font-headline-md text-headline-md text-on-surface font-semibold" id="email-greeting">
+                  Estimada Laura Martínez,
+                </p>
+<p class="font-body-lg text-body-lg text-on-surface leading-relaxed" id="email-lead">
+                  Te informamos que tu solicitud de homologación para la asignatura <strong class="text-primary font-semibold">Cálculo diferencial</strong> ha sido <strong class="text-[#15803D] font-bold uppercase">APROBADA</strong> por el Comité Académico de Ciencias Básicas.
+                </p>
+</div>
+<!-- Homologation Summary Card -->
+<div class="bg-surface-container-low rounded-xl p-space-lg flex flex-col gap-space-md" id="email-summary-card">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md uppercase tracking-wider text-outline font-semibold">Resumen de Homologación</span>
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">
+                    100% Compatibilidad
+                  </span>
+</div>
+<!-- Subjects Matching Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-surface-container-lowest p-3.5 rounded-lg flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-outline">Asignatura de origen</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold" id="subject-origin">Cálculo I</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">3 Créditos académicos cursados</span>
+</div>
+<div class="bg-surface-container-lowest p-3.5 rounded-lg flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-outline">Asignatura homologada</span>
+<span class="font-headline-sm text-headline-sm text-primary font-semibold" id="subject-target">Cálculo diferencial</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">3 Créditos computados</span>
+</div>
+</div>
+<!-- Evaluator Observation -->
+<div class="bg-surface-container-lowest p-4 rounded-lg flex flex-col gap-1.5">
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-tertiary">notes</span>
+                    Observación del evaluador
+                  </span>
+<p class="font-body-md text-body-md text-on-surface italic leading-relaxed" id="evaluator-obs">
+                    "Se verificaron los temas de límites, derivadas y optimización. Cumple cabalmente con los requisitos curriculares."
+                  </p>
+<div class="flex items-center justify-between pt-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="font-medium text-on-surface">Dr. Andrés Ramírez (Comité Revisor)</span>
+<span class="font-code-tabular text-code-tabular text-primary" id="evaluator-resolution">Resolución: Versión 2 - Dictamen favorable</span>
+</div>
+</div>
+</div>
+<!-- Call to Action simulated in email -->
+<div class="flex flex-col items-center justify-center py-2 gap-2">
+<a class="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg shadow-sm transition-colors text-center w-full sm:w-auto" href="#" onclick="return false;">
+<span class="material-symbols-outlined text-[20px]">open_in_new</span>
+<span>Ver detalle en el portal</span>
+</a>
+<span class="font-body-sm text-body-sm text-outline">El enlace requiere autenticación institucional previa.</span>
+</div>
+<!-- Institutional Footer / Signatures & Confidentiality -->
+<div class="pt-6 flex flex-col gap-4 text-on-surface-variant font-body-sm text-body-sm">
+<div class="flex flex-col gap-0.5">
+<span class="font-label-md text-label-md text-on-surface">Dirección de Admisiones y Registro Académico</span>
+<span>Comité de Homologaciones y Transferencias de Créditos</span>
+<span>Campus Universitario Central • Sede Administrativa</span>
+</div>
+<div class="p-3 rounded bg-surface-container-low text-[11px] leading-relaxed text-outline">
+<strong>Aviso de Confidencialidad:</strong> La información contenida en este correo y sus archivos adjuntos es de carácter confidencial y para uso exclusivo del destinatario registrado en la base de datos de la Universidad. Si por error ha recibido esta comunicación, por favor notifíquelo a <span class="underline">seguridad@universidad.edu.co</span> y proceda a su eliminación inmediata.
+                </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Technical Integration Metadata Block (Collapsible) -->
+<div class="bg-surface-container-lowest p-space-lg flex flex-col gap-space-sm">
+<button class="flex items-center justify-between w-full text-left py-1 group" onclick="toggleTechSpecs()" type="button">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">
+                  Metadatos de integración (POST /v1/notifications/preview)
+                </span>
+<span class="font-body-sm text-body-sm text-outline">Telemetría de evento y payload simulado</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-surface-container font-code-tabular text-[11px] text-primary">JSON SCHEMA 1.2</span>
+<span class="material-symbols-outlined text-outline transition-transform duration-200" id="tech-chevron">expand_more</span>
+</div>
+</button>
+<!-- Collapsible Content -->
+<div class="flex flex-col gap-3 pt-2" id="tech-details">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+<div class="bg-surface-container-low p-2.5 rounded-lg flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase">Canal</span>
+<span class="font-code-tabular text-code-tabular text-on-surface font-semibold" id="meta-channel">EMAIL</span>
+</div>
+<div class="bg-surface-container-low p-2.5 rounded-lg flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase">Tipo de evento</span>
+<span class="font-code-tabular text-code-tabular text-primary font-semibold" id="meta-event-type">request.status_changed.v1</span>
+</div>
+<div class="bg-surface-container-low p-2.5 rounded-lg flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase">ID del evento</span>
+<span class="font-code-tabular text-code-tabular text-on-surface font-semibold" id="meta-event-id">evt_9941a82f3c01</span>
+</div>
+</div>
+<!-- JSON Preview -->
+<div class="relative rounded-lg bg-inverse-surface p-4 overflow-x-auto text-inverse-on-surface font-code-tabular text-code-tabular">
+<div class="absolute right-3 top-3 text-surface-variant font-label-sm text-label-sm opacity-60">
+                application/json
+              </div>
+<pre class="leading-5" id="json-payload"><code>{
+  "event_id": "evt_9941a82f3c01",
+  "event_type": "request.status_changed.v1",
+  "timestamp": "2025-03-12T15:45:00Z",
+  "environment": "demo_sandbox",
+  "payload": {
+    "request_id": "SOL-8A41F2C9",
+    "previous_status": "in_review",
+    "new_status": "approved",
+    "student": {
+      "name": "Laura Martínez",
+      "email": "laura.martinez@universidad.edu.co",
+      "program": "Ingeniería de Sistemas"
+    },
+    "course_origin": "Cálculo I",
+    "course_target": "Cálculo diferencial",
+    "credits": 3,
+    "evaluator_verdict": "favorable",
+    "evaluator_note": "Se verificaron los temas de límites, derivadas y optimización."
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Client-side Interactive Logic -->
+<script>
+  const notificationsData = {
+    approved: {
+      id: "SOL · 8A41F2C9",
+      badgeText: "Aprobada",
+      badgeColorBg: "#DCFCE7",
+      badgeColorText: "#15803D",
+      recipientName: "Laura Martínez",
+      recipientEmail: "laura.martinez@universidad.edu.co",
+      date: "12 de marzo de 2025, 10:45 AM",
+      subject: "[Aprobada] Solicitud de homologación de asignatura - SOL · 8A41F2C9",
+      leadHtml: 'Te informamos que tu solicitud de homologación para la asignatura <strong class="text-primary font-semibold">Cálculo diferencial</strong> ha sido <strong class="text-[#15803D] font-bold uppercase">APROBADA</strong> por el Comité Académico de Ciencias Básicas.',
+      subjectOrigin: "Cálculo I",
+      subjectOriginCredits: "3 Créditos académicos cursados",
+      subjectTarget: "Cálculo diferencial",
+      subjectTargetCredits: "3 Créditos computados",
+      observation: '"Se verificaron los temas de límites, derivadas y optimización. Cumple cabalmente con los requisitos curriculares."',
+      resolution: "Resolución: Versión 2 - Dictamen favorable",
+      eventId: "evt_9941a82f3c01",
+      json: {
+        event_id: "evt_9941a82f3c01",
+        event_type: "request.status_changed.v1",
+        timestamp: "2025-03-12T15:45:00Z",
+        environment: "demo_sandbox",
+        payload: {
+          request_id: "SOL-8A41F2C9",
+          previous_status: "in_review",
+          new_status: "approved",
+          student: {
+            name: "Laura Martínez",
+            email: "laura.martinez@universidad.edu.co",
+            program: "Ingeniería de Sistemas"
+          },
+          course_origin: "Cálculo I",
+          course_target: "Cálculo diferencial",
+          credits: 3,
+          evaluator_verdict: "favorable",
+          evaluator_note: "Se verificaron los temas de límites, derivadas y optimización."
+        }
+      }
+    },
+    adjustments: {
+      id: "SOL · 1D88E3A2",
+      badgeText: "Requiere ajustes",
+      badgeColorBg: "#FFFBEB",
+      badgeColorText: "#B45309",
+      recipientName: "Carlos Gómez",
+      recipientEmail: "carlos.gomez@universidad.edu.co",
+      date: "12 de marzo de 2025, 10:18 AM",
+      subject: "[Requiere ajustes] Solicitud de homologación - SOL · 1D88E3A2",
+      leadHtml: 'Tu solicitud de homologación para la asignatura <strong class="text-primary font-semibold">Física Mecánica</strong> se encuentra en estado <strong class="text-[#B45309] font-bold uppercase">REQUIERE AJUSTES</strong>. Por favor anexa el syllabus oficial sellado.',
+      subjectOrigin: "Física General I",
+      subjectOriginCredits: "4 Créditos académicos",
+      subjectTarget: "Física Mecánica",
+      subjectTargetCredits: "Pendiente de verificación",
+      observation: '"El microcurrículo adjuntado carece del sello de decanatura y no desglosa las horas de laboratorio práctico."',
+      resolution: "Resolución: Versión 1 - Requerimiento de subsanación (Plazo: 5 días hábiles)",
+      eventId: "evt_3821a71c89fe",
+      json: {
+        event_id: "evt_3821a71c89fe",
+        event_type: "request.status_changed.v1",
+        timestamp: "2025-03-12T15:18:00Z",
+        environment: "demo_sandbox",
+        payload: {
+          request_id: "SOL-1D88E3A2",
+          previous_status: "in_review",
+          new_status: "requires_adjustments",
+          student: {
+            name: "Carlos Gómez",
+            email: "carlos.gomez@universidad.edu.co",
+            program: "Ingeniería Mecánica"
+          },
+          course_origin: "Física General I",
+          course_target: "Física Mecánica",
+          credits: 4,
+          evaluator_verdict: "adjustments_required",
+          evaluator_note: "El microcurrículo adjuntado carece del sello de decanatura."
+        }
+      }
+    },
+    rejected: {
+      id: "SOL · 9E33B712",
+      badgeText: "Rechazada",
+      badgeColorBg: "#FEE2E2",
+      badgeColorText: "#B91C1C",
+      recipientName: "María Torres",
+      recipientEmail: "maria.torres@universidad.edu.co",
+      date: "11 de marzo de 2025, 04:30 PM",
+      subject: "[Rechazada] Notificación sobre solicitud de homologación - SOL · 9E33B712",
+      leadHtml: 'Lamentamos informarte que tu solicitud de homologación para la asignatura <strong class="text-primary font-semibold">Estructuras de Datos</strong> ha sido <strong class="text-[#B91C1C] font-bold uppercase">RECHAZADA</strong>.',
+      subjectOrigin: "Programación Orientada a Objetos",
+      subjectOriginCredits: "3 Créditos cursados",
+      subjectTarget: "Estructuras de Datos",
+      subjectTargetCredits: "0 Créditos otorgados",
+      observation: '"La equivalencia temática es inferior al 70%. No se cubren grafos, árboles B, ni análisis de complejidad asintótica."',
+      resolution: "Resolución: Versión 1 - Dictamen denegatorio",
+      eventId: "evt_1180fd909a33",
+      json: {
+        event_id: "evt_1180fd909a33",
+        event_type: "request.status_changed.v1",
+        timestamp: "2025-03-11T21:30:00Z",
+        environment: "demo_sandbox",
+        payload: {
+          request_id: "SOL-9E33B712",
+          previous_status: "in_review",
+          new_status: "rejected",
+          student: {
+            name: "María Torres",
+            email: "maria.torres@universidad.edu.co",
+            program: "Ingeniería de Software"
+          },
+          course_origin: "Programación Orientada a Objetos",
+          course_target: "Estructuras de Datos",
+          credits: 3,
+          evaluator_verdict: "rejected",
+          evaluator_note: "La equivalencia temática es inferior al 70%."
+        }
+      }
+    }
+  };
+
+  function selectNotification(key) {
+    const data = notificationsData[key];
+    if (!data) return;
+
+    // Update Card Styles
+    ['approved', 'adjustments', 'rejected'].forEach(k => {
+      const el = document.getElementById('item-' + k);
+      if (!el) return;
+      if (k === key) {
+        el.classList.add('bg-primary/[0.03]');
+        // Add left primary bar if not present
+        if (!el.querySelector('.selection-bar')) {
+          const bar = document.createElement('div');
+          bar.className = 'selection-bar absolute left-0 top-0 bottom-0 w-1.5 bg-primary';
+          el.prepend(bar);
+        }
+      } else {
+        el.classList.remove('bg-primary/[0.03]');
+        const bar = el.querySelector('.selection-bar');
+        if (bar) bar.remove();
+      }
+    });
+
+    // Update Email Reader Metadata
+    document.getElementById('email-subject').textContent = data.subject;
+    document.getElementById('email-date').textContent = data.date;
+    document.getElementById('email-recipient').textContent = `${data.recipientName} <${data.recipientEmail}>`;
+
+    // Update Body Canvas
+    document.getElementById('email-greeting').textContent = `Estimado(a) ${data.recipientName},`;
+    document.getElementById('email-lead').innerHTML = data.leadHtml;
+    document.getElementById('subject-origin').textContent = data.subjectOrigin;
+    document.getElementById('subject-target').textContent = data.subjectTarget;
+    document.getElementById('evaluator-obs').textContent = data.observation;
+    document.getElementById('evaluator-resolution').textContent = data.resolution;
+
+    // Update Tech Specs
+    document.getElementById('meta-event-id').textContent = data.eventId;
+    document.getElementById('json-payload').querySelector('code').textContent = JSON.stringify(data.json, null, 2);
+  }
+
+  function toggleTechSpecs() {
+    const panel = document.getElementById('tech-details');
+    const chevron = document.getElementById('tech-chevron');
+    if (panel.classList.contains('hidden')) {
+      panel.classList.remove('hidden');
+      chevron.style.transform = 'rotate(0deg)';
+    } else {
+      panel.classList.add('hidden');
+      chevron.style.transform = 'rotate(-90deg)';
+    }
+  }
+
+  function copyHTMLPreview() {
+    const canvas = document.getElementById('email-canvas');
+    if (!canvas) return;
+    const htmlContent = canvas.outerHTML;
+
+    navigator.clipboard.writeText(htmlContent).then(() => {
+      const tooltip = document.getElementById('copy-tooltip');
+      if (tooltip) {
+        tooltip.classList.remove('hidden');
+        setTimeout(() => {
+          tooltip.classList.add('hidden');
+        }, 2200);
+      }
+    }).catch(err => {
+      console.warn('No se pudo copiar el texto: ', err);
+    });
+  }
+
+  function exportPlainText() {
+    const subject = document.getElementById('email-subject').innerText;
+    const sender = document.getElementById('email-sender').innerText;
+    const recipient = document.getElementById('email-recipient').innerText;
+    const date = document.getElementById('email-date').innerText;
+    const greeting = document.getElementById('email-greeting').innerText;
+    const lead = document.getElementById('email-lead').innerText;
+    const origin = document.getElementById('subject-origin').innerText;
+    const target = document.getElementById('subject-target').innerText;
+    const obs = document.getElementById('evaluator-obs').innerText;
+    const resolution = document.getElementById('evaluator-resolution').innerText;
+
+    const plainText = `UNIVERSIDAD NACIONAL - REGISTRO ACADÉMICO\n` +
+      `===================================================\n` +
+      `ASUNTO: ${subject}\n` +
+      `DE: ${sender}\n` +
+      `PARA: ${recipient}\n` +
+      `FECHA: ${date}\n` +
+      `===================================================\n\n` +
+      `${greeting}\n\n` +
+      `${lead}\n\n` +
+      `RESUMEN DE HOMOLOGACIÓN:\n` +
+      `- Asignatura de origen: ${origin}\n` +
+      `- Asignatura homologada: ${target}\n` +
+      `- Observaciones: ${obs}\n` +
+      `- Dictamen: ${resolution}\n\n` +
+      `Consulte el expediente completo en el portal web institucional.\n` +
+      `Mensaje generado automáticamente en entorno de previsualización.`;
+
+    const blob = new Blob([plainText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `notificacion-${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Real-time search filter for demo
+  document.getElementById('event-search')?.addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    const cards = document.querySelectorAll('#events-list .event-card');
+    cards.forEach(card => {
+      const text = card.innerText.toLowerCase();
+      card.style.display = text.includes(term) ? 'block' : 'none';
+    });
+  });
+</script></div></main></div></body></html>

@@ -1,1 +1,207 @@
-<p>login works!</p>
+<main class="w-full flex items-center justify-center p-space-lg min-h-screen bg-background font-body-md text-on-surface antialiased">
+  <div class="flex flex-col w-full">
+    <div class="w-full min-h-[calc(100vh-3rem)] flex flex-col lg:flex-row shadow-xl rounded-xl overflow-hidden bg-surface">
+      <!-- Columna Izquierda (55%) -->
+      <div class="w-full lg:w-[55%] bg-tertiary-container text-on-tertiary-container relative p-space-lg lg:p-space-xl flex flex-col justify-between overflow-hidden">
+        <!-- Fondo geométrico sutil SVG -->
+        <div class="absolute inset-0 opacity-10 pointer-events-none">
+          <svg class="w-full h-full" height="100%" width="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern height="48" id="academic-grid" patternunits="userSpaceOnUse" width="48">
+                <path d="M 48 0 L 0 0 0 48" fill="none" stroke="currentColor" stroke-width="1.2"></path>
+                <circle cx="24" cy="24" fill="currentColor" r="1.5"></circle>
+              </pattern>
+            </defs>
+            <rect fill="url(#academic-grid)" height="100%" width="100%"></rect>
+          </svg>
+        </div>
+        <!-- Resplandor sutil decorativo -->
+        <div class="absolute -top-32 -left-32 w-96 h-96 bg-primary rounded-full blur-3xl opacity-30 pointer-events-none"></div>
+        <div class="absolute -bottom-24 -right-24 w-80 h-80 bg-secondary rounded-full blur-3xl opacity-20 pointer-events-none"></div>
+        
+        <!-- Encabezado / Logo y Marca -->
+        <div class="relative z-10">
+          <div class="flex items-center gap-space-md mb-space-lg">
+            <!-- Using a standard logo icon fallback if needed, but keeping the mockup src -->
+            <img alt="Logo Portal de Solicitudes Académicas" class="w-12 h-12 object-contain rounded-lg shadow-sm bg-surface p-1.5" src="https://lh3.googleusercontent.com/aida/AEtjO1UQjp7PW3TYIJtAOGoLV1rOLYJhq8nG9vWxulSc__5aVG607PvT7yD5j88X6GlbmOYaI9IBeB6KrDyv2vz3r9F1G8D2QOmIdmN9ITZZTfm516A0U-0zKWmq-IW-FIK8Wf5XgRRMC40rHksGmZwzY0brvrxBRMmfTYywU497wq-YZLgZjmi4586DuVkTwsZLm1Xeikk1UsV9zlTCSt9UyiabHGmqalKWaTzJC5OGjJ1NUR4dmE9K69C-mw"/>
+            <div>
+              <span class="font-label-sm text-label-sm uppercase tracking-wider text-surface-variant font-semibold">Sistema Universitario Central</span>
+              <p class="font-headline-sm text-headline-sm text-on-primary tracking-tight">Portal de Convalidaciones & Homologación</p>
+            </div>
+          </div>
+          <div class="max-w-xl">
+            <h1 class="font-display-lg text-display-lg font-bold text-on-primary leading-tight tracking-tight mb-space-sm">
+              Gestiona tus solicitudes académicas en un solo lugar.
+            </h1>
+            <p class="font-body-lg text-body-lg text-surface-variant leading-relaxed">
+              Presenta, revisa y consulta solicitudes de homologación de manera clara, rigurosa y completamente organizada.
+            </p>
+          </div>
+        </div>
+
+        <!-- Ilustración Central SVG: Documento Académico y Flujo de Pasos -->
+        <div class="relative z-10 my-space-lg max-w-xl bg-inverse-surface/30 backdrop-blur-md rounded-xl p-space-md shadow-inner">
+          <div class="flex items-center justify-between gap-space-md mb-space-sm pb-space-sm border-b border-surface-variant/20">
+            <div class="flex items-center gap-space-xs">
+              <span class="material-symbols-outlined text-secondary-fixed-dim text-[20px]">verified_user</span>
+              <span class="font-label-md text-label-md text-secondary-fixed-dim font-medium">Expediente Oficial Homologado</span>
+            </div>
+            <span class="font-code-tabular text-code-tabular text-surface-variant/80">Ref: EXP-2025-0841</span>
+          </div>
+          <div class="grid grid-cols-3 gap-space-sm text-center">
+            <div class="bg-inverse-surface/40 p-space-sm rounded-lg flex flex-col items-center">
+              <div class="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-on-primary mb-1">
+                <span class="material-symbols-outlined text-[16px]">edit_note</span>
+              </div>
+              <span class="font-label-sm text-label-sm text-on-primary font-medium">1. Carga Guía</span>
+              <span class="font-body-sm text-body-sm text-surface-variant text-[10px]">Validado</span>
+            </div>
+            <div class="bg-inverse-surface/40 p-space-sm rounded-lg flex flex-col items-center">
+              <div class="w-7 h-7 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed mb-1">
+                <span class="material-symbols-outlined text-[16px]">rule</span>
+              </div>
+              <span class="font-label-sm text-label-sm text-on-primary font-medium">2. Comité Par</span>
+              <span class="font-body-sm text-body-sm text-secondary-fixed-dim text-[10px]">En sesión</span>
+            </div>
+            <div class="bg-inverse-surface/20 p-space-sm rounded-lg flex flex-col items-center opacity-75">
+              <div class="w-7 h-7 rounded-full bg-surface-variant/30 flex items-center justify-center text-surface-variant mb-1">
+                <span class="material-symbols-outlined text-[16px]">task_alt</span>
+              </div>
+              <span class="font-label-sm text-label-sm text-surface-variant font-medium">3. Dictamen</span>
+              <span class="font-body-sm text-body-sm text-surface-variant/70 text-[10px]">Resolución</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Beneficios Principales -->
+        <div class="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-space-md">
+          <div class="bg-inverse-surface/20 p-space-md rounded-xl backdrop-blur-sm hover:bg-inverse-surface/30 transition-colors">
+            <div class="w-8 h-8 rounded-lg bg-surface-variant/20 flex items-center justify-center text-secondary-fixed mb-space-sm">
+              <span class="material-symbols-outlined text-[20px]">assignment_turned_in</span>
+            </div>
+            <h3 class="font-headline-sm text-headline-sm text-on-primary mb-space-xs font-semibold">Formularios guiados</h3>
+            <p class="font-body-sm text-body-sm text-surface-variant leading-normal">
+              Paso a paso con validaciones en tiempo real para evitar rechazos documentales.
+            </p>
+          </div>
+          <div class="bg-inverse-surface/20 p-space-md rounded-xl backdrop-blur-sm hover:bg-inverse-surface/30 transition-colors">
+            <div class="w-8 h-8 rounded-lg bg-surface-variant/20 flex items-center justify-center text-primary-fixed mb-space-sm">
+              <span class="material-symbols-outlined text-[20px]">timeline</span>
+            </div>
+            <h3 class="font-headline-sm text-headline-sm text-on-primary mb-space-xs font-semibold">Seguimiento visual</h3>
+            <p class="font-body-sm text-body-sm text-surface-variant leading-normal">
+              Monitorea si tu trámite está en borrador, en revisión docente o resuelto formalmente.
+            </p>
+          </div>
+          <div class="bg-inverse-surface/20 p-space-md rounded-xl backdrop-blur-sm hover:bg-inverse-surface/30 transition-colors">
+            <div class="w-8 h-8 rounded-lg bg-surface-variant/20 flex items-center justify-center text-secondary-fixed-dim mb-space-sm">
+              <span class="material-symbols-outlined text-[20px]">balance</span>
+            </div>
+            <h3 class="font-headline-sm text-headline-sm text-on-primary mb-space-xs font-semibold">Evaluación clara</h3>
+            <p class="font-body-sm text-body-sm text-surface-variant leading-normal">
+              Criterios docentes colegiados con retroalimentación curricular transparente.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna Derecha (45%) -->
+      <div class="w-full lg:w-[45%] bg-surface flex items-center justify-center p-space-md lg:p-space-xl">
+        <div class="w-full max-w-[450px] bg-surface-container-lowest shadow-md rounded-xl p-space-lg flex flex-col justify-between">
+          
+          <!-- Header de Acceso -->
+          <div>
+            <div class="flex items-center justify-between mb-space-xs">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm font-semibold bg-surface-container-high text-primary">
+                <span class="w-2 h-2 rounded-full bg-primary"></span>
+                Portal de Identidad
+              </span>
+              <span class="font-label-sm text-label-sm text-on-surface-variant">SSO v2.4</span>
+            </div>
+            <h2 class="font-headline-lg text-headline-lg font-bold text-on-surface mb-1">Bienvenido</h2>
+            <p class="font-body-md text-body-md text-on-surface-variant mb-space-lg">
+              Ingresa con tu cuenta institucional para continuar con el expediente académico.
+            </p>
+            
+            <!-- Botón Principal: Autenticación Institucional -->
+            <button class="w-full h-10 px-space-md bg-primary hover:bg-primary-container text-on-primary rounded-lg font-label-lg text-label-lg font-semibold flex items-center justify-center gap-space-sm shadow-sm transition duration-150" type="button">
+              <span class="material-symbols-outlined text-[20px]">account_balance</span>
+              Continuar con cuenta institucional
+            </button>
+            <div class="mt-2 text-center">
+              <span class="font-body-sm text-body-sm text-on-surface-variant">Autenticación segura federada vía Keycloak</span>
+            </div>
+
+            <!-- Separador -->
+            <div class="relative my-space-lg flex items-center justify-center">
+              <div class="w-full h-[1px] bg-surface-container-high absolute"></div>
+              <span class="relative z-10 bg-surface-container-lowest px-space-md font-label-sm text-label-sm text-outline font-medium">
+                O EXPLORA EL PROTOTIPO
+              </span>
+            </div>
+
+            <!-- Banner Informativo del Prototipo -->
+            <div class="bg-surface-container-low rounded-lg p-space-sm mb-space-md flex gap-space-sm items-start border border-surface-container-high">
+              <span class="material-symbols-outlined text-tertiary text-[18px] shrink-0 mt-0.5">info</span>
+              <div class="min-w-0">
+                <p class="font-body-sm text-body-sm text-on-surface-variant leading-snug">
+                  El acceso institucional mediante Keycloak corresponde a la arquitectura objetivo. En este entorno puedes probar los roles sin requerir credenciales ni almacenamiento persistente en BD.
+                </p>
+              </div>
+            </div>
+
+            <!-- Error Banner (if any) -->
+            <div *ngIf="error()" class="bg-error-container text-on-error-container rounded-lg p-space-sm mb-space-md flex gap-space-sm items-start border border-error/20">
+              <span class="material-symbols-outlined text-[18px] shrink-0 mt-0.5">error</span>
+              <div class="min-w-0">
+                <p class="font-body-sm text-body-sm leading-snug">
+                  {{ error() }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Selector de Roles Demostrativos (Componentized) -->
+            <app-role-selector 
+              [roles]="roles" 
+              [selectedRoleId]="selectedRole().id"
+              (roleSelected)="onRoleSelected($event)">
+            </app-role-selector>
+
+            <!-- Botón de Entrada en Modo Demo -->
+            <button 
+              (click)="enterDemoMode()"
+              [disabled]="isLoading()"
+              class="w-full h-10 px-space-md bg-secondary text-on-secondary hover:bg-on-secondary-container disabled:opacity-70 disabled:cursor-not-allowed rounded-lg font-label-lg text-label-lg font-semibold flex items-center justify-center gap-space-sm shadow-sm transition duration-150" 
+              type="button"
+            >
+              <span *ngIf="!isLoading()" class="material-symbols-outlined text-[18px]">science</span>
+              <span *ngIf="isLoading()" class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+              <span>Entrar como {{ selectedRole().name }}</span>
+            </button>
+            <p class="font-body-sm text-body-sm text-center text-outline mt-1.5 text-[11px]">
+              Sesión temporal de sólo lectura y prueba. No persiste cambios en BD.
+            </p>
+          </div>
+
+          <!-- Pie de tarjeta institucional -->
+          <div class="mt-space-lg pt-space-md bg-surface-container-lowest">
+            <div class="flex flex-wrap items-center justify-center gap-x-space-md gap-y-1 text-center">
+              <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition flex items-center gap-1" href="#">
+                <span class="material-symbols-outlined text-[14px]">menu_book</span> Guía de trámites
+              </a>
+              <span class="text-outline-variant font-body-sm">•</span>
+              <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition flex items-center gap-1" href="#">
+                <span class="material-symbols-outlined text-[14px]">policy</span> Políticas de privacidad
+              </a>
+              <span class="text-outline-variant font-body-sm">•</span>
+              <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition flex items-center gap-1" href="#">
+                <span class="material-symbols-outlined text-[14px]">support_agent</span> Soporte técnico
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</main>

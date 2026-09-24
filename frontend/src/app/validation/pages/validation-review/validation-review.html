@@ -1,1 +1,196 @@
-<p>validation-review works!</p>
+<app-main-layout>
+  <div class="flex flex-col w-full" *ngIf="!isLoading() && requestData()">
+    <!-- Cabecera -->
+    <section class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6">
+      <div class="flex flex-col gap-1.5">
+        <div class="flex items-center gap-2 font-code-tabular text-code-tabular text-tertiary">
+          <span>Revisión</span>
+          <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+          <span>Solicitudes</span>
+          <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+          <span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-code-tabular text-[12px] font-semibold">SOL · {{ requestData()?.request_id?.slice(0,8) | uppercase }}</span>
+        </div>
+        <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Revisión de solicitud</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">Verifica la información académica y registra una decisión colegiada.</p>
+      </div>
+      <div class="flex items-center gap-3 self-start md:self-auto">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full font-label-md text-label-md shadow-sm"
+             [ngClass]="requestData()?.status === 'UNDER_REVIEW' ? 'bg-surface-container-high text-primary' : 'bg-surface-container text-on-surface-variant'">
+          <span *ngIf="requestData()?.status === 'UNDER_REVIEW'" class="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+          <span>{{ requestData()?.status === 'UNDER_REVIEW' ? 'En revisión' : requestData()?.status }}</span>
+        </div>
+        <span class="px-2.5 py-1 rounded bg-surface-container text-on-surface-variant font-code-tabular text-code-tabular font-medium">
+          Versión {{ requestData()?.version }}
+        </span>
+        <div class="hidden xl:flex items-center gap-2 px-3 py-1 rounded bg-surface-variant text-on-surface font-label-sm text-label-sm">
+          <span class="material-symbols-outlined text-[16px] text-tertiary">shield_person</span>
+          <span>Modo Evaluador</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Layout de Dos Paneles -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start w-full">
+      <!-- PANEL IZQUIERDO -->
+      <div class="lg:col-span-8 flex flex-col gap-space-lg">
+        
+        <!-- Ficha Resumen Estudiante -->
+        <div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <div class="relative">
+              <div class="w-14 h-14 rounded-full bg-surface-container-high text-primary flex items-center justify-center shadow-sm">
+                <span class="material-symbols-outlined text-[28px]">person</span>
+              </div>
+              <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-secondary rounded-full ring-2 ring-surface-container-lowest"></span>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <div class="flex items-center gap-2">
+                <h2 class="font-headline-sm text-headline-sm text-on-surface truncate">{{ requestData()?.student?.name }}</h2>
+                <span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Estudiante Regular</span>
+              </div>
+              <p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Ingeniería de Sistemas · Facultad de Ingeniería y Ciencias Aplicadas</p>
+              <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-on-surface-variant font-code-tabular text-code-tabular">
+                <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">badge</span> {{ requestData()?.student?.student_code }}</span>
+                <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">mail</span> {{ requestData()?.student?.email }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex md:flex-col items-end justify-between md:justify-center gap-1 bg-surface-container-low p-3 rounded-lg">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Promedio Acumulado</span>
+            <span class="font-headline-md text-headline-md text-primary font-code-tabular">4.62 <span class="text-body-sm text-outline">/ 5.0</span></span>
+          </div>
+        </div>
+
+        <!-- Matriz Curricular -->
+        <div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col gap-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[22px]">compare_arrows</span>
+              <h3 class="font-headline-md text-headline-md text-on-surface">Matriz de Homologación Curricular</h3>
+            </div>
+            <span class="px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm flex items-center gap-1.5">
+              <span class="h-1.5 w-1.5 rounded-full bg-secondary"></span>
+              Proyección automatizada
+            </span>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-11 gap-4 items-center">
+            <!-- Origen -->
+            <div class="md:col-span-5 bg-surface-container-low p-5 rounded-xl flex flex-col gap-3">
+              <div class="flex items-center justify-between">
+                <span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider">Universidad Externa</span>
+                <span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-code-tabular text-[11px]">ORIGEN</span>
+              </div>
+              <div>
+                <h4 class="font-headline-sm text-headline-sm text-on-surface">{{ requestData()?.academic_data?.source_course }}</h4>
+              </div>
+              <div class="grid grid-cols-3 gap-2 pt-2 bg-surface-container-lowest p-3 rounded-lg font-code-tabular">
+                <div class="flex flex-col">
+                  <span class="font-label-sm text-label-sm text-outline">Créditos</span>
+                  <span class="font-headline-sm text-headline-sm text-on-surface">{{ requestData()?.academic_data?.source_credits }}</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="font-label-sm text-label-sm text-outline">Nota</span>
+                  <span class="font-headline-sm text-headline-sm text-secondary font-semibold">4.5 <span class="text-[11px] text-outline font-normal">/5.0</span></span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="md:col-span-1 flex flex-col items-center justify-center py-2 md:py-0">
+              <div class="w-12 h-12 rounded-full bg-primary-fixed text-primary flex items-center justify-center shadow-sm relative group">
+                <span class="font-code-tabular font-bold text-[13px]">88%</span>
+              </div>
+              <span class="material-symbols-outlined text-primary text-[20px] hidden md:block mt-1">arrow_forward</span>
+            </div>
+            
+            <!-- Destino -->
+            <div class="md:col-span-5 bg-surface-container-high p-5 rounded-xl flex flex-col gap-3">
+              <div class="flex items-center justify-between">
+                <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Malla Curricular Institucional</span>
+                <span class="px-2 py-0.5 rounded bg-surface-container-lowest text-primary font-code-tabular text-[11px] font-semibold">DESTINO</span>
+              </div>
+              <div>
+                <h4 class="font-headline-sm text-headline-sm text-on-surface">{{ requestData()?.academic_data?.target_course }}</h4>
+              </div>
+              <div class="grid grid-cols-3 gap-2 pt-2 bg-surface-container-lowest p-3 rounded-lg font-code-tabular">
+                <div class="flex flex-col">
+                  <span class="font-label-sm text-label-sm text-outline">Créditos Requeridos</span>
+                  <span class="font-headline-sm text-headline-sm text-on-surface">{{ requestData()?.academic_data?.target_credits }}</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="font-label-sm text-label-sm text-outline">Nota Mínima</span>
+                  <span class="font-headline-sm text-headline-sm text-on-surface">3.0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex flex-col gap-3 bg-surface-container-low p-4 rounded-xl">
+            <div class="flex items-center justify-between">
+              <span class="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary text-[18px]">verified</span>
+                Análisis temático cruzado
+              </span>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-lowest text-body-md">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-secondary text-[20px]">check_circle</span>
+                  <span class="font-medium text-on-surface">Módulo 1</span>
+                </div>
+                <span class="font-code-tabular text-secondary font-semibold text-body-sm px-2 py-0.5 rounded bg-secondary-container/30">95% coincidencia</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Documento -->
+        <div *ngIf="requestData()?.documents?.length" class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-error-container text-error flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[28px]">picture_as_pdf</span>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <div class="flex items-center gap-2">
+                <h4 class="font-headline-sm text-headline-sm text-on-surface truncate">{{ requestData()?.documents?.[0]?.name }}</h4>
+                <span class="material-symbols-outlined text-secondary text-[18px]">verified</span>
+              </div>
+              <div class="flex items-center gap-3 font-code-tabular text-code-tabular text-on-surface-variant mt-1">
+                <span>{{ (requestData()?.documents?.[0]?.size_bytes! / 1024 / 1024).toFixed(1) }} MB</span>
+                <span>•</span>
+                <span>{{ requestData()?.documents?.[0]?.mime_type }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button class="px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors font-label-md text-label-md flex items-center gap-2" type="button">
+              <span class="material-symbols-outlined text-[18px]">visibility</span>
+              <span>Previsualizar</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PANEL DERECHO -->
+      <div class="lg:col-span-4 sticky top-24 flex flex-col gap-space-md">
+        <app-review-form 
+          [isSubmitting]="isSubmitting()"
+          [isResolved]="isResolved"
+          (submitDecision)="onRequestDecision($event)">
+        </app-review-form>
+      </div>
+    </div>
+  </div>
+  
+  <app-review-modal 
+    *ngIf="showModal()"
+    [decision]="pendingDecision()"
+    [observation]="pendingObservation()"
+    [requestId]="requestData()?.request_id || ''"
+    [currentVersion]="requestData()?.version || 1"
+    [isSubmitting]="isSubmitting()"
+    (confirm)="confirmDecision()"
+    (cancel)="cancelDecision()">
+  </app-review-modal>
+</app-main-layout>
