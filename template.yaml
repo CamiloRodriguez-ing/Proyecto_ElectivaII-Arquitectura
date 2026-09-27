@@ -1,56 +1,347 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
+Description: Student Requests API - one Lambda per route, Keycloak JWT authorization, and Kafka events.
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, test, prod]
+  FrontendOrigin:
+    Type: String
+    Default: "*"
+  KeycloakIssuer:
+    Type: String
+    Default: "https://keycloak-3a73e53a-a0c9-4484-ba06-7bfbeca55673.moonshard-wow.com/realms/academic-requests"
+  KeycloakAudience:
+    Type: String
+    Default: academic-api
+  KafkaEnabled:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+  KafkaBootstrapServers:
+    Type: String
+    Default: "localhost:9092"
+  KafkaSecurityProtocol:
+    Type: String
+    Default: SASL_SSL
+    AllowedValues: [SASL_SSL, SSL, SASL_PLAINTEXT, PLAINTEXT]
+  KafkaSaslMechanism:
+    Type: String
+    Default: AWS_MSK_IAM
+    AllowedValues:
+      [NONE, AWS_MSK_IAM, OAUTHBEARER, PLAIN, SCRAM-SHA-256, SCRAM-SHA-512]
+  UseKafkaVpc:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+  KafkaSubnetIds:
+    Type: CommaDelimitedList
+    Default: "subnet-00000000"
+  KafkaSecurityGroupIds:
+    Type: CommaDelimitedList
+    Default: "sg-00000000"
+
+Conditions:
+  AttachKafkaVpc: !Equals [!Ref UseKafkaVpc, "true"]
 
 Globals:
   Function:
     Runtime: python3.11
     Architectures: [x86_64]
-    Timeout: 15
+    Timeout: 20
     MemorySize: 256
+    Tracing: Active
     Environment:
       Variables:
-        APP_ENV: dev
-        DEMO_MODE: "true"
-        FRONTEND_ORIGIN: "*"
-        KEYCLOAK_SERVER_URL: "https://keycloak-3a73e53a-a0c9-4484-ba06-7bfbeca55673.moonshard-wow.com"
-        KEYCLOAK_REALM: "academic-requests"
-        KAFKA_BOOTSTRAP_SERVERS: "kafka-c820a368-3fd9-49da-9acc-0a8af269072a.moonshard-wow.com"
-        KAFKA_TOPIC_REQUESTS: "academic-requests-topic"
-        KAFKA_TOPIC_REVIEWS: "academic-reviews"
-        KAFKA_TOPIC_NOTIFICATIONS: "academic-notifications"
-        KAFKA_TOPIC_ANALYTICS: "academic-analytics"
+        APP_ENV: !Ref Environment
+        FRONTEND_ORIGIN: !Ref FrontendOrigin
+        KEYCLOAK_ISSUER: !Ref KeycloakIssuer
+        KEYCLOAK_AUDIENCE: !Ref KeycloakAudience
+        KAFKA_ENABLED: !Ref KafkaEnabled
+        KAFKA_BOOTSTRAP_SERVERS: !Ref KafkaBootstrapServers
+        KAFKA_SECURITY_PROTOCOL: !Ref KafkaSecurityProtocol
+        KAFKA_SASL_MECHANISM: !Ref KafkaSaslMechanism
+        KAFKA_TOPIC_REQUESTS: academic-requests
+        KAFKA_TOPIC_REVIEWS: academic-reviews
+        KAFKA_TOPIC_NOTIFICATIONS: academic-notifications
+        KAFKA_TOPIC_ANALYTICS: academic-analytics
 
 Resources:
+  KafkaProducerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+      Policies:
+        - PolicyName: PublishAcademicKafkaEvents
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kafka:GetBootstrapBrokers
+                  - kafka:DescribeClusterV2
+                  - kafka-cluster:Connect
+                  - kafka-cluster:DescribeCluster
+                  - kafka-cluster:DescribeTopic
+                  - kafka-cluster:WriteData
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                Resource: "*"
+
   AcademicRequestsApi:
     Type: AWS::Serverless::HttpApi
     Properties:
       StageName: $default
       CorsConfiguration:
-        AllowOrigins: ["*"]
+        AllowOrigins: [!Ref FrontendOrigin]
         AllowMethods: [GET, POST, OPTIONS]
         AllowHeaders: [Content-Type, X-Request-Id, Authorization]
 
-  FastApiFunction:
+  HealthFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: .
-      Handler: main.handler
+      CodeUri: src
+      Handler: functions.health.handler.lambda_handler
       Events:
-        Root:
+        Health:
           Type: HttpApi
           Properties:
             ApiId: !Ref AcademicRequestsApi
-            Path: /
-            Method: ANY
+            Path: /v1/health
+            Method: GET
             PayloadFormatVersion: "2.0"
-        Proxy:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref AcademicRequestsApi
-            Path: /{proxy+}
-            Method: ANY
-            PayloadFormatVersion: "2.0"
+
+  AuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src
+      Handler: functions.keycloak_authorizer.handler.lambda_handler
+
+  ValidateRequestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src
+      Handler: functions.validate_request.handler.lambda_handler
+      Role: !GetAtt KafkaProducerRole.Arn
+      VpcConfig: !If
+        - AttachKafkaVpc
+        - SubnetIds: !Ref KafkaSubnetIds
+          SecurityGroupIds: !Ref KafkaSecurityGroupIds
+        - !Ref AWS::NoValue
+
+  PrepareRequestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src
+      Handler: functions.prepare_request.handler.lambda_handler
+      Role: !GetAtt KafkaProducerRole.Arn
+      VpcConfig: !If
+        - AttachKafkaVpc
+        - SubnetIds: !Ref KafkaSubnetIds
+          SecurityGroupIds: !Ref KafkaSecurityGroupIds
+        - !Ref AWS::NoValue
+
+  EvaluateReviewFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src
+      Handler: functions.evaluate_review.handler.lambda_handler
+      Role: !GetAtt KafkaProducerRole.Arn
+      VpcConfig: !If
+        - AttachKafkaVpc
+        - SubnetIds: !Ref KafkaSubnetIds
+          SecurityGroupIds: !Ref KafkaSecurityGroupIds
+        - !Ref AWS::NoValue
+
+  PreviewNotificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src
+      Handler: functions.preview_notification.handler.lambda_handler
+      Role: !GetAtt KafkaProducerRole.Arn
+      VpcConfig: !If
+        - AttachKafkaVpc
+        - SubnetIds: !Ref KafkaSubnetIds
+          SecurityGroupIds: !Ref KafkaSecurityGroupIds
+        - !Ref AWS::NoValue
+
+  AnalyticsSummaryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src
+      Handler: functions.analytics_summary.handler.lambda_handler
+      Role: !GetAtt KafkaProducerRole.Arn
+      VpcConfig: !If
+        - AttachKafkaVpc
+        - SubnetIds: !Ref KafkaSubnetIds
+          SecurityGroupIds: !Ref KafkaSecurityGroupIds
+        - !Ref AWS::NoValue
+
+  KeycloakJwtAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      ApiId: !Ref AcademicRequestsApi
+      AuthorizerType: REQUEST
+      AuthorizerPayloadFormatVersion: "2.0"
+      AuthorizerUri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthorizerFunction.Arn}/invocations"
+      EnableSimpleResponses: true
+      IdentitySource:
+        - "$request.header.Authorization"
+      Name: keycloak-academic-api
+
+  AuthorizerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AuthorizerFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${AcademicRequestsApi}/authorizers/*"
+
+  ValidateRequestIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref AcademicRequestsApi
+      IntegrationMethod: POST
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ValidateRequestFunction.Arn}/invocations"
+      PayloadFormatVersion: "2.0"
+
+  ValidateRequestRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref AcademicRequestsApi
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref KeycloakJwtAuthorizer
+      RouteKey: "POST /v1/requests/validate"
+      Target: !Join ["/", [integrations, !Ref ValidateRequestIntegration]]
+
+  ValidateRequestPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ValidateRequestFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${AcademicRequestsApi}/*/POST/v1/requests/validate"
+
+  PrepareRequestIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref AcademicRequestsApi
+      IntegrationMethod: POST
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PrepareRequestFunction.Arn}/invocations"
+      PayloadFormatVersion: "2.0"
+
+  PrepareRequestRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref AcademicRequestsApi
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref KeycloakJwtAuthorizer
+      RouteKey: "POST /v1/requests/prepare"
+      Target: !Join ["/", [integrations, !Ref PrepareRequestIntegration]]
+
+  PrepareRequestPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PrepareRequestFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${AcademicRequestsApi}/*/POST/v1/requests/prepare"
+
+  EvaluateReviewIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref AcademicRequestsApi
+      IntegrationMethod: POST
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${EvaluateReviewFunction.Arn}/invocations"
+      PayloadFormatVersion: "2.0"
+
+  EvaluateReviewRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref AcademicRequestsApi
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref KeycloakJwtAuthorizer
+      RouteKey: "POST /v1/reviews/evaluate"
+      Target: !Join ["/", [integrations, !Ref EvaluateReviewIntegration]]
+
+  EvaluateReviewPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref EvaluateReviewFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${AcademicRequestsApi}/*/POST/v1/reviews/evaluate"
+
+  PreviewNotificationIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref AcademicRequestsApi
+      IntegrationMethod: POST
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PreviewNotificationFunction.Arn}/invocations"
+      PayloadFormatVersion: "2.0"
+
+  PreviewNotificationRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref AcademicRequestsApi
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref KeycloakJwtAuthorizer
+      RouteKey: "POST /v1/notifications/preview"
+      Target: !Join ["/", [integrations, !Ref PreviewNotificationIntegration]]
+
+  PreviewNotificationPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PreviewNotificationFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${AcademicRequestsApi}/*/POST/v1/notifications/preview"
+
+  AnalyticsSummaryIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref AcademicRequestsApi
+      IntegrationMethod: POST
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AnalyticsSummaryFunction.Arn}/invocations"
+      PayloadFormatVersion: "2.0"
+
+  AnalyticsSummaryRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref AcademicRequestsApi
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref KeycloakJwtAuthorizer
+      RouteKey: "POST /v1/analytics/summary"
+      Target: !Join ["/", [integrations, !Ref AnalyticsSummaryIntegration]]
+
+  AnalyticsSummaryPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AnalyticsSummaryFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${AcademicRequestsApi}/*/POST/v1/analytics/summary"
 
 Outputs:
   ApiUrl:
     Value: !Sub "https://${AcademicRequestsApi}.execute-api.${AWS::Region}.amazonaws.com"
+  FunctionPerEndpoint:
+    Value: "health, validate-request, prepare-request, evaluate-review, preview-notification, analytics-summary"

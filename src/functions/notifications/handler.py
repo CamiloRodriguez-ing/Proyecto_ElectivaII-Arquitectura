@@ -1,5 +1,5 @@
-from src.shared.adapters.http_api_v2 import handler_for
-from src.shared.application.preview_notification import preview_notification
+from shared.adapters.http_api_v2 import handler_for
+from shared.application.preview_notification import preview_notification
 
 
 def lambda_handler(event, context):

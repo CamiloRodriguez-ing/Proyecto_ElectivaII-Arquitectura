@@ -1,9 +1,9 @@
 from datetime import datetime, timezone
 from typing import Any
 
-from src.shared.domain.enums import RequestStatus, ReviewDecision
-from src.shared.domain.errors import ValidationError
-from src.shared.domain.rules import next_status
+from shared.domain.enums import RequestStatus, ReviewDecision
+from shared.domain.errors import ValidationError
+from shared.domain.rules import next_status
 
 
 def evaluate_request(payload: dict[str, Any]) -> dict[str, Any]:

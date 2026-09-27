@@ -2,7 +2,7 @@
 
 ## Configuración Global
 - **Base URL:** `/v1` (Relativa al dominio configurado, ej: `https://<api-id>.execute-api.<region>.amazonaws.com/v1`)
-- **Autenticación:** Según se configure en API Gateway. 
+- **Autenticación:** `Authorization: Bearer <access-token>` de Keycloak en todas las rutas excepto `/health`. El token debe tener audiencia `academic-api`; cada ruta aplica además roles de cliente.
 - **Formato por defecto:** `application/json`
 - **Estructura de Respuesta General:**
   Todas las respuestas exitosas devuelven los datos bajo la propiedad `data` y metadatos en `meta`:
@@ -31,6 +31,21 @@
     }
   }
   ```
+
+---
+
+## Matriz de autorización
+
+| Ruta | Roles permitidos |
+|---|---|
+| `GET /health` | Pública |
+| `POST /requests/validate` | `STUDENT`, `ADMINISTRATOR` |
+| `POST /requests/prepare` | `STUDENT`, `ADMINISTRATOR` |
+| `POST /reviews/evaluate` | `REVIEWER`, `ADMINISTRATOR` |
+| `POST /notifications/preview` | `REVIEWER`, `NOTIFICATION_SERVICE`, `ADMINISTRATOR` |
+| `POST /analytics/summary` | `ANALYST`, `ADMINISTRATOR` |
+
+Una credencial ausente produce `401`; un token inválido o sin un rol permitido produce `403` desde el Lambda authorizer. En evaluaciones, la API ignora cualquier identidad de actor enviada por el cliente y usa `sub` y los roles del token. Si Kafka no confirma el evento posterior a una operación exitosa, la API devuelve `503 EVENT_PUBLISH_UNAVAILABLE` para que el cliente reintente.
 
 ---
 

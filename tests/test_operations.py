@@ -1,6 +1,6 @@
-from src.shared.application.evaluate_request import evaluate_request
-from src.shared.application.preview_notification import preview_notification
-from src.shared.application.summarize_requests import summarize_requests
+from shared.application.evaluate_request import evaluate_request
+from shared.application.preview_notification import preview_notification
+from shared.application.summarize_requests import summarize_requests
 
 
 def test_evaluation_increments_version_and_creates_event():

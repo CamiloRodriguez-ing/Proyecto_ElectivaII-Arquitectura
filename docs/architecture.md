@@ -1,10 +1,10 @@
 # Architecture
 
-The first stage is a stateless HTTP API. API Gateway HTTP API uses payload format 2.0 and invokes one Lambda per business capability. Handlers adapt HTTP events, application services coordinate use cases, and domain rules remain independent from AWS.
+The service is a stateless HTTP API. API Gateway HTTP API uses payload format 2.0 and invokes a different Lambda for every endpoint. Handlers adapt HTTP events, application services coordinate use cases, and domain rules remain independent from AWS.
 
-No application storage, queues, identity provider, email provider, or file storage is declared in the current SAM stack. Prepared requests and domain events are returned to the caller and are not persisted. Documents contain metadata only.
+No application database, email provider, or file storage is declared in the application stack. Prepared requests are returned but not persisted; successful protected operations publish minimal events to Kafka. Documents contain metadata only.
 
-The accepted target for the next identity increment is an externally deployed Keycloak realm with multiple OIDC clients and role-based route authorization. It is specified in [Keycloak Authentication and Authorization](authentication-keycloak.md) and [ADR-005](ADR-005-keycloak-identity.md). This target is not implemented by the current source code or infrastructure template.
+An externally deployed Keycloak realm owns identity. An API Gateway Lambda authorizer validates issuer, audience, signature, time claims and client roles; the shared endpoint adapter repeats the route-role check. See [Keycloak Authentication and Authorization](authentication-keycloak.md) and [ADR-005](ADR-005-keycloak-identity.md). Kafka event publication is described in [Kafka event integration](kafka-events.md) and [ADR-006](ADR-006-kafka-events.md).
 
 ## Boundaries
 
@@ -14,6 +14,6 @@ The accepted target for the next identity increment is an externally deployed Ke
 - `src/shared/adapters`: HTTP response and event translation.
 - `docs/openapi.yaml`: external contract.
 
-## Target identity boundary
+## Identity boundary
 
-Keycloak will own users, credentials, groups, clients, roles, and identity sessions. API Gateway will validate access tokens issued for `academic-api`; a route guard will enforce the API client roles before invoking a use case. Identity storage belongs to Keycloak and does not make the academic-request API stateful.
+Keycloak owns users, credentials, groups, clients, roles, and identity sessions. The Lambda authorizer validates access tokens issued for `academic-api` and enforces client roles before API Gateway invokes an endpoint. Identity storage belongs to Keycloak and does not make the academic-request API stateful.

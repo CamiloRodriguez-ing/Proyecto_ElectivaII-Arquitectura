@@ -1,6 +1,6 @@
 # Student Requests Backend
 
-Stateless academic request API implemented with Python, AWS Lambda, API Gateway HTTP API, and AWS SAM.
+Stateless academic request API implemented with Python, one AWS Lambda per endpoint, API Gateway HTTP API, Keycloak authorization, Kafka events, and AWS SAM.
 
 ## Local development
 
@@ -30,11 +30,12 @@ sam local start-api
 
 This first stage is intentionally stateless. Prepared requests and events are returned to the caller but are not persisted, and documents are represented only by metadata.
 
+All routes except health require a Keycloak access token with audience `academic-api` and an allowed client role. Successful protected operations publish versioned events to Kafka. For direct local handler tests set `KAFKA_ENABLED=false`; deployed environments should configure a reachable broker.
+
 ## Documentation
 
 - [Architecture](docs/architecture.md)
 - [Deployment](docs/deployment.md)
 - [Keycloak authentication and route authorization](docs/authentication-keycloak.md)
+- [Kafka event integration](docs/kafka-events.md)
 - [OpenAPI contract](docs/openapi.yaml)
-
-Authentication is currently a documented target and is not enforced by the deployed frontend or API yet.

@@ -2,13 +2,16 @@ openapi: 3.0.3
 info:
   title: Student Requests API
   version: 1.0.0
-  description: Stateless academic request API for the first demonstration stage.
+  description: Stateless academic request API protected by Keycloak and publishing Kafka events.
 servers:
   - url: http://localhost:3000
+security:
+  - KeycloakBearer: []
 paths:
   /v1/health:
     get:
       operationId: getHealth
+      security: []
       responses:
         '200':
           description: Service health
@@ -45,10 +48,19 @@ paths:
       requestBody: {required: true, content: {application/json: {schema: {type: object, required: [requests], properties: {requests: {type: array, maxItems: 100, items: {$ref: '#/components/schemas/Request'}}}}}}}
       responses: {'200': {description: Analytics summary}}
 components:
+  securitySchemes:
+    KeycloakBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Keycloak access token with audience academic-api and the route's required client role.
   responses:
     BadRequest: {description: Invalid JSON or incomplete request}
     ValidationError: {description: Business validation error}
     Conflict: {description: State transition is not allowed}
+    Unauthorized: {description: Missing Keycloak access token}
+    Forbidden: {description: Invalid token or token without an allowed academic-api client role}
+    EventUnavailable: {description: Kafka did not acknowledge the operation event; the caller may retry}
   schemas:
     SuccessResponse: {type: object, required: [data, meta], properties: {data: {type: object}, meta: {$ref: '#/components/schemas/Meta'}}}
     Meta: {type: object, required: [request_id, api_version], properties: {request_id: {type: string}, api_version: {type: string, example: v1}, timestamp: {type: string, format: date-time}}}

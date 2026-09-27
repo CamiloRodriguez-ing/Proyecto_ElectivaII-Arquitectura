@@ -2,7 +2,7 @@
 
 ## Document status
 
-This document defines the **target** identity architecture for Student Requests. It does not describe a feature that is already active: the deployed API and the current frontend do not yet validate tokens or enforce roles. No source code or infrastructure template is changed by this document.
+This document describes the implemented backend identity architecture for Student Requests. An API Gateway REQUEST Lambda authorizer validates Keycloak JWT access tokens and the client-role matrix before an endpoint is invoked. Each route Lambda repeats the role check as defense in depth. The frontend login flow is not implemented by this backend change.
 
 Keycloak is the required identity provider. The application remains stateless: Keycloak owns identities, credentials, clients, roles, and identity sessions; the Student Requests API still owns no database and stores no academic requests.
 
@@ -12,13 +12,13 @@ Keycloak is the required identity provider. The application remains stateless: K
 - Use OAuth 2.0 access tokens, never ID tokens, to call the API.
 - Keep browser and machine clients separate.
 - Put API permissions in client roles belonging to `academic-api`.
-- Validate the token issuer, signature, expiration, and audience at API Gateway.
+- Validate the token issuer, RS256 signature, expiration, and audience in the Lambda authorizer attached to API Gateway.
 - Enforce the route-to-role matrix before executing a use case.
 - Derive the actor identity from the validated token instead of trusting `actor`, email, or role values sent in a request body.
 
 Authentication answers **who the caller is**. Authorization answers **what that caller may do**. Both controls are required.
 
-## Target topology
+## Implemented topology
 
 ```text
                          OIDC login / PKCE
@@ -27,25 +27,34 @@ Browser ────────────────────────
    │ Bearer access token                  Keycloak (remote HTTPS)
    │                                      realm: academic-requests
    v                                               │
-API Gateway HTTP API <──── public signing keys ────┘
+API Gateway HTTP API
    │
-   │ validated JWT claims
    v
-route role guard
+Keycloak authorizer Lambda <──── public signing keys ────┘
+   │ validated subject and roles
+   v
+endpoint role guard
    │
-   ├── requests Lambda
-   ├── reviews Lambda
-   ├── notifications Lambda
-   └── analytics Lambda
+   ├── validate-request Lambda
+   ├── prepare-request Lambda
+   ├── evaluate-review Lambda
+   ├── preview-notification Lambda
+   └── analytics-summary Lambda
 ```
 
-The OIDC issuer is:
+The current development issuer configured by SAM is:
+
+```text
+https://keycloak-3a73e53a-a0c9-4484-ba06-7bfbeca55673.moonshard-wow.com/realms/academic-requests
+```
+
+For a controlled institutional deployment, use an issuer such as:
 
 ```text
 https://auth.example.edu/realms/academic-requests
 ```
 
-`auth.example.edu` is a placeholder and must be replaced with the real public hostname everywhere. The issuer must match exactly; changing the realm name, scheme, host, port, or path changes the issuer.
+`auth.example.edu` is a placeholder and must be replaced with the real public hostname everywhere. The issuer must match the discovery document exactly; changing the realm name, scheme, host, port, or path changes the issuer.
 
 ## Realm and multi-client model
 
@@ -185,38 +194,38 @@ Authorization must read only `resource_access.academic-api.roles`. It must not a
 
 ### HTTP outcomes
 
-- `401 Unauthorized`: token missing, malformed, expired, signed by an unknown key, wrong issuer, or wrong audience.
-- `403 Forbidden`: token valid but none of the required `academic-api` roles is present.
+- `401 Unauthorized`: the `Authorization` identity source is missing, so API Gateway does not invoke the authorizer.
+- `403 Forbidden`: token malformed, expired, signed by an unknown key, wrong issuer/audience, or valid without an allowed `academic-api` role.
 - `2xx`: both token validation and route authorization passed, then the business operation succeeded.
 
 ## Enforcement with API Gateway and Lambda
 
-AWS API Gateway HTTP API JWT authorizers validate the JWT signature through the issuer's discovery/JWKS metadata and validate claims such as `iss`, `aud`, and `exp`. Configure:
+The deployed HTTP API uses a payload-format `2.0` REQUEST Lambda authorizer with simple responses. Configure:
 
 ```text
 Identity source: $request.header.Authorization
-Issuer:          https://auth.example.edu/realms/academic-requests
-Audience:        academic-api
+Authorizer:      functions.keycloak_authorizer.handler.lambda_handler
+Issuer env:      https://auth.example.edu/realms/academic-requests
+Audience env:    academic-api
 ```
 
 Attach this authorizer to every route except `GET /v1/health` and `OPTIONS` preflight requests.
 
-API Gateway's native route permissions inspect `scope` or `scp`; Keycloak client roles are normally emitted in the nested `resource_access` claim. Therefore, the target implementation needs a shared authorization guard after Gateway's JWT validation, or a custom Lambda authorizer that validates the token and enforces the same matrix. The recommended first implementation is:
+The native API Gateway JWT authorizer was not used in the current development deployment because AWS could not retrieve the configured issuer discovery endpoint. The same network restriction also prevents Lambda from refreshing JWKS. The current RS256 public signing JWK is therefore packaged with the authorizer for offline validation. Public keys are not secrets, but a Keycloak signing-key rotation requires updating `src/functions/keycloak_authorizer/jwks.json` and redeploying before new tokens are accepted.
 
-1. API Gateway JWT authorizer validates signature, issuer, audience, and time claims.
-2. A shared Lambda adapter reads `requestContext.authorizer.jwt.claims`.
-3. The adapter parses `resource_access`, selects `academic-api.roles`, and checks the route matrix.
-4. The adapter returns `403` before calling the use case when no allowed role is present.
+1. API Gateway rejects requests missing the configured `Authorization` identity source.
+2. The authorizer verifies the token's `kid` against the packaged Keycloak JWK and validates RS256 signature, `iss`, `aud`, `exp`, `nbf`, and `iat`.
+3. It reads only `resource_access.academic-api.roles` and applies a deny-by-default route matrix.
+4. For an allowed request it returns only trusted `sub` and client roles in authorizer context; tokens are never forwarded in context.
+5. The endpoint adapter reads `requestContext.authorizer.lambda`, repeats the role check, and derives the actor from `sub`.
 
-This requires a later code and SAM change and is intentionally **not implemented by this documentation task**. Do not mark a route as protected in OpenAPI or release notes until enforcement is deployed and tested.
+The implementation also:
 
-The future implementation must also:
-
-- Add `Authorization` to API Gateway CORS `AllowHeaders`.
-- Keep `OPTIONS` unauthenticated so browser preflight succeeds.
-- Use `sub` as the stable actor ID.
-- Replace the body-provided evaluation actor with the validated token subject and role.
-- Never log access tokens, refresh tokens, authorization headers, passwords, or client secrets.
+- Adds `Authorization` to API Gateway CORS `AllowHeaders`.
+- Keeps `OPTIONS` unauthenticated so browser preflight succeeds.
+- Uses `sub` as the stable actor ID.
+- Replaces the body-provided evaluation actor with the validated token subject and role.
+- Never logs access tokens, refresh tokens, authorization headers, passwords, or client secrets.
 
 ## Keycloak configuration procedure
 
@@ -423,7 +432,7 @@ After the first successful sign-in:
 
 ## Integration acceptance criteria
 
-Authentication is not complete until all of the following pass in the deployed environment:
+Deployment acceptance is not complete until all of the following pass in the deployed environment:
 
 - Discovery and JWKS endpoints are reachable through HTTPS with a valid certificate.
 - A portal login uses Authorization Code with PKCE S256.
@@ -445,5 +454,4 @@ Authentication is not complete until all of the following pass in the deployed e
 - [Keycloak: JavaScript adapter](https://www.keycloak.org/securing-apps/javascript-adapter)
 - [Keycloak: Server Administration Guide](https://www.keycloak.org/docs/latest/server_admin/)
 - [Keycloak: Health checks](https://www.keycloak.org/observability/health)
-- [AWS: Control access to HTTP APIs with JWT authorizers](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html)
-
+- [AWS: Working with Lambda authorizers for HTTP APIs](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html)

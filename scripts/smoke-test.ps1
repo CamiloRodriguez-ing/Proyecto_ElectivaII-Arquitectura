@@ -1,7 +1,10 @@
-param([Parameter(Mandatory=$true)][string]$BaseUrl)
-$headers = @{'x-request-id' = 'smoke-test'}
+param(
+    [Parameter(Mandatory=$true)][string]$BaseUrl,
+    [Parameter(Mandatory=$true)][string]$AccessToken
+)
+$headers = @{'x-request-id' = 'smoke-test'; 'Authorization' = "Bearer $AccessToken"}
 $validRequest = @{student=@{student_code='202012345';name='Student';email='student@university.edu.co'};type='CREDIT_TRANSFER';academic_data=@{source_course='Calculus I';target_course='Differential Calculus';source_credits=3;target_credits=3};documents=@()} | ConvertTo-Json -Depth 5
-$review = @{request=@{request_id='11111111-1111-4111-8111-111111111111';status='UNDER_REVIEW';version=2};evaluation=@{decision='APPROVE';observation='Approved by smoke test';actor=@{id='admin-demo';role='ADMINISTRATOR'}}} | ConvertTo-Json -Depth 5
+$review = @{request=@{request_id='11111111-1111-4111-8111-111111111111';status='UNDER_REVIEW';version=2};evaluation=@{decision='APPROVE';observation='Approved by smoke test'}} | ConvertTo-Json -Depth 5
 $notification = @{event=@{event_type='request.status_changed.v1';data=@{new_status='APPROVED'}};recipient=@{email='student@university.edu.co'}} | ConvertTo-Json -Depth 5
 $analytics = @{requests=@(@{type='CREDIT_TRANSFER';status='APPROVED'})} | ConvertTo-Json -Depth 5
 $checks = @(

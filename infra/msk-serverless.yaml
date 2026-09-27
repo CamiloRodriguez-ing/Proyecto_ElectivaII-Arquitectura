@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Isolated network and Amazon MSK Serverless cluster for Student Requests events.
+
+Parameters:
+  ClusterName:
+    Type: String
+    Default: academic-events-dev
+  VpcCidr:
+    Type: String
+    Default: 10.42.0.0/16
+
+Resources:
+  KafkaVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${ClusterName}-vpc"
+
+  KafkaSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref KafkaVpc
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      CidrBlock: 10.42.1.0/24
+      Tags:
+        - Key: Name
+          Value: !Sub "${ClusterName}-a"
+
+  KafkaSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref KafkaVpc
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      CidrBlock: 10.42.2.0/24
+      Tags:
+        - Key: Name
+          Value: !Sub "${ClusterName}-b"
+
+  KafkaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Lambda to MSK Serverless IAM traffic
+      VpcId: !Ref KafkaVpc
+
+  KafkaIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref KafkaSecurityGroup
+      SourceSecurityGroupId: !Ref KafkaSecurityGroup
+      IpProtocol: tcp
+      FromPort: 9098
+      ToPort: 9098
+
+  KafkaCluster:
+    Type: AWS::MSK::ServerlessCluster
+    Properties:
+      ClusterName: !Ref ClusterName
+      ClientAuthentication:
+        Sasl:
+          Iam:
+            Enabled: true
+      VpcConfigs:
+        - SecurityGroups:
+            - !Ref KafkaSecurityGroup
+          SubnetIds:
+            - !Ref KafkaSubnetA
+            - !Ref KafkaSubnetB
+
+Outputs:
+  ClusterArn:
+    Value: !Ref KafkaCluster
+  LambdaSubnetIds:
+    Value: !Join [",", [!Ref KafkaSubnetA, !Ref KafkaSubnetB]]
+  LambdaSecurityGroupIds:
+    Value: !Ref KafkaSecurityGroup

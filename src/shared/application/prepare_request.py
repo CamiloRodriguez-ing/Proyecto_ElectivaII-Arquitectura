@@ -2,9 +2,9 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
-from src.shared.domain.rules import validate_request
-from src.shared.domain.enums import RequestStatus
-from src.shared.domain.errors import ValidationError
+from shared.domain.rules import validate_request
+from shared.domain.enums import RequestStatus
+from shared.domain.errors import ValidationError
 
 
 def prepare_request(payload: dict[str, Any]) -> dict[str, Any]:

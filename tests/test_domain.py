@@ -1,6 +1,6 @@
-from src.shared.domain.enums import RequestStatus, ReviewDecision
-from src.shared.domain.errors import StateTransitionError
-from src.shared.domain.rules import next_status, validate_request
+from shared.domain.enums import RequestStatus, ReviewDecision
+from shared.domain.errors import StateTransitionError
+from shared.domain.rules import next_status, validate_request
 
 
 def valid_payload():

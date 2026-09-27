@@ -1,4 +1,4 @@
-from src.shared.adapters.http_api_v2 import response
+from shared.adapters.http_api_v2 import response
 
 
 def lambda_handler(event, context):

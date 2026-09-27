@@ -1,6 +1,6 @@
-from src.shared.adapters.http_api_v2 import handler_for
-from src.shared.application.prepare_request import prepare_request
-from src.shared.domain.rules import validate_request
+from shared.adapters.http_api_v2 import handler_for
+from shared.application.prepare_request import prepare_request
+from shared.domain.rules import validate_request
 
 
 def lambda_handler(event, context):
