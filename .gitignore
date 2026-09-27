@@ -18,3 +18,5 @@ npm-shrinkwrap.json
 *.swp
 *.swo
 *~
+
+.env

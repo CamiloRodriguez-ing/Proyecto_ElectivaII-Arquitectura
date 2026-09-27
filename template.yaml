@@ -5,13 +5,20 @@ Globals:
   Function:
     Runtime: python3.11
     Architectures: [x86_64]
-    Timeout: 10
+    Timeout: 15
     MemorySize: 256
     Environment:
       Variables:
         APP_ENV: dev
         DEMO_MODE: "true"
         FRONTEND_ORIGIN: "*"
+        KEYCLOAK_SERVER_URL: "https://keycloak-3a73e53a-a0c9-4484-ba06-7bfbeca55673.moonshard-wow.com"
+        KEYCLOAK_REALM: "academic-requests"
+        KAFKA_BOOTSTRAP_SERVERS: "kafka-c820a368-3fd9-49da-9acc-0a8af269072a.moonshard-wow.com"
+        KAFKA_TOPIC_REQUESTS: "academic-requests-topic"
+        KAFKA_TOPIC_REVIEWS: "academic-reviews"
+        KAFKA_TOPIC_NOTIFICATIONS: "academic-notifications"
+        KAFKA_TOPIC_ANALYTICS: "academic-analytics"
 
 Resources:
   AcademicRequestsApi:
@@ -21,46 +28,28 @@ Resources:
       CorsConfiguration:
         AllowOrigins: ["*"]
         AllowMethods: [GET, POST, OPTIONS]
-        AllowHeaders: [Content-Type, X-Request-Id]
+        AllowHeaders: [Content-Type, X-Request-Id, Authorization]
 
-  HealthFunction:
+  FastApiFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
-      Handler: src.functions.health.handler.lambda_handler
+      Handler: main.handler
       Events:
-        Health:
+        Root:
           Type: HttpApi
-          Properties: {ApiId: !Ref AcademicRequestsApi, Path: /v1/health, Method: GET, PayloadFormatVersion: "2.0"}
-  RequestsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: .
-      Handler: src.functions.requests.handler.lambda_handler
-      Events:
-        Validate: {Type: HttpApi, Properties: {ApiId: !Ref AcademicRequestsApi, Path: /v1/requests/validate, Method: POST, PayloadFormatVersion: "2.0"}}
-        Prepare: {Type: HttpApi, Properties: {ApiId: !Ref AcademicRequestsApi, Path: /v1/requests/prepare, Method: POST, PayloadFormatVersion: "2.0"}}
-  ReviewsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: .
-      Handler: src.functions.reviews.handler.lambda_handler
-      Events:
-        Evaluate: {Type: HttpApi, Properties: {ApiId: !Ref AcademicRequestsApi, Path: /v1/reviews/evaluate, Method: POST, PayloadFormatVersion: "2.0"}}
-  NotificationsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: .
-      Handler: src.functions.notifications.handler.lambda_handler
-      Events:
-        Preview: {Type: HttpApi, Properties: {ApiId: !Ref AcademicRequestsApi, Path: /v1/notifications/preview, Method: POST, PayloadFormatVersion: "2.0"}}
-  AnalyticsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: .
-      Handler: src.functions.analytics.handler.lambda_handler
-      Events:
-        Summary: {Type: HttpApi, Properties: {ApiId: !Ref AcademicRequestsApi, Path: /v1/analytics/summary, Method: POST, PayloadFormatVersion: "2.0"}}
+          Properties:
+            ApiId: !Ref AcademicRequestsApi
+            Path: /
+            Method: ANY
+            PayloadFormatVersion: "2.0"
+        Proxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AcademicRequestsApi
+            Path: /{proxy+}
+            Method: ANY
+            PayloadFormatVersion: "2.0"
 
 Outputs:
   ApiUrl:
