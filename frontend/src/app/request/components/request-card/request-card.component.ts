@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+﻿import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AcademicRequestResponseData } from '../../services/request.types';
 
@@ -63,7 +63,7 @@ import { AcademicRequestResponseData } from '../../services/request.types';
         </div>
         
         <!-- Observaciones o Errores -->
-        <div *ngIf="request.status === 'ACTION_REQUIRED' && request.observations?.length" class="p-3 rounded-xl bg-error-container/40 flex items-start gap-2.5 mt-2">
+        <div *ngIf="request.status === 'CHANGES_REQUESTED' && request.observations?.length" class="p-3 rounded-xl bg-error-container/40 flex items-start gap-2.5 mt-2">
           <span class="material-symbols-outlined text-[20px] text-error shrink-0 mt-0.5">announcement</span>
           <div class="flex flex-col">
             <span class="font-label-sm text-label-sm text-error font-bold">Observación:</span>
@@ -81,10 +81,10 @@ import { AcademicRequestResponseData } from '../../services/request.types';
           <span class="material-symbols-outlined text-[18px]">{{ getButtonIcon(request.status) }}</span>
           <span>{{ getButtonLabel(request.status) }}</span>
         </button>
-        <button *ngIf="request.status !== 'ACTION_REQUIRED'" class="p-2 rounded-xl hover:bg-surface-container text-on-surface-variant transition-colors" type="button">
+        <button *ngIf="request.status !== 'CHANGES_REQUESTED'" class="p-2 rounded-xl hover:bg-surface-container text-on-surface-variant transition-colors" type="button">
           <span class="material-symbols-outlined text-[20px]">more_vert</span>
         </button>
-        <span *ngIf="request.status === 'ACTION_REQUIRED'" class="font-label-sm text-label-sm text-error">Vence pronto</span>
+        <span *ngIf="request.status === 'CHANGES_REQUESTED'" class="font-label-sm text-label-sm text-error">Vence pronto</span>
       </div>
     </div>
   `
@@ -98,7 +98,7 @@ export class RequestCardComponent {
       'SUBMITTED': 'Enviada',
       'UNDER_REVIEW': 'En revisión',
       'APPROVED': 'Aprobada',
-      'ACTION_REQUIRED': 'Requiere ajustes',
+      'CHANGES_REQUESTED': 'Requiere ajustes',
       'REJECTED': 'Rechazada'
     };
     return labels[status] || status;
@@ -109,7 +109,7 @@ export class RequestCardComponent {
       'SUBMITTED': 'send',
       'UNDER_REVIEW': 'schedule',
       'APPROVED': 'verified',
-      'ACTION_REQUIRED': 'warning',
+      'CHANGES_REQUESTED': 'warning',
       'REJECTED': 'cancel'
     };
     return icons[status] || 'info';
@@ -120,28 +120,28 @@ export class RequestCardComponent {
       'SUBMITTED': 'bg-primary-fixed text-on-primary-fixed',
       'UNDER_REVIEW': 'bg-tertiary-fixed text-on-tertiary-fixed',
       'APPROVED': 'bg-secondary-fixed text-on-secondary-fixed',
-      'ACTION_REQUIRED': 'bg-error-container text-on-error-container',
+      'CHANGES_REQUESTED': 'bg-error-container text-on-error-container',
       'REJECTED': 'bg-error text-on-error'
     };
     return classes[status] || 'bg-surface-variant text-on-surface-variant';
   }
 
   getButtonClasses(status: string): string {
-    if (status === 'ACTION_REQUIRED') {
+    if (status === 'CHANGES_REQUESTED') {
       return 'bg-primary text-on-primary hover:bg-primary-container shadow-sm';
     }
     return 'bg-surface-container hover:bg-surface-variant text-on-surface font-label-md text-label-md';
   }
 
   getButtonLabel(status: string): string {
-    if (status === 'ACTION_REQUIRED') return 'Corregir y anexar';
+    if (status === 'CHANGES_REQUESTED') return 'Corregir y anexar';
     if (status === 'APPROVED') return 'Ver resolución';
     if (status === 'SUBMITTED') return 'Ver estado';
     return 'Ver resumen';
   }
 
   getButtonIcon(status: string): string {
-    if (status === 'ACTION_REQUIRED') return 'edit_document';
+    if (status === 'CHANGES_REQUESTED') return 'edit_document';
     return 'visibility';
   }
 }

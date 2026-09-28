@@ -1,4 +1,4 @@
-import { Component, Input, computed, signal } from '@angular/core';
+﻿import { Component, Input, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -65,8 +65,8 @@ import { CommonModule } from '@angular/common';
                 <span class="font-label-md text-label-md text-on-surface">Requiere ajustes</span>
               </div>
               <div class="flex items-center gap-2">
-                <span class="font-code-tabular text-label-md font-label-md text-on-surface">{{ byStatus['ACTION_REQUIRED'] || 0 }}</span>
-                <span class="font-code-tabular text-body-sm text-body-sm text-on-surface-variant">({{ pct(byStatus['ACTION_REQUIRED'] || 0) }}%)</span>
+                <span class="font-code-tabular text-label-md font-label-md text-on-surface">{{ byStatus['CHANGES_REQUESTED'] || 0 }}</span>
+                <span class="font-code-tabular text-body-sm text-body-sm text-on-surface-variant">({{ pct(byStatus['CHANGES_REQUESTED'] || 0) }}%)</span>
               </div>
             </div>
             <div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
@@ -176,7 +176,7 @@ export class ReportChartsComponent {
   }
 
   approvedLength() { return this.calcLen(this.byStatus['APPROVED'] || 0); }
-  changesLength() { return this.calcLen(this.byStatus['ACTION_REQUIRED'] || 0); }
+  changesLength() { return this.calcLen(this.byStatus['CHANGES_REQUESTED'] || 0); }
   reviewLength() { return this.calcLen(this.byStatus['UNDER_REVIEW'] || 0); }
   rejectedLength() { return this.calcLen(this.byStatus['REJECTED'] || 0); }
   submittedLength() { return this.calcLen(this.byStatus['SUBMITTED'] || 0); }

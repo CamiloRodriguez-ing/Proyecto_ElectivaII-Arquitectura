@@ -1,4 +1,4 @@
-import { Component, Input, computed, signal } from '@angular/core';
+﻿import { Component, Input, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AcademicRequestResponseData } from '../../../request/services/request.types';
@@ -39,7 +39,7 @@ export class ReportTableComponent {
     switch (status) {
       case 'APPROVED': return 'bg-[#DCFCE7] text-[#15803D]';
       case 'UNDER_REVIEW': return 'bg-[#FEF3C7] text-[#B45309]';
-      case 'ACTION_REQUIRED': return 'bg-[#FFFBEB] text-[#B45309]';
+      case 'CHANGES_REQUESTED': return 'bg-[#FFFBEB] text-[#B45309]';
       case 'REJECTED': return 'bg-[#FEE2E2] text-[#B91C1C]';
       case 'SUBMITTED': return 'bg-[#E0F2FE] text-[#0369A1]';
       default: return 'bg-surface-container text-on-surface-variant';
@@ -50,7 +50,7 @@ export class ReportTableComponent {
     switch (status) {
       case 'APPROVED': return 'bg-[#15803D]';
       case 'UNDER_REVIEW': return 'bg-[#B45309]';
-      case 'ACTION_REQUIRED': return 'bg-transparent text-[#B45309]';
+      case 'CHANGES_REQUESTED': return 'bg-transparent text-[#B45309]';
       case 'REJECTED': return 'bg-[#B91C1C]';
       case 'SUBMITTED': return 'bg-[#0369A1]';
       default: return 'bg-outline';

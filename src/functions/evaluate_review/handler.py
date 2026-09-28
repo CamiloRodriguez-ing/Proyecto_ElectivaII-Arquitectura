@@ -7,7 +7,7 @@ from shared.application.evaluate_request import evaluate_request
 
 def _trusted_actor(body, principal):
     evaluation = {**body.get("evaluation", {})}
-    evaluation["actor"] = {"id": principal.subject, "role": sorted(principal.roles)[0]}
+    evaluation["actor"] = {"id": principal.subject, "role": sorted(principal.roles)[0], "tenant_id": principal.tenant_id}
     return {**body, "evaluation": evaluation}
 
 

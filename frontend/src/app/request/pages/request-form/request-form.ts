@@ -1,25 +1,17 @@
-import { Component, signal, inject } from '@angular/core';
+﻿import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MainLayoutComponent } from '../../../core/layouts/main-layout/main-layout.component';
 import { RequestService } from '../../services/request.service';
 import { AcademicRequestPayload, ApiError, AcademicRequestResponseData } from '../../services/request.types';
-
-// Import newly extracted components
-import { StudentSummaryComponent } from '../../components/student-summary/student-summary.component';
-import { AcademicSummaryComponent } from '../../components/academic-summary/academic-summary.component';
-import { DocumentSummaryComponent } from '../../components/document-summary/document-summary.component';
-import { ValidationChecklistComponent } from '../../components/validation-checklist/validation-checklist.component';
 
 @Component({
   selector: 'app-request-form',
   standalone: true,
   imports: [
     CommonModule, 
-    MainLayoutComponent,
-    StudentSummaryComponent,
-    AcademicSummaryComponent,
-    DocumentSummaryComponent,
-    ValidationChecklistComponent
+    FormsModule,
+    MainLayoutComponent
   ],
   templateUrl: './request-form.html',
   styleUrl: './request-form.css'
@@ -30,39 +22,47 @@ export class RequestForm {
   payload: AcademicRequestPayload = {
     type: "CREDIT_TRANSFER",
     student: {
-      student_code: "202012345",
-      name: "Laura Martínez",
-      email: "laura.martinez@universidad.edu.co"
+      student_code: "",
+      name: "",
+      email: ""
     },
     academic_data: {
-      source_course: "Cálculo I",
-      target_course: "Cálculo Diferencial",
-      source_credits: 3,
-      target_credits: 3
+      source_course: "",
+      target_course: "",
+      source_credits: 0,
+      target_credits: 0
     },
-    documents: [
-      {
-        name: "contenido-programatico-calculo.pdf",
-        mime_type: "application/pdf",
-        size_bytes: 1200000
-      }
-    ]
+    documents: []
   };
 
-  legalConsent = signal(false);
-  isSubmitting = signal(false);
+  fileName = "";
+
   isValidating = signal(false);
   validationOk = signal(false);
-  
+  isSubmitting = signal(false);
   apiError = signal<ApiError | null>(null);
-  successData = signal<AcademicRequestResponseData | null>(null);
-  showSuccessModal = signal(false);
+  successResponse = signal<AcademicRequestResponseData | null>(null);
+  
+  legalConsent = signal(false);
 
-  setConsent(value: boolean) {
-    this.legalConsent.set(value);
+  onFileChange(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.fileName = file.name;
+      this.payload.documents = [
+        {
+          name: file.name,
+          mime_type: file.type || 'application/pdf',
+          size_bytes: file.size
+        }
+      ];
+    } else {
+      this.fileName = "";
+      this.payload.documents = [];
+    }
   }
 
-  validateData() {
+  validateRequest() {
     this.isValidating.set(true);
     this.apiError.set(null);
     this.validationOk.set(false);
@@ -71,6 +71,16 @@ export class RequestForm {
       next: (res) => {
         if (res.data.valid) {
           this.validationOk.set(true);
+        } else {
+          // Si valid = false, mostrar un error
+          this.apiError.set({
+            error: {
+               code: 'VALIDATION_FAILED',
+               message: 'Errores en la validación de la solicitud.',
+               details: res.data.errors?.map(e => ({ field: 'General', reason: e.toString() })) || []
+            },
+            meta: { request_id: '', api_version: '' }
+          });
         }
         this.isValidating.set(false);
       },
@@ -82,26 +92,21 @@ export class RequestForm {
   }
 
   prepareRequest() {
-    if (!this.legalConsent() || this.isSubmitting()) return;
+    if (!this.legalConsent() || this.isSubmitting() || !this.validationOk()) return;
     
     this.isSubmitting.set(true);
     this.apiError.set(null);
-    this.successData.set(null);
+    this.successResponse.set(null);
 
     this.requestService.prepareRequest(this.payload).subscribe({
       next: (res) => {
+        this.successResponse.set(res.data);
         this.isSubmitting.set(false);
-        this.successData.set(res.data);
-        this.showSuccessModal.set(true);
       },
       error: (err) => {
         this.isSubmitting.set(false);
         this.apiError.set(err);
       }
     });
-  }
-
-  closeModal() {
-    this.showSuccessModal.set(false);
   }
 }

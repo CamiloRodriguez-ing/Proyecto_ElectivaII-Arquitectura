@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+﻿import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MainLayoutComponent } from '../../../core/layouts/main-layout/main-layout.component';
 import { RequestService } from '../../../request/services/request.service';
@@ -185,7 +185,7 @@ export class DashboardComponent implements OnInit {
               documents: []
             },
             {
-              request_id: '64b81234-abcd', type: 'CREDIT_TRANSFER', status: 'ACTION_REQUIRED', version: 1, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), observations: [],
+              request_id: '64b81234-abcd', type: 'CREDIT_TRANSFER', status: 'CHANGES_REQUESTED', version: 1, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), observations: [],
               student: { student_code: '125', name: 'Diego Armando Salazar', email: 'd@u.edu' },
               academic_data: { source_course: 'Física Mecánica', target_course: 'Introducción a la Física Clásica', source_credits: 3, target_credits: 3 },
               documents: []
@@ -239,7 +239,7 @@ export class DashboardComponent implements OnInit {
 
         const approved = by_status['APPROVED'] || 0;
         const rejected = by_status['REJECTED'] || 0;
-        const changes = by_status['ACTION_REQUIRED'] || 0;
+        const changes = by_status['CHANGES_REQUESTED'] || 0;
 
         this.summary.set({
           total,

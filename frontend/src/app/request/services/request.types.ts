@@ -1,4 +1,4 @@
-// Interfaces for Module 2: Requests (Endpoints 2.1 and 2.2)
+﻿// Interfaces for Module 2: Requests (Endpoints 2.1 and 2.2)
 
 export interface RequestStudent {
   student_code: string;
@@ -32,7 +32,7 @@ export interface AcademicRequestResponseData extends AcademicRequestPayload {
   observations: string[];
   created_at: string;
   updated_at: string;
-  version: number;
+  version: number; tenant_id?: string;
 }
 
 export interface ValidateResponseData {
@@ -71,7 +71,7 @@ export interface EvaluationPayload {
   request: {
     request_id: string;
     status: string;
-    version: number;
+    version: number; tenant_id?: string;
   };
   evaluation: {
     decision: 'APPROVE' | 'REJECT' | 'REQUEST_CHANGES';
@@ -87,7 +87,7 @@ export interface EvaluationResponseData {
   request: {
     request_id: string;
     status: string;
-    version: number;
+    version: number; tenant_id?: string;
     updated_at: string;
   };
   event: any;

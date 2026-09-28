@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, computed, signal } from '@angular/core';
+﻿import { Component, EventEmitter, Input, Output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NotificationItem } from '../../services/notification.types';
@@ -43,12 +43,12 @@ import { NotificationItem } from '../../services/notification.types';
           </button>
           <button 
             class="filter-chip px-3 py-1 rounded-full font-label-sm text-label-sm whitespace-nowrap transition-colors"
-            [class.bg-primary]="filter() === 'ACTION_REQUIRED'"
-            [class.text-on-primary]="filter() === 'ACTION_REQUIRED'"
-            [class.bg-surface-container-low]="filter() !== 'ACTION_REQUIRED'"
-            [class.text-on-surface-variant]="filter() !== 'ACTION_REQUIRED'"
-            [class.hover:bg-surface-container]="filter() !== 'ACTION_REQUIRED'"
-            (click)="filter.set('ACTION_REQUIRED')">
+            [class.bg-primary]="filter() === 'CHANGES_REQUESTED'"
+            [class.text-on-primary]="filter() === 'CHANGES_REQUESTED'"
+            [class.bg-surface-container-low]="filter() !== 'CHANGES_REQUESTED'"
+            [class.text-on-surface-variant]="filter() !== 'CHANGES_REQUESTED'"
+            [class.hover:bg-surface-container]="filter() !== 'CHANGES_REQUESTED'"
+            (click)="filter.set('CHANGES_REQUESTED')">
             Requiere ajustes
           </button>
           <button 
@@ -161,7 +161,7 @@ export class NotificationListComponent {
   getStatusBadgeClasses(status: string): string {
     switch (status) {
       case 'APPROVED': return 'bg-[#DCFCE7] text-[#15803D]';
-      case 'ACTION_REQUIRED': return 'bg-[#FFFBEB] text-[#B45309]';
+      case 'CHANGES_REQUESTED': return 'bg-[#FFFBEB] text-[#B45309]';
       case 'REJECTED': return 'bg-[#FEE2E2] text-[#B91C1C]';
       default: return 'bg-surface-container text-on-surface-variant';
     }
@@ -170,7 +170,7 @@ export class NotificationListComponent {
   getStatusIconColor(status: string): string {
     switch (status) {
       case 'APPROVED': return 'bg-[#15803D]';
-      case 'ACTION_REQUIRED': return 'bg-[#B45309]';
+      case 'CHANGES_REQUESTED': return 'bg-[#B45309]';
       case 'REJECTED': return 'bg-[#B91C1C]';
       default: return 'bg-outline';
     }
@@ -179,7 +179,7 @@ export class NotificationListComponent {
   getStatusText(status: string): string {
     switch (status) {
       case 'APPROVED': return 'Aprobada';
-      case 'ACTION_REQUIRED': return 'Requiere ajustes';
+      case 'CHANGES_REQUESTED': return 'Requiere ajustes';
       case 'REJECTED': return 'Rechazada';
       default: return status;
     }
@@ -188,7 +188,7 @@ export class NotificationListComponent {
   getStatusSubtitle(status: string): string {
     switch (status) {
       case 'APPROVED': return 'Previsualización';
-      case 'ACTION_REQUIRED': return 'Syllabus incompleto';
+      case 'CHANGES_REQUESTED': return 'Syllabus incompleto';
       case 'REJECTED': return 'Contenido diferido';
       default: return '';
     }

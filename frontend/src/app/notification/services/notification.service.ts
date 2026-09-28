@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+﻿import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, catchError, throwError, of, delay } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -50,7 +50,7 @@ export class NotificationService {
         {
           id: "SOL-1D88E3A2",
           request_id: "SOL · 1D88E3A2",
-          status: "ACTION_REQUIRED",
+          status: "CHANGES_REQUESTED",
           recipient_name: "Carlos Gómez",
           recipient_email: "carlos.gomez@universidad.edu.co",
           date: "12 de marzo de 2025, 10:18 AM",

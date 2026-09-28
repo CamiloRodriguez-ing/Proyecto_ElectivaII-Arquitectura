@@ -1,14 +1,15 @@
-import { Component } from '@angular/core';
+﻿import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
   imports: [CommonModule, SidebarComponent, HeaderComponent],
   template: `
-    <div class="bg-background font-body-md text-on-surface antialiased">
+    <div [ngClass]="getTenantThemeClass()" class="bg-background font-body-md text-on-surface antialiased transition-colors duration-300">
       <app-sidebar></app-sidebar>
       <div class="pl-[260px]">
         <app-header></app-header>
@@ -21,4 +22,13 @@ import { HeaderComponent } from '../header/header.component';
     </div>
   `
 })
-export class MainLayoutComponent {}
+export class MainLayoutComponent {
+  private authService = inject(AuthService);
+
+  getTenantThemeClass(): string {
+    const email = this.authService.currentUser()?.email?.toLowerCase() || '';
+    if (email.includes('minas')) return 'theme-minas';
+    if (email.includes('electronica')) return 'theme-electronica';
+    return 'theme-sistemas';
+  }
+}

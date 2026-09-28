@@ -125,3 +125,34 @@
 }
 
 ::-webkit-scrollbar { display: none; }
+@layer base {
+  .theme-minas {
+    --color-primary: #d97706; /* amber-600 */
+    --color-primary-container: #fef3c7; /* amber-100 */
+    --color-on-primary-container: #78350f; /* amber-900 */
+    --color-secondary: #0f766e; /* teal-700 */
+    --color-surface-tint: #f59e0b; /* amber-500 */
+    --color-tertiary: #b45309; /* amber-700 */
+    --color-tertiary-container: #fde68a; /* amber-200 */
+    --color-on-tertiary-container: #451a03; /* amber-950 */
+    --color-primary-fixed: #fde68a;
+    --color-on-primary-fixed: #451a03;
+    --color-tertiary-fixed: #fef3c7;
+    --color-on-tertiary-fixed: #78350f;
+  }
+  
+  .theme-electronica {
+    --color-primary: #dc2626; /* red-600 */
+    --color-primary-container: #fee2e2; /* red-100 */
+    --color-on-primary-container: #7f1d1d; /* red-900 */
+    --color-secondary: #0f766e;
+    --color-surface-tint: #ef4444; /* red-500 */
+    --color-tertiary: #b91c1c; /* red-700 */
+    --color-tertiary-container: #fecaca; /* red-200 */
+    --color-on-tertiary-container: #450a0a; /* red-950 */
+    --color-primary-fixed: #fecaca;
+    --color-on-primary-fixed: #450a0a;
+    --color-tertiary-fixed: #fee2e2;
+    --color-on-tertiary-fixed: #7f1d1d;
+  }
+}

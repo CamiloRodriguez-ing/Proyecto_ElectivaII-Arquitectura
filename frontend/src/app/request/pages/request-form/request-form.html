@@ -1,208 +1,148 @@
-<app-main-layout>
-  <!-- Sub-Header / Breadcrumbs & Action Bar -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between pb-space-lg gap-space-md">
-    <div class="flex flex-col gap-1">
-      <div class="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant">
-        <span class="hover:text-primary cursor-pointer transition-colors">Mis solicitudes</span>
-        <span class="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
-        <span class="text-on-surface font-semibold">Nueva solicitud</span>
-      </div>
-      <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Nueva solicitud de homologación</h1>
-      <p class="font-body-md text-body-md text-on-surface-variant">Completa la información académica y valida los datos antes de preparar la solicitud.</p>
-    </div>
-    <div class="flex items-center gap-3">
-      <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant font-code-tabular text-code-tabular">
-        <span class="inline-block w-2 h-2 rounded-full bg-secondary"></span>
-        <span>SESIÓN ID: #ST-89214-COL</span>
-      </div>
-      <button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-colors shadow-sm" type="button">
-        <span class="material-symbols-outlined text-[18px]">history</span>
-        <span>Borrador autoguardado</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Stepper de 4 Pasos -->
-  <div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md mb-space-lg">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-sm relative">
-      <div class="flex items-center gap-3 p-3 rounded-lg bg-surface-container-low transition-all">
-        <div class="w-9 h-9 rounded-full bg-secondary-container text-secondary flex items-center justify-center font-label-lg shadow-sm">
-          <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check</span>
-        </div>
-        <div class="flex flex-col min-w-0">
-          <span class="font-label-sm text-label-sm text-secondary uppercase font-semibold tracking-wide">Paso 1 · Completo</span>
-          <span class="font-headline-sm text-headline-sm text-on-surface truncate">Datos del estudiante</span>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 p-3 rounded-lg bg-surface-container-low transition-all">
-        <div class="w-9 h-9 rounded-full bg-secondary-container text-secondary flex items-center justify-center font-label-lg shadow-sm">
-          <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check</span>
-        </div>
-        <div class="flex flex-col min-w-0">
-          <span class="font-label-sm text-label-sm text-secondary uppercase font-semibold tracking-wide">Paso 2 · Completo</span>
-          <span class="font-headline-sm text-headline-sm text-on-surface truncate">Información académica</span>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 p-3 rounded-lg bg-surface-container-low transition-all">
-        <div class="w-9 h-9 rounded-full bg-secondary-container text-secondary flex items-center justify-center font-label-lg shadow-sm">
-          <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check</span>
-        </div>
-        <div class="flex flex-col min-w-0">
-          <span class="font-label-sm text-label-sm text-secondary uppercase font-semibold tracking-wide">Paso 3 · Completo</span>
-          <span class="font-headline-sm text-headline-sm text-on-surface truncate">Documentos de soporte</span>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 p-3 rounded-lg bg-primary-container text-on-primary shadow-sm transition-all">
-        <div class="w-9 h-9 rounded-full bg-surface-container-lowest text-primary font-bold flex items-center justify-center font-label-lg shadow-sm">
-          <span>4</span>
-        </div>
-        <div class="flex flex-col min-w-0">
-          <span class="font-label-sm text-label-sm text-surface-variant uppercase font-semibold tracking-wide">Paso 4 · En curso</span>
-          <span class="font-headline-sm text-headline-sm text-on-primary truncate">Revisar y preparar</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Layout Principal (2 Columnas Asimétricas: Formularios & Inspector Lateral) -->
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
-    <!-- Columna Izquierda: Bloques de Información Registrada & Homologación (8 cols) -->
-    <div class="lg:col-span-8 flex flex-col gap-space-lg">
-      <app-student-summary [student]="payload.student"></app-student-summary>
-      <app-academic-summary [academicData]="payload.academic_data"></app-academic-summary>
-      <app-document-summary [documents]="payload.documents"></app-document-summary>
+﻿<app-main-layout>
+  <div class="max-w-4xl mx-auto py-8">
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Nueva Solicitud Académica</h1>
+      <p class="text-gray-600">Completa la información a continuación para iniciar el proceso de homologación.</p>
     </div>
 
-    <!-- Columna Derecha: Sección 4 Revisión, Checklist de Validaciones y CTA (4 cols) -->
-    <div class="lg:col-span-4 flex flex-col gap-space-lg sticky top-24">
+    <!-- Error Global -->
+    <div *ngIf="apiError()" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex flex-col gap-2">
+      <div class="flex items-center gap-2 font-semibold">
+        <span class="material-symbols-outlined text-[20px]">error</span>
+        <span>{{ apiError()?.error?.message }}</span>
+      </div>
+      <ul class="list-disc pl-8 text-sm" *ngIf="apiError()?.error?.details?.length">
+        <li *ngFor="let detail of apiError()?.error?.details">
+          {{ detail.field }}: {{ detail.reason }}
+        </li>
+      </ul>
+    </div>
+
+    <!-- Éxito -->
+    <div *ngIf="successResponse()" class="mb-6 p-6 bg-green-50 border border-green-200 rounded-xl text-green-800 flex flex-col items-center justify-center text-center">
+      <span class="material-symbols-outlined text-[48px] mb-2 text-green-600">check_circle</span>
+      <h2 class="text-xl font-bold mb-1">¡Solicitud Radicada Exitosamente!</h2>
+      <p class="mb-4">Tu solicitud ha sido ingresada al sistema.</p>
+      <div class="bg-white px-4 py-2 rounded-lg border border-green-200 font-mono text-lg font-semibold">
+        {{ successResponse()?.request_id }}
+      </div>
+    </div>
+
+    <form (ngSubmit)="validationOk() ? prepareRequest() : validateRequest()" *ngIf="!successResponse()" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       
-      <!-- Errores Dinámicos 422 -->
-      <div *ngIf="apiError()" class="p-space-md rounded-xl bg-error-container text-on-error-container shadow-sm flex flex-col gap-3">
-        <div class="flex items-center justify-between">
-          <span class="font-code-tabular text-code-tabular font-bold bg-error text-on-error px-2 py-0.5 rounded">
-            Error HTTP
-          </span>
-          <span class="material-symbols-outlined text-[20px] text-error">error</span>
-        </div>
-        <h4 class="font-headline-sm text-headline-sm text-on-error-container">{{ apiError()?.error?.message || 'Hubo un error con la solicitud' }}</h4>
-        <ul *ngIf="apiError()?.error?.details?.length" class="font-body-sm text-body-sm list-disc list-inside">
-          <li *ngFor="let det of apiError()?.error?.details">
-            <b>{{ det.field }}:</b> {{ det.reason }}
-          </li>
-        </ul>
-        <div *ngIf="apiError()?.error?.code" class="bg-surface-container-lowest text-on-surface p-2.5 rounded-lg text-code-tabular font-code-tabular mt-2">
-          <code>"code": "{{ apiError()?.error?.code }}"</code>
+      <!-- Paso 1: Datos Básicos -->
+      <div class="p-6 border-b border-gray-200">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-blue-600">person</span>
+          Datos del Estudiante
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Código Estudiantil</label>
+            <input type="text" [(ngModel)]="payload.student.student_code" name="studentCode" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nombres y Apellidos</label>
+            <input type="text" [(ngModel)]="payload.student.name" name="studentName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Correo Institucional</label>
+            <input type="email" [(ngModel)]="payload.student.email" name="studentEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
         </div>
       </div>
 
-      <!-- Card Principal de Revisión y Preparación -->
-      <div class="bg-surface-container-lowest rounded-xl shadow-md p-space-lg relative overflow-hidden">
-        <div class="flex items-center justify-between pb-space-sm mb-space-md">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary text-[24px]">fact_check</span>
-            <h2 class="font-headline-md text-headline-md text-on-surface">4. Revisión y Cierre</h2>
+      <!-- Paso 2: Información Académica -->
+      <div class="p-6 border-b border-gray-200 bg-gray-50/50">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-blue-600">school</span>
+          Información Académica y Convalidación
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <h3 class="text-sm font-bold text-gray-600 uppercase tracking-wide mb-3 border-b pb-2">Asignatura de Origen</h3>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Nombre de la asignatura</label>
+                <input type="text" [(ngModel)]="payload.academic_data.source_course" name="sourceCourse" required class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Créditos aprobados</label>
+                <input type="number" [(ngModel)]="payload.academic_data.source_credits" name="sourceCredits" required min="1" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+              </div>
+            </div>
           </div>
-          <span class="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse" title="Motor de validación activo"></span>
-        </div>
-
-        <div *ngIf="validationOk()" class="mb-space-md p-3.5 rounded-xl bg-secondary-container text-on-secondary-container flex items-start gap-2.5">
-          <span class="material-symbols-outlined text-secondary text-[20px] shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-          <div class="flex flex-col">
-            <span class="font-label-md text-label-md font-bold">POST /v1/requests/validate: OK (200)</span>
-            <span class="font-body-sm text-body-sm">La información cumple rigurosamente las reglas de validación académicas.</span>
+          <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <h3 class="text-sm font-bold text-blue-600 uppercase tracking-wide mb-3 border-b pb-2">Asignatura de Destino</h3>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Nombre de la asignatura (Malla UPTC)</label>
+                <input type="text" [(ngModel)]="payload.academic_data.target_course" name="targetCourse" required class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Créditos esperados</label>
+                <input type="number" [(ngModel)]="payload.academic_data.target_credits" name="targetCredits" required min="1" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <app-validation-checklist [consent]="legalConsent()" (consentChange)="setConsent($event)"></app-validation-checklist>
+      <!-- Paso 3: Documento de Soporte -->
+      <div class="p-6 border-b border-gray-200">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-blue-600">upload_file</span>
+          Documento de Soporte (Contenido Programático)
+        </h2>
+        <div class="flex items-center justify-center w-full">
+          <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+              <span class="material-symbols-outlined text-gray-400 text-3xl mb-2">cloud_upload</span>
+              <p class="mb-1 text-sm text-gray-500"><span class="font-semibold">Haz clic para adjuntar</span> el contenido programático en PDF</p>
+            </div>
+            <input type="file" class="hidden" accept=".pdf" (change)="onFileChange($event)" required />
+          </label>
+        </div>
+        <div *ngIf="fileName" class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+          <span class="material-symbols-outlined text-blue-600">description</span>
+          <span class="text-sm font-medium text-blue-900">{{ fileName }}</span>
+          <span class="material-symbols-outlined text-green-600 ml-auto">check_circle</span>
+        </div>
+      </div>
 
-        <!-- Botones de Acción -->
-        <div class="flex flex-col gap-2.5">
+      <!-- Paso 4: Validar y Preparar -->
+      <div class="p-6 bg-gray-50 flex flex-col md:flex-row items-center justify-between gap-4">
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input type="checkbox" [(ngModel)]="legalConsent" name="legalConsent" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+          <span class="text-sm text-gray-700">Declaro que la información es verídica y verificable.</span>
+        </label>
+        
+        <div class="flex gap-3">
           <button 
-            (click)="prepareRequest()"
-            [disabled]="!legalConsent() || isSubmitting()"
-            [ngClass]="(!legalConsent() || isSubmitting()) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary active:scale-[0.99]'"
-            class="w-full h-11 px-4 rounded-xl bg-primary-container text-on-primary font-label-lg text-label-lg transition-all flex items-center justify-center gap-2 shadow-sm" 
-            type="button"
+            type="button" 
+            *ngIf="!validationOk()"
+            (click)="validateRequest()"
+            [disabled]="isValidating() || isSubmitting()"
+            class="px-6 py-2.5 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg flex items-center gap-2 disabled:opacity-50 transition-colors"
           >
-            <span *ngIf="!isSubmitting()" class="material-symbols-outlined text-[20px]">send</span>
-            <span *ngIf="isSubmitting()" class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
-            <span>+ Preparar solicitud</span>
-          </button>
-          <button 
-            (click)="validateData()"
-            [disabled]="isValidating()"
-            class="w-full h-10 px-4 rounded-xl bg-surface-container hover:bg-surface-variant disabled:opacity-50 text-on-surface font-label-md text-label-md transition-colors flex items-center justify-center gap-2" 
-            type="button"
-          >
+            <span *ngIf="isValidating()" class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
             <span *ngIf="!isValidating()" class="material-symbols-outlined text-[18px]">rule</span>
-            <span *ngIf="isValidating()" class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
-            <span>Re-validar información</span>
+            1. Validar Datos
+          </button>
+
+          <button 
+            type="submit" 
+            *ngIf="validationOk()"
+            [disabled]="!legalConsent() || isSubmitting()"
+            class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm flex items-center gap-2 disabled:opacity-50 transition-colors"
+          >
+            <span *ngIf="isSubmitting()" class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+            <span *ngIf="!isSubmitting()" class="material-symbols-outlined text-[18px]">send</span>
+            2. Radicar Solicitud
           </button>
         </div>
       </div>
 
-      <div class="bg-surface-container p-space-md rounded-xl shadow-sm flex flex-col gap-2">
-        <span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold">Políticas del proceso</span>
-        <ul class="font-body-sm text-body-sm text-on-surface-variant space-y-1.5 list-disc list-inside">
-          <li>Respuesta estimada: 5 días hábiles.</li>
-          <li>Comité de currículo sesiona los jueves.</li>
-          <li>Notificación enviada a bandeja institucional.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Modal Post-Envío -->
-  <div *ngIf="showSuccessModal()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-tertiary/45 backdrop-blur-sm">
-    <div class="bg-surface-container-lowest rounded-2xl shadow-xl max-w-lg w-full p-space-lg relative flex flex-col gap-space-md">
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-xl bg-secondary-container text-secondary flex items-center justify-center shrink-0 shadow-sm">
-          <span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">task_alt</span>
-        </div>
-        <div class="flex flex-col">
-          <span class="font-label-sm text-label-sm text-secondary uppercase font-bold tracking-wider">Demostración exitosa</span>
-          <h3 class="font-headline-lg text-headline-lg text-on-surface">Solicitud preparada con éxito</h3>
-        </div>
-      </div>
-      <p class="font-body-md text-body-md text-on-surface-variant">
-        La solicitud de homologación ha sido procesada mediante <code class="font-code-tabular text-primary">POST /v1/requests/prepare</code> y está lista para el flujo de revisión.
-      </p>
-      
-      <div class="bg-surface-container p-space-md rounded-xl flex flex-col gap-2 font-code-tabular text-code-tabular" *ngIf="successData()">
-        <div class="flex items-center justify-between">
-          <span class="text-on-surface-variant">Identificador único (UUID):</span>
-          <span class="font-bold text-primary font-headline-sm truncate max-w-[200px]" [title]="successData()?.request_id">{{ successData()?.request_id }}</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <span class="text-on-surface-variant">Estado inicial:</span>
-          <span class="px-2 py-0.5 rounded bg-secondary-container text-secondary font-bold text-label-sm uppercase">{{ successData()?.status }}</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <span class="text-on-surface-variant">Versión del schema:</span>
-          <span class="text-on-surface">v{{ successData()?.version }}</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <span class="text-on-surface-variant">Timestamp:</span>
-          <span class="text-on-surface truncate">{{ successData()?.created_at }}</span>
-        </div>
-      </div>
-
-      <div class="p-3 rounded-lg bg-surface-container-high text-on-surface-variant font-body-sm text-body-sm flex items-start gap-2">
-        <span class="material-symbols-outlined text-[18px] text-tertiary shrink-0 mt-0.5">storage</span>
-        <span>
-          <strong>Nota explícita:</strong> No almacenada en base de datos de manera persistente durante el modo demostración.
-        </span>
-      </div>
-
-      <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
-        <button (click)="closeModal()" class="w-full sm:w-1/2 h-10 px-4 rounded-xl bg-surface-container hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-colors" type="button">
-          Ver resumen
-        </button>
-        <button (click)="closeModal()" class="w-full sm:w-1/2 h-10 px-4 rounded-xl bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md transition-colors shadow-sm flex items-center justify-center gap-1.5" type="button">
-          <span>Ir a mis solicitudes</span>
-          <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-        </button>
-      </div>
-    </div>
+    </form>
   </div>
 </app-main-layout>

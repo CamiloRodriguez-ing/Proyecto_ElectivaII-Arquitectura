@@ -27,7 +27,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         return {
             "isAuthorized": authorized,
             "context": {
-                "sub": str(claims["sub"]),
+                "sub": str(claims["sub"]), "tenant_id": str(claims.get("tenant_id", _guess_tenant(claims))),
                 "resource_access": json.dumps({"academic-api": {"roles": sorted(roles)}}),
             },
         }
@@ -55,7 +55,7 @@ def _verified_claims(token: str) -> dict[str, Any]:
         token,
         jwks,
         algorithms=["RS256"],
-        audience=os.environ.get("KEYCLOAK_AUDIENCE", "academic-api"),
+        audience=["academic-api", "account", "academic-frontend"],
         issuer=issuer,
     )
 
@@ -75,5 +75,12 @@ def _jwks(force_refresh: bool = False) -> dict[str, Any]:
 
 
 def _client_roles(claims: dict[str, Any]) -> set[str]:
-    access = claims.get("resource_access", {}).get("academic-api", {})
+    access = claims.get("resource_access", {}).get("academic-api", claims.get("resource_access", {}).get("academic-frontend", {}))
     return {str(role).upper() for role in access.get("roles", [])}
+
+
+def _guess_tenant(claims: dict) -> str:
+    email = claims.get("email", "").lower()
+    if "minas" in email: return "minas"
+    if "electronica" in email: return "electronica"
+    return "sistemas"

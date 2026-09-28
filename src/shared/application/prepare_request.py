@@ -35,5 +35,5 @@ def prepare_request(payload: dict[str, Any]) -> dict[str, Any]:
         "observations": [],
         "created_at": now,
         "updated_at": now,
-        "version": 1,
+        "version": 1,"tenant_id": payload.get("tenant_id", "default_tenant"),
     }

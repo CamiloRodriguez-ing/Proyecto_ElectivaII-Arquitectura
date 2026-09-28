@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+﻿import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MainLayoutComponent } from '../../../core/layouts/main-layout/main-layout.component';
 import { RequestCardComponent } from '../../components/request-card/request-card.component';
@@ -89,7 +89,7 @@ export class RequestList implements OnInit {
       {
         type: 'CREDIT_TRANSFER',
         request_id: '1D88E3A2-9012',
-        status: 'ACTION_REQUIRED',
+        status: 'CHANGES_REQUESTED',
         version: 1,
         created_at: '2025-03-10T14:30:00Z',
         updated_at: '2025-03-11T09:00:00Z',

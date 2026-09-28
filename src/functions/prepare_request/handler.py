@@ -17,11 +17,11 @@ def _publish(_body, result, principal, request_id):
     )
 
 
-def lambda_handler(event, context):
+def _trusted_actor(body, principal):`n    return {**body, "tenant_id": principal.tenant_id}`n`ndef lambda_handler(event, context):
     return handler_for(
         prepare_request,
         event,
         success_status=201,
-        required_roles={"STUDENT", "ADMINISTRATOR"},
+        required_roles={"STUDENT", "ADMINISTRATOR"},`n        prepare_body=_trusted_actor,
         after_success=_publish,
     )
