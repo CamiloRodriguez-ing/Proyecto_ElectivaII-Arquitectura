@@ -1,4 +1,4 @@
-import json
+﻿import json
 from dataclasses import dataclass
 from typing import Any, Iterable
 
@@ -15,6 +15,7 @@ class AuthorizationError(Exception):
 class Principal:
     subject: str
     roles: frozenset[str]
+    tenant_id: str = "default_tenant"
 
 
 def principal_from_event(event: dict[str, Any], client_id: str = "academic-api") -> Principal:
@@ -44,7 +45,8 @@ def principal_from_event(event: dict[str, Any], client_id: str = "academic-api")
             raw_roles = raw_roles.split()
 
     roles = frozenset(str(role).upper() for role in raw_roles if str(role).strip())
-    tenant_id = claims.get("tenant_id", "default_tenant")`n    return Principal(subject=subject, roles=roles, tenant_id=tenant_id)
+    tenant_id = claims.get("tenant_id", "default_tenant")
+    return Principal(subject=subject, roles=roles, tenant_id=tenant_id)
 
 
 def require_any_role(event: dict[str, Any], allowed_roles: Iterable[str]) -> Principal:
@@ -53,3 +55,7 @@ def require_any_role(event: dict[str, Any], allowed_roles: Iterable[str]) -> Pri
     if not principal.roles.intersection(allowed):
         raise AuthorizationError("The authenticated user does not have a role allowed for this route")
     return principal
+
+
+
+

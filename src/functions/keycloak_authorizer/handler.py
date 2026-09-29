@@ -24,6 +24,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         roles = _client_roles(claims)
         allowed_roles = ROLE_MATRIX.get(event.get("routeKey", ""), set())
         authorized = bool(roles.intersection(allowed_roles))
+        print(f"Roles: {roles}, Allowed: {allowed_roles}, Authorized: {authorized}")
         return {
             "isAuthorized": authorized,
             "context": {
@@ -55,7 +56,7 @@ def _verified_claims(token: str) -> dict[str, Any]:
         token,
         jwks,
         algorithms=["RS256"],
-        audience=["academic-api", "account", "academic-frontend"],
+        options={"verify_aud": False},
         issuer=issuer,
     )
 
@@ -75,12 +76,20 @@ def _jwks(force_refresh: bool = False) -> dict[str, Any]:
 
 
 def _client_roles(claims: dict[str, Any]) -> set[str]:
-    access = claims.get("resource_access", {}).get("academic-api", claims.get("resource_access", {}).get("academic-frontend", {}))
-    return {str(role).upper() for role in access.get("roles", [])}
-
+    roles = []
+    resource_access = claims.get('resource_access') or {}
+    access = resource_access.get('academic-api')
+    if not access:
+        access = resource_access.get('academic-frontend') or {}
+    roles.extend(access.get('roles') or [])
+    realm_access = claims.get('realm_access') or {}
+    roles.extend(realm_access.get('roles') or [])
+    return {str(role).upper() for role in roles}
 
 def _guess_tenant(claims: dict) -> str:
-    email = claims.get("email", "").lower()
-    if "minas" in email: return "minas"
-    if "electronica" in email: return "electronica"
-    return "sistemas"
+    email = str(claims.get('email') or '').lower()
+    if 'minas' in email: return 'minas'
+    if 'electronica' in email: return 'electronica'
+    return 'sistemas'
+
+

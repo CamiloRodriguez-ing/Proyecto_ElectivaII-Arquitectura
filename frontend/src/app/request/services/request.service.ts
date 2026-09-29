@@ -1,4 +1,4 @@
-﻿import { Injectable, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable, catchError, throwError, tap, of, map } from 'rxjs';
@@ -40,6 +40,9 @@ export class RequestService {
     
     // Aislamiento: Filtrar solicitudes por tenant
     const tenantRequests = allRequests.filter(req => req.tenant_id === currentTenant);
+    console.log('All Requests:', allRequests);
+    console.log('Current Tenant:', currentTenant);
+    console.log('Filtered:', tenantRequests);
     
     return of({
       data: tenantRequests,

@@ -1,4 +1,4 @@
-﻿import { Component, inject, signal, OnInit } from '@angular/core';
+﻿import { Component, inject, signal, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MainLayoutComponent } from '../../../core/layouts/main-layout/main-layout.component';
@@ -39,12 +39,12 @@ import { AcademicRequestResponseData } from '../../../request/services/request.t
               <div class="flex items-start justify-between mb-2">
                 <span class="font-mono text-xs font-semibold text-blue-600 truncate mr-2">{{ req.request_id }}</span>
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" 
-                      [ngClass]="{'bg-yellow-100 text-yellow-800': req.status === 'UNDER_REVIEW', 'bg-green-100 text-green-800': req.status === 'APPROVED', 'bg-red-100 text-red-800': req.status === 'REJECTED'}">
+                      [ngClass]="{'bg-yellow-100 text-yellow-800': req.status === 'UNDER_REVIEW' || req.status === 'SUBMITTED', 'bg-green-100 text-green-800': req.status === 'APPROVED', 'bg-red-100 text-red-800': req.status === 'REJECTED' || req.status === 'CHANGES_REQUESTED'}">
                   {{ req.status }}
                 </span>
               </div>
               <h3 class="font-bold text-gray-900 text-sm mb-1">{{ req.student.name }} ({{ req.student.student_code }})</h3>
-              <p class="text-sm text-gray-600 truncate">{{ req.academic_data.source_course }} → {{ req.academic_data.target_course }}</p>
+              <p class="text-sm text-gray-600 truncate">{{ req.academic_data.source_course }} &rarr; {{ req.academic_data.target_course }}</p>
               <div class="text-xs text-gray-400 mt-3 flex items-center justify-between">
                 <span>{{ req.type }}</span>
                 <span>{{ req.created_at | date:'short' }}</span>
@@ -52,134 +52,133 @@ import { AcademicRequestResponseData } from '../../../request/services/request.t
             </div>
           </div>
 
-          <!-- Formulario de Evaluación -->
+          <!-- Panel de Detalles y Decisión -->
           <div class="lg:col-span-7">
             <h2 class="text-lg font-bold text-gray-800 border-b pb-2 mb-4">Acciones de Evaluación</h2>
             
-            <div *ngIf="!selectedRequest()" class="h-64 flex flex-col items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-300">
-              <span class="material-symbols-outlined text-gray-400 text-4xl mb-2">touch_app</span>
-              <p class="text-gray-500">Selecciona una solicitud de la lista para evaluarla.</p>
+            <div *ngIf="!selectedRequest()" class="flex flex-col items-center justify-center h-[400px] border border-dashed border-gray-300 rounded-xl bg-gray-50 text-gray-400">
+              <span class="material-symbols-outlined text-4xl mb-3">touch_app</span>
+              <p>Selecciona una solicitud de la lista para evaluarla.</p>
             </div>
 
-            <div *ngIf="selectedRequest()" class="bg-white shadow-sm border border-gray-200 rounded-xl p-6">
-              
-              <div *ngIf="successMessage()" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-start gap-3">
-                <span class="material-symbols-outlined mt-0.5">check_circle</span>
-                <div>
-                  <p class="font-medium">¡Decisión registrada correctamente!</p>
-                  <p class="text-sm mt-1">La evaluación fue enviada al sistema central y se encoló el evento.</p>
+            <div *ngIf="selectedRequest() as req" class="bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col h-full">
+              <!-- Detalles de la Solicitud -->
+              <div class="p-6 bg-gray-50 border-b">
+                <div class="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">{{ req.student.name }}</h3>
+                    <p class="text-sm text-gray-500">{{ req.student.email }} | Código: {{ req.student.student_code }}</p>
+                  </div>
+                  <span class="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-bold">{{ req.type }}</span>
                 </div>
-              </div>
-              
-              <div *ngIf="errorMessage()" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-3">
-                <span class="material-symbols-outlined mt-0.5">error</span>
-                <div>
-                  <p class="font-medium">Error al registrar la decisión</p>
-                  <p class="text-sm mt-1">{{ errorMessage() }}</p>
-                </div>
-              </div>
-
-              <!-- Resumen de la Solicitud Seleccionada -->
-              <div class="mb-6 p-4 bg-blue-50/50 border border-blue-100 rounded-lg">
-                <h4 class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-2">Detalles para revisión</h4>
-                <div class="grid grid-cols-2 gap-4 text-sm">
+                
+                <div class="grid grid-cols-2 gap-4 mt-6 p-4 bg-white rounded-lg border">
                   <div>
-                    <span class="block text-gray-500 text-xs">Estudiante</span>
-                    <span class="font-medium text-gray-900">{{ selectedRequest()?.student?.name }}</span>
+                    <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Materia Origen</p>
+                    <p class="font-medium text-gray-900">{{ req.academic_data.source_course }}</p>
+                    <p class="text-sm text-gray-500">{{ req.academic_data.source_credits }} créditos</p>
                   </div>
                   <div>
-                    <span class="block text-gray-500 text-xs">Correo</span>
-                    <span class="font-medium text-gray-900">{{ selectedRequest()?.student?.email }}</span>
-                  </div>
-                  <div>
-                    <span class="block text-gray-500 text-xs">Origen</span>
-                    <span class="font-medium text-gray-900">{{ selectedRequest()?.academic_data?.source_course }} ({{ selectedRequest()?.academic_data?.source_credits }} cr.)</span>
-                  </div>
-                  <div>
-                    <span class="block text-gray-500 text-xs">Destino</span>
-                    <span class="font-medium text-gray-900">{{ selectedRequest()?.academic_data?.target_course }} ({{ selectedRequest()?.academic_data?.target_credits }} cr.)</span>
-                  </div>
-                  <div class="col-span-2 mt-2 pt-2 border-t border-blue-100">
-                    <span class="block text-gray-500 text-xs">Documento adjunto</span>
-                    <span class="font-medium text-blue-600 flex items-center gap-1 mt-1">
-                      <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
-                      {{ selectedRequest()?.documents?.[0]?.name || 'Sin documento' }}
-                    </span>
+                    <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Materia Destino</p>
+                    <p class="font-medium text-gray-900">{{ req.academic_data.target_course }}</p>
+                    <p class="text-sm text-gray-500">{{ req.academic_data.target_credits }} créditos</p>
                   </div>
                 </div>
               </div>
 
-              <form (ngSubmit)="submitDecision()" class="space-y-6">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Decisión</label>
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <label class="relative flex items-center justify-center gap-2 p-3 border rounded-lg cursor-pointer transition-all" [ngClass]="{'border-green-500 bg-green-50 text-green-700 ring-1 ring-green-500': decision() === 'APPROVE', 'border-gray-200 hover:bg-gray-50 text-gray-700': decision() !== 'APPROVE'}">
-                      <input type="radio" name="decision" value="APPROVE" (change)="decision.set('APPROVE')" class="sr-only">
-                      <span class="material-symbols-outlined text-[20px]">check_circle</span>
-                      <span class="font-medium text-sm">Aprobar</span>
-                    </label>
-
-                    <label class="relative flex items-center justify-center gap-2 p-3 border rounded-lg cursor-pointer transition-all" [ngClass]="{'border-yellow-500 bg-yellow-50 text-yellow-700 ring-1 ring-yellow-500': decision() === 'REQUEST_CHANGES', 'border-gray-200 hover:bg-gray-50 text-gray-700': decision() !== 'REQUEST_CHANGES'}">
-                      <input type="radio" name="decision" value="REQUEST_CHANGES" (change)="decision.set('REQUEST_CHANGES')" class="sr-only">
-                      <span class="material-symbols-outlined text-[20px]">warning</span>
-                      <span class="font-medium text-sm text-center leading-tight">Requerir Cambios</span>
-                    </label>
-
-                    <label class="relative flex items-center justify-center gap-2 p-3 border rounded-lg cursor-pointer transition-all" [ngClass]="{'border-red-500 bg-red-50 text-red-700 ring-1 ring-red-500': decision() === 'REJECT', 'border-gray-200 hover:bg-gray-50 text-gray-700': decision() !== 'REJECT'}">
-                      <input type="radio" name="decision" value="REJECT" (change)="decision.set('REJECT')" class="sr-only">
-                      <span class="material-symbols-outlined text-[20px]">cancel</span>
-                      <span class="font-medium text-sm">Rechazar</span>
-                    </label>
+              <!-- Formulario de Evaluación -->
+              <div class="p-6 flex-grow flex flex-col">
+                
+                <div *ngIf="successMessage()" class="mb-6 bg-green-50 text-green-800 p-4 rounded-lg border border-green-200 flex items-start gap-3">
+                  <span class="material-symbols-outlined text-green-500">check_circle</span>
+                  <div>
+                    <p class="font-bold">¡Evaluación registrada con éxito!</p>
+                    <p class="text-sm">El evento ha sido emitido y guardado localmente.</p>
                   </div>
                 </div>
 
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Observaciones (Requerido)</label>
-                  <textarea 
-                    [(ngModel)]="observation" 
-                    name="observation" 
-                    required
-                    rows="3" 
-                    placeholder="Justificación académica de la decisión tomada..."
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
-                  ></textarea>
+                <div *ngIf="errorMessage()" class="mb-6 bg-red-50 text-red-800 p-4 rounded-lg border border-red-200 flex items-start gap-3">
+                  <span class="material-symbols-outlined text-red-500">error</span>
+                  <div>
+                    <p class="font-bold">Error en la evaluación</p>
+                    <p class="text-sm">{{ errorMessage() }}</p>
+                  </div>
                 </div>
 
-                <div class="pt-4 border-t border-gray-100 flex justify-end">
+                <div class="space-y-6 flex-grow">
+                  <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Decisión:</label>
+                    <div class="flex gap-4">
+                      <label class="flex-1 flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50" [ngClass]="{'border-green-500 ring-1 ring-green-500 bg-green-50 hover:bg-green-50': decision === 'APPROVED'}">
+                        <input type="radio" name="decision" value="APPROVED" [(ngModel)]="decision" class="sr-only">
+                        <span class="material-symbols-outlined mr-2" [ngClass]="{'text-green-600': decision === 'APPROVED', 'text-gray-400': decision !== 'APPROVED'}">check_circle</span>
+                        <span [ngClass]="{'font-bold text-green-700': decision === 'APPROVED', 'font-medium text-gray-700': decision !== 'APPROVED'}">Aprobar</span>
+                      </label>
+                      <label class="flex-1 flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50" [ngClass]="{'border-red-500 ring-1 ring-red-500 bg-red-50 hover:bg-red-50': decision === 'REJECTED'}">
+                        <input type="radio" name="decision" value="REJECTED" [(ngModel)]="decision" class="sr-only">
+                        <span class="material-symbols-outlined mr-2" [ngClass]="{'text-red-600': decision === 'REJECTED', 'text-gray-400': decision !== 'REJECTED'}">cancel</span>
+                        <span [ngClass]="{'font-bold text-red-700': decision === 'REJECTED', 'font-medium text-gray-700': decision !== 'REJECTED'}">Rechazar</span>
+                      </label>
+                      <label class="flex-1 flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50" [ngClass]="{'border-yellow-500 ring-1 ring-yellow-500 bg-yellow-50 hover:bg-yellow-50': decision === 'CHANGES_REQUESTED'}">
+                        <input type="radio" name="decision" value="CHANGES_REQUESTED" [(ngModel)]="decision" class="sr-only">
+                        <span class="material-symbols-outlined mr-2" [ngClass]="{'text-yellow-600': decision === 'CHANGES_REQUESTED', 'text-gray-400': decision !== 'CHANGES_REQUESTED'}">edit_document</span>
+                        <span [ngClass]="{'font-bold text-yellow-700': decision === 'CHANGES_REQUESTED', 'font-medium text-gray-700': decision !== 'CHANGES_REQUESTED'}">Ajustar</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Observaciones Técnicas:</label>
+                    <textarea 
+                      [(ngModel)]="observation"
+                      rows="4" 
+                      class="w-full px-4 py-3 rounded-lg border-gray-300 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none shadow-sm"
+                      placeholder="Justifica la decisión para el estudiante..."></textarea>
+                  </div>
+                </div>
+
+                <div class="mt-8 flex justify-end">
                   <button 
-                    type="submit" 
-                    [disabled]="isSubmitting() || !observation.trim()"
-                    class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  >
-                    <span *ngIf="isSubmitting()" class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
-                    <span *ngIf="!isSubmitting()" class="material-symbols-outlined text-[18px]">send</span>
-                    Registrar Evaluación
+                    (click)="submitReview()"
+                    [disabled]="isSubmitting() || !decision || !observation.trim()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                    <span *ngIf="isSubmitting()" class="material-symbols-outlined animate-spin text-sm">progress_activity</span>
+                    <span *ngIf="!isSubmitting()" class="material-symbols-outlined text-sm">send</span>
+                    Registrar Decisión
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
+
           </div>
         </div>
       </div>
     </app-main-layout>
   `
 })
-export class ValidationReview implements OnInit {
+export class ValidationReview {
   private requestService = inject(RequestService);
   private authService = inject(AuthService);
 
   requests = signal<AcademicRequestResponseData[]>([]);
   selectedRequest = signal<AcademicRequestResponseData | null>(null);
   
-  decision = signal<'APPROVE' | 'REJECT' | 'REQUEST_CHANGES'>('APPROVE');
+  decision = '';
   observation = '';
   
   isSubmitting = signal(false);
   successMessage = signal(false);
   errorMessage = signal('');
 
+  constructor() {
+    effect(() => {
+      if (this.authService.currentUser()) {
+        this.loadRequests();
+      }
+    });
+  }
+
   ngOnInit() {
-    this.loadRequests();
   }
 
   loadRequests() {
@@ -199,30 +198,27 @@ export class ValidationReview implements OnInit {
     this.successMessage.set(false);
     this.errorMessage.set('');
     this.observation = '';
-    this.decision.set('APPROVE');
+    this.decision = '';
   }
 
-  submitDecision() {
+  submitReview() {
     const req = this.selectedRequest();
-    if (!req || !this.observation.trim()) return;
-    
+    const user = this.authService.currentUser();
+    if (!req || !user || !this.decision || !this.observation.trim()) return;
+
     this.isSubmitting.set(true);
-    this.successMessage.set(false);
     this.errorMessage.set('');
+    this.successMessage.set(false);
 
     const payload = {
-      request: {
-        request_id: req.request_id,
-        status: req.status || 'UNDER_REVIEW',
-        version: req.version || 1
-      },
+      request: req,
       evaluation: {
-        decision: this.decision(),
+        decision: this.decision,
+        observation: this.observation,
         actor: {
-          id: this.authService.currentUser()?.id || 'unknown',
-          role: this.authService.currentUser()?.name || 'Revisor'
-        },
-        observation: this.observation
+          id: user.username || user.email,
+          role: 'REVIEWER'
+        }
       }
     };
 
@@ -230,12 +226,15 @@ export class ValidationReview implements OnInit {
       next: (res) => {
         this.isSubmitting.set(false);
         this.successMessage.set(true);
-        this.selectedRequest.set(null); // Deseleccionar
-        this.loadRequests(); // Recargar la lista para ver el nuevo estado
+        // Refresh requests logic
+        this.loadRequests();
+        if (res.data?.request) {
+           this.selectedRequest.set(res.data.request);
+        }
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        this.errorMessage.set(err.message || 'Error de conexión con el servidor AWS');
+        this.errorMessage.set(err.message || 'Ocurrió un error al registrar la evaluación');
       }
     });
   }

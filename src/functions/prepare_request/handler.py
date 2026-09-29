@@ -1,4 +1,4 @@
-import os
+﻿import os
 
 from shared.adapters.http_api_v2 import handler_for
 from shared.adapters.kafka_events import publish_event
@@ -17,11 +17,16 @@ def _publish(_body, result, principal, request_id):
     )
 
 
-def _trusted_actor(body, principal):`n    return {**body, "tenant_id": principal.tenant_id}`n`ndef lambda_handler(event, context):
+def _trusted_actor(body, principal):
+    return {**body, "tenant_id": principal.tenant_id}
+
+def lambda_handler(event, context):
     return handler_for(
         prepare_request,
         event,
         success_status=201,
-        required_roles={"STUDENT", "ADMINISTRATOR"},`n        prepare_body=_trusted_actor,
+        required_roles={"STUDENT", "ADMINISTRATOR"},
+        prepare_body=_trusted_actor,
         after_success=_publish,
     )
+
