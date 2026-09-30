@@ -109,20 +109,20 @@ import { AcademicRequestResponseData } from '../../../request/services/request.t
                   <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Decisión:</label>
                     <div class="flex gap-4">
-                      <label class="flex-1 flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50" [ngClass]="{'border-green-500 ring-1 ring-green-500 bg-green-50 hover:bg-green-50': decision === 'APPROVED'}">
-                        <input type="radio" name="decision" value="APPROVED" [(ngModel)]="decision" class="sr-only">
-                        <span class="material-symbols-outlined mr-2" [ngClass]="{'text-green-600': decision === 'APPROVED', 'text-gray-400': decision !== 'APPROVED'}">check_circle</span>
-                        <span [ngClass]="{'font-bold text-green-700': decision === 'APPROVED', 'font-medium text-gray-700': decision !== 'APPROVED'}">Aprobar</span>
+                      <label class="flex-1 flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50" [ngClass]="{'border-green-500 ring-1 ring-green-500 bg-green-50 hover:bg-green-50': decision === 'APPROVE'}">
+                        <input type="radio" name="decision" value="APPROVE" [(ngModel)]="decision" class="sr-only">
+                        <span class="material-symbols-outlined mr-2" [ngClass]="{'text-green-600': decision === 'APPROVE', 'text-gray-400': decision !== 'APPROVE'}">check_circle</span>
+                        <span [ngClass]="{'font-bold text-green-700': decision === 'APPROVE', 'font-medium text-gray-700': decision !== 'APPROVE'}">Aprobar</span>
                       </label>
-                      <label class="flex-1 flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50" [ngClass]="{'border-red-500 ring-1 ring-red-500 bg-red-50 hover:bg-red-50': decision === 'REJECTED'}">
-                        <input type="radio" name="decision" value="REJECTED" [(ngModel)]="decision" class="sr-only">
-                        <span class="material-symbols-outlined mr-2" [ngClass]="{'text-red-600': decision === 'REJECTED', 'text-gray-400': decision !== 'REJECTED'}">cancel</span>
-                        <span [ngClass]="{'font-bold text-red-700': decision === 'REJECTED', 'font-medium text-gray-700': decision !== 'REJECTED'}">Rechazar</span>
+                      <label class="flex-1 flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50" [ngClass]="{'border-red-500 ring-1 ring-red-500 bg-red-50 hover:bg-red-50': decision === 'REJECT'}">
+                        <input type="radio" name="decision" value="REJECT" [(ngModel)]="decision" class="sr-only">
+                        <span class="material-symbols-outlined mr-2" [ngClass]="{'text-red-600': decision === 'REJECT', 'text-gray-400': decision !== 'REJECT'}">cancel</span>
+                        <span [ngClass]="{'font-bold text-red-700': decision === 'REJECT', 'font-medium text-gray-700': decision !== 'REJECT'}">Rechazar</span>
                       </label>
-                      <label class="flex-1 flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50" [ngClass]="{'border-yellow-500 ring-1 ring-yellow-500 bg-yellow-50 hover:bg-yellow-50': decision === 'CHANGES_REQUESTED'}">
-                        <input type="radio" name="decision" value="CHANGES_REQUESTED" [(ngModel)]="decision" class="sr-only">
-                        <span class="material-symbols-outlined mr-2" [ngClass]="{'text-yellow-600': decision === 'CHANGES_REQUESTED', 'text-gray-400': decision !== 'CHANGES_REQUESTED'}">edit_document</span>
-                        <span [ngClass]="{'font-bold text-yellow-700': decision === 'CHANGES_REQUESTED', 'font-medium text-gray-700': decision !== 'CHANGES_REQUESTED'}">Ajustar</span>
+                      <label class="flex-1 flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50" [ngClass]="{'border-yellow-500 ring-1 ring-yellow-500 bg-yellow-50 hover:bg-yellow-50': decision === 'REQUEST_CHANGES'}">
+                        <input type="radio" name="decision" value="REQUEST_CHANGES" [(ngModel)]="decision" class="sr-only">
+                        <span class="material-symbols-outlined mr-2" [ngClass]="{'text-yellow-600': decision === 'REQUEST_CHANGES', 'text-gray-400': decision !== 'REQUEST_CHANGES'}">edit_document</span>
+                        <span [ngClass]="{'font-bold text-yellow-700': decision === 'REQUEST_CHANGES', 'font-medium text-gray-700': decision !== 'REQUEST_CHANGES'}">Ajustar</span>
                       </label>
                     </div>
                   </div>
