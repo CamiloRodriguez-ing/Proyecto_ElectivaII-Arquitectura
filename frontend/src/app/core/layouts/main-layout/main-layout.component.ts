@@ -2,7 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
-import { AuthService } from '../../../auth/services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-main-layout',
@@ -23,12 +23,7 @@ import { AuthService } from '../../../auth/services/auth.service';
   `
 })
 export class MainLayoutComponent {
-  private authService = inject(AuthService);
-
   getTenantThemeClass(): string {
-    const email = this.authService.currentUser()?.email?.toLowerCase() || '';
-    if (email.includes('minas')) return 'theme-minas';
-    if (email.includes('electronica')) return 'theme-electronica';
-    return 'theme-sistemas';
+    return environment.themeClass;
   }
 }

@@ -2,6 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../auth/services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-sidebar',
@@ -49,16 +50,10 @@ export class SidebarComponent {
   }
 
   getTenantLogo(): string {
-    const email = this.authService.currentUser()?.email?.toLowerCase() || '';
-    if (email.includes('minas')) return 'minas.png';
-    if (email.includes('electronica')) return 'electronica.png';
-    return 'sistemas.png';
+    return environment.logo;
   }
 
   getTenantName(): string {
-    const email = this.authService.currentUser()?.email?.toLowerCase() || '';
-    if (email.includes('minas')) return 'Ing. Minas';
-    if (email.includes('electronica')) return 'Ing. Electrónica';
-    return 'Ing. Sistemas';
+    return environment.tenantName;
   }
 }

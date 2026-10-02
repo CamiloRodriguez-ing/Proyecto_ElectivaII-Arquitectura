@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+﻿import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable, catchError, throwError, tap, of, map } from 'rxjs';
@@ -86,12 +86,7 @@ export class RequestService {
 
   // --- MultiTenant Helper ---
   public getCurrentTenant(): string {
-    const user = this.authService.currentUser();
-    if (!user) return 'default';
-    const email = user.email?.toLowerCase() || '';
-    if (email.includes('minas')) return 'minas';
-    if (email.includes('electronica')) return 'electronica';
-    return 'sistemas';
+    return environment.tenantId;
   }
 
   // --- CQRS Local Read Model Simulation ---
@@ -134,3 +129,5 @@ export class RequestService {
     return throwError(() => error);
   }
 }
+
+
