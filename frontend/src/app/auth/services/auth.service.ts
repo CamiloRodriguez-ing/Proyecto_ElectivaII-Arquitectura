@@ -73,6 +73,18 @@ export class AuthService {
         roleId = 'revisor'; roleName = 'Revisor Docente';
       }
 
+            const email = (decoded.email || '').toLowerCase();
+      const tenant = environment.tenantId.toLowerCase();
+      
+      // BLOQUEO ESTRICTO DE MULTI-TENANCY A NIVEL DE APLICACIÓN
+      if (email && tenant && tenant !== 'default') {
+        if (!email.includes(tenant)) {
+          alert('ACCESO DENEGADO (Tenant Isolation):\nEl usuario ' + email + ' no tiene permitido ingresar al portal de Ingeniería de ' + tenant);
+          this.logout();
+          return;
+        }
+      }
+
       this.currentUser.set({
         id: roleId,
         name: roleName,
@@ -129,3 +141,6 @@ export class AuthService {
     }
   }
 }
+
+
+
