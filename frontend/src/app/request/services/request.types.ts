@@ -14,9 +14,16 @@ export interface RequestAcademicData {
 }
 
 export interface RequestDocument {
+  document_id?: string;
   name: string;
   mime_type: string;
   size_bytes: number;
+}
+
+export interface DocumentUploadResponse {
+  document_id: string;
+  upload_url: string;
+  expires_in: number;
 }
 
 export interface AcademicRequestPayload {

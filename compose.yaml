@@ -1,6 +1,35 @@
 name: academic-requests
 
 services:
+  app-postgres:
+    image: postgres:16.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: academic_requests
+      POSTGRES_USER: academic_app
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD:-local-academic-db}
+    volumes:
+      - application_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U academic_app -d academic_requests"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [application]
+
+  app-migrate:
+    image: postgres:16.6-alpine
+    restart: "no"
+    environment:
+      PGPASSWORD: ${APP_DB_PASSWORD:-local-academic-db}
+    volumes:
+      - ./db/migrations/001_operational.sql:/migrations/001_operational.sql:ro
+    command: ["psql", "-h", "app-postgres", "-U", "academic_app", "-d", "academic_requests", "-v", "ON_ERROR_STOP=1", "-f", "/migrations/001_operational.sql"]
+    depends_on:
+      app-postgres:
+        condition: service_healthy
+    networks: [application]
+
   postgres:
     image: postgres:16.6-alpine
     restart: unless-stopped
@@ -98,6 +127,24 @@ services:
         condition: service_healthy
     networks: [application]
 
+  s3mock:
+    image: adobe/s3mock:5.1.0
+    restart: unless-stopped
+    environment:
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: academic-documents,academic-analytics
+      COM_ADOBE_TESTING_S3MOCK_STORE_ROOT: /s3mockroot
+      COM_ADOBE_TESTING_S3MOCK_STORE_RETAIN_FILES_ON_EXIT: "true"
+    ports:
+      - "9090:9090"
+    volumes:
+      - s3mock_data:/s3mockroot
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/favicon.ico"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [application]
+
   api:
     build:
       context: .
@@ -118,13 +165,27 @@ services:
       KAFKA_TOPIC_REVIEWS: academic-reviews
       KAFKA_TOPIC_NOTIFICATIONS: academic-notifications
       KAFKA_TOPIC_ANALYTICS: academic-analytics
+      PERSISTENCE_ENABLED: "true"
+      DATABASE_URL: postgresql://academic_app:${APP_DB_PASSWORD:-local-academic-db}@app-postgres:5432/academic_requests
+      DOCUMENT_BUCKET: academic-documents
+      ANALYTICS_BUCKET: academic-analytics
+      ANALYTICS_PSEUDONYM_SALT: local-analytics-only
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      S3_ENDPOINT_URL: http://s3mock:9090
+      S3_PUBLIC_ENDPOINT_URL: http://localhost:9090
     ports:
       - "8080:8080"
     depends_on:
+      app-migrate:
+        condition: service_completed_successfully
       keycloak:
         condition: service_healthy
       kafka-init:
         condition: service_completed_successfully
+      s3mock:
+        condition: service_healthy
     healthcheck:
       test:
         [
@@ -151,8 +212,10 @@ services:
     networks: [application]
 
 volumes:
+  application_data:
   keycloak_data:
   kafka_data:
+  s3mock_data:
 
 networks:
   application:

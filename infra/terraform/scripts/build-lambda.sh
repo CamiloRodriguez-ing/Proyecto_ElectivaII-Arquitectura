@@ -3,6 +3,7 @@ set -euo pipefail
 
 source_dir="${1:?source directory is required}"
 build_dir="${2:?build directory is required}"
+migration_dir="${3:?migration directory is required}"
 
 case "$build_dir" in
   */.terraform/build/lambda) ;;
@@ -22,5 +23,7 @@ python3 -m pip install \
   --target "$build_dir"
 
 cp -R -- "$source_dir"/. "$build_dir"/
+mkdir -p -- "$build_dir/migrations"
+cp -- "$migration_dir"/*.sql "$build_dir/migrations/"
 find "$build_dir" -type d -name '__pycache__' -prune -exec rm -rf -- {} +
 find "$build_dir" -type f -name '*.pyc' -delete

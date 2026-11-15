@@ -2,19 +2,19 @@
 
 ## Implemented architecture
 
-Every protected HTTP Lambda publishes a versioned event after its use case succeeds. A producer is created lazily and reused while the Lambda execution environment remains warm. Delivery requests `acks=all`; an unacknowledged event causes an HTTP `503 EVENT_PUBLISH_UNAVAILABLE`, so the caller can retry instead of receiving a false success.
+State-changing request and review Lambdas persist a versioned event envelope in `outbox_events` in the same transaction as operational data. A scheduled publisher uses row locks to claim pending envelopes and publishes with `acks=all`; success records `published_at`, while a broker failure records the error and leaves the row retryable. Stateless validation/preview operations retain direct publication when Kafka is enabled.
 
 The safe local/template default is `KAFKA_ENABLED=false`. A deployed event-producing environment must explicitly set `KafkaEnabled=true` together with reachable broker and network settings; this prevents an incomplete broker configuration from making every business route return `503`.
 
 | Route | Topic | Event type | Partition key |
 |---|---|---|---|
 | `POST /v1/requests/validate` | `academic-requests` | `request.validated.v1` | Keycloak subject |
-| `POST /v1/requests/prepare` | `academic-requests` | `request.submitted.v1` | request ID |
-| `POST /v1/reviews/evaluate` | `academic-reviews` | `request.status_changed.v1` | request ID |
+| `POST /v1/requests/prepare` | `academic-requests` | `request.submitted.v1` | request ID (outbox) |
+| `POST /v1/reviews/evaluate` | `academic-reviews` | `request.status_changed.v1` | request ID (outbox) |
 | `POST /v1/notifications/preview` | `academic-notifications` | `notification.previewed.v1` | Keycloak subject |
 | `POST /v1/analytics/summary` | `academic-analytics` | `analytics.summarized.v1` | Keycloak subject |
 
-Events contain `event_id`, `event_type`, `occurred_at`, `source`, `schema_version`, `correlation_id`, the trusted Keycloak actor and a minimal event-specific `data` object. Student names, email addresses, document names, access tokens and complete HTTP bodies are deliberately excluded.
+Events contain `event_id`, `event_type`, `occurred_at`, `source`, `schema_version`, `correlation_id`, aggregate and tenant identifiers, the trusted Keycloak actor, and a minimal event-specific `data` object. Student names, email addresses, document names, access tokens, and complete HTTP bodies are deliberately excluded. The analytics ingestion projection hashes actor and owner identifiers before writing S3.
 
 ## Deploy Amazon MSK Serverless
 
@@ -59,9 +59,9 @@ Create the four topics from an administrative client placed in the VPC. Recommen
 
 ## Delivery semantics
 
-Publishing is synchronous and at-least-once from a caller retry perspective. Consumers must deduplicate using `event_id` or a business key and must tolerate repeated messages. Because the current API does not persist requests, it cannot implement a transactional outbox. When persistence is introduced, replace direct publication with an outbox to atomically commit state and event intent.
+Outbox publication is asynchronous and at least once. A process can publish and fail before recording `published_at`, so consumers must enforce uniqueness on `event_id`. The outbox makes the database change and event intent atomic, but it does not promise exactly-once broker delivery. Broker outages delay events without rejecting already committed HTTP writes.
 
-Monitor Lambda errors/duration, MSK connection/authentication failures, topic bytes, consumer lag and `503 EVENT_PUBLISH_UNAVAILABLE` responses. Never log payloads containing identity or academic data.
+Monitor pending outbox age/count, attempts and `last_error`, publisher errors/duration, MSK connection/authentication failures, topic bytes, and consumer lag. Alert when the oldest pending event exceeds the agreed service level. Never log payloads containing identity or academic data.
 
 ## Authoritative references
 

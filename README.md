@@ -1,6 +1,6 @@
-# Student Requests Backend
+# Student Requests Platform
 
-Stateless academic request API implemented with Python, one AWS Lambda per endpoint, API Gateway HTTP API, Keycloak authorization, Kafka events, and Terraform. The complete development environment also runs with Docker Compose.
+Persistent academic-request platform implemented with Python, one AWS Lambda per endpoint, API Gateway HTTP API, Keycloak authorization, PostgreSQL/RDS Proxy, private S3 document storage, a transactional Kafka outbox, and an optional S3/Glue/Redshift Serverless OLAP platform. The complete operational flow also runs with Docker Compose.
 
 ## Run the complete stack locally
 
@@ -17,6 +17,8 @@ The local services are:
 - API health: <http://localhost:8080/v1/health>
 - Keycloak: <http://localhost:8081> (administration user `admin`, password from `.env`)
 - Kafka from the host: `localhost:19092`
+- Application PostgreSQL: internal service `app-postgres`
+- S3-compatible document and analytics storage: <http://localhost:9090>
 
 The imported development users are `estudiante.sistemas`, `revisor.sistemas`, `analista.sistemas`, and `admin.sistemas`. Each user's password is its first word (`estudiante`, `revisor`, `analista`, or `admin`). These credentials are local fixtures and must never be used in a deployed environment.
 
@@ -48,20 +50,27 @@ terraform -chdir=infra/terraform plan -out=deployment.tfplan
 terraform -chdir=infra/terraform apply deployment.tfplan
 ```
 
-Edit `terraform.tfvars` first. It supports either the existing external Kafka broker or an optional Terraform-managed Amazon MSK Serverless cluster. Terraform deploys the same Lambda-per-route/API Gateway architecture as the SAM template.
+Edit `terraform.tfvars` first. Terraform provisions the operational database, RDS Proxy, document bucket and migrations. Set `create_msk_serverless=true` for managed Kafka and `analytics_enabled=true` plus a non-default `analytics_pseudonym_salt` for the OLAP platform.
 
 ## Routes
 
 - `GET /v1/health`
 - `POST /v1/requests/validate`
 - `POST /v1/requests/prepare`
+- `GET /v1/requests`
+- `GET /v1/requests/{request_id}`
+- `POST /v1/documents/upload-url`
+- `GET /v1/documents/{document_id}/download-url`
 - `POST /v1/reviews/evaluate`
 - `POST /v1/notifications/preview`
+- `GET /v1/notifications`
+- `PATCH /v1/notifications/{notification_id}/read`
 - `POST /v1/analytics/summary`
+- `GET /v1/analytics/cube/requests`
+- `GET /v1/analytics/cube/equivalences`
+- `GET /v1/analytics/cube/processing-times`
 
-This first stage is intentionally stateless. Prepared requests and events are returned to the caller but are not persisted, and documents are represented only by metadata.
-
-All routes except health require a Keycloak access token with audience `academic-api` and an allowed client role. Successful protected operations publish versioned events to Kafka. For direct local handler tests set `KAFKA_ENABLED=false`; deployed environments should configure a reachable broker.
+All routes except health require a Keycloak access token with audience `academic-api` and an allowed client role. Request and review writes commit their state and event intent atomically; the outbox publisher delivers those events to Kafka with at-least-once semantics. Documents are uploaded directly through short-lived presigned URLs and are never public.
 
 ## Documentation
 
@@ -69,4 +78,5 @@ All routes except health require a Keycloak access token with audience `academic
 - [Deployment](docs/deployment.md)
 - [Keycloak authentication and route authorization](docs/authentication-keycloak.md)
 - [Kafka event integration](docs/kafka-events.md)
+- [Persistence and OLAP](docs/persistence-and-olap.md)
 - [OpenAPI contract](docs/openapi.yaml)

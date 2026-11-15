@@ -63,6 +63,25 @@ class KafkaEventPublisher:
                     self._producer = None
             raise KafkaPublishError(f"Kafka did not acknowledge {event_type}") from error
 
+    def publish_envelope(self, *, topic: str, event: dict[str, Any], key: str) -> None:
+        """Publish an event whose identity was durably assigned by the outbox."""
+        if os.environ.get("KAFKA_ENABLED", "false").lower() != "true":
+            return
+        try:
+            producer = self._get_producer()
+            producer.send(topic, key=key.encode("utf-8"), value=event).get(
+                timeout=float(os.environ.get("KAFKA_ACK_TIMEOUT_SECONDS", "10"))
+            )
+        except Exception as error:
+            with self._lock:
+                if self._producer is not None:
+                    try:
+                        self._producer.close(timeout=0)
+                    except Exception:
+                        pass
+                    self._producer = None
+            raise KafkaPublishError(f"Kafka did not acknowledge {event.get('event_type', 'outbox event')}") from error
+
     def _get_producer(self):
         if self._producer is not None:
             return self._producer
@@ -120,3 +139,7 @@ publisher = KafkaEventPublisher()
 
 def publish_event(**kwargs: Any) -> dict[str, Any] | None:
     return publisher.publish(**kwargs)
+
+
+def publish_envelope(**kwargs: Any) -> None:
+    publisher.publish_envelope(**kwargs)

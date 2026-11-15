@@ -1,6 +1,12 @@
 aws_region      = "us-east-1"
 environment     = "dev"
 frontend_origin = "*"
+persistence_enabled = true
+
+# OLAP resources are opt-in because Redshift Serverless and Glue incur cost.
+# Set a strong, environment-specific salt before enabling them.
+analytics_enabled        = false
+analytics_pseudonym_salt = "replace-with-a-long-random-secret"
 
 keycloak_issuer   = "https://auth.example.edu/realms/academic-requests"
 keycloak_audience = "academic-api"

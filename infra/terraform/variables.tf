@@ -76,24 +76,6 @@ variable "kafka_sasl_mechanism" {
   }
 }
 
-variable "use_kafka_vpc" {
-  description = "Attach event-producing Lambdas to the supplied Kafka VPC networking."
-  type        = bool
-  default     = false
-}
-
-variable "kafka_subnet_ids" {
-  description = "Private subnet IDs used by Lambda when use_kafka_vpc is true."
-  type        = list(string)
-  default     = []
-}
-
-variable "kafka_security_group_ids" {
-  description = "Security group IDs used by Lambda when use_kafka_vpc is true."
-  type        = list(string)
-  default     = []
-}
-
 variable "create_msk_serverless" {
   description = "Create an isolated VPC and Amazon MSK Serverless cluster, and wire the Lambdas to it."
   type        = bool
@@ -114,4 +96,35 @@ variable "lambda_timeout" {
 variable "lambda_memory_size" {
   type    = number
   default = 256
+}
+
+variable "persistence_enabled" {
+  description = "Provision and use the PostgreSQL operational store."
+  type        = bool
+  default     = true
+}
+
+variable "database_instance_class" {
+  description = "RDS PostgreSQL instance class."
+  type        = string
+  default     = "db.t4g.micro"
+}
+
+variable "analytics_enabled" {
+  description = "Provision the S3/Glue/Redshift Serverless OLAP platform."
+  type        = bool
+  default     = false
+}
+
+variable "redshift_base_capacity" {
+  description = "Base RPUs for the Redshift Serverless workgroup."
+  type        = number
+  default     = 8
+}
+
+variable "analytics_pseudonym_salt" {
+  description = "Non-public salt used to pseudonymize analytics identities."
+  type        = string
+  sensitive   = true
+  default     = "replace-before-enabling-analytics"
 }

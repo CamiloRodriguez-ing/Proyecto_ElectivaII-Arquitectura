@@ -2,14 +2,14 @@
 
 ## Complete local environment
 
-Prerequisite: Docker Engine with the Compose plugin. The Compose project runs the Angular SSR frontend, the Lambda-compatible Python API, Keycloak backed by PostgreSQL, and a single-node Redpanda Kafka-compatible broker.
+Prerequisite: Docker Engine with the Compose plugin. The Compose project runs the Angular SSR frontend, the Lambda-compatible Python API, separate application and Keycloak PostgreSQL databases, an S3-compatible object store, and a single-node Redpanda Kafka-compatible broker.
 
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
 
-Wait until `api` and `keycloak` are healthy, then open <http://localhost:4200>. Keycloak is available at <http://localhost:8081>, API health at <http://localhost:8080/v1/health>, and Kafka at `localhost:19092` for host-side inspection.
+Wait until `api` and `keycloak` are healthy, then open <http://localhost:4200>. Keycloak is available at <http://localhost:8081>, API health at <http://localhost:8080/v1/health>, Kafka at `localhost:19092`, and the S3-compatible endpoint at <http://localhost:9090>. The `app-migrate` one-shot service applies the operational schema before API startup.
 
 The realm fixture creates these local-only accounts:
 
@@ -20,13 +20,13 @@ The realm fixture creates these local-only accounts:
 | `analista.sistemas` | `analista` | `ANALYST` |
 | `admin.sistemas` | `admin` | `ADMINISTRATOR` |
 
-Use `docker compose logs -f api keycloak kafka` to inspect the core services and `docker compose down` to stop them. Named volumes retain identity and Kafka data. If the realm fixture changes and a clean re-import is required, remove the local volumes explicitly with `docker compose down --volumes`; this irreversibly deletes only the Compose project's local Keycloak and Kafka data.
+Use `docker compose logs -f api app-postgres keycloak kafka s3mock` to inspect the core services and `docker compose down` to stop them. Named volumes retain application, identity, Kafka, and object data. `docker compose down --volumes` irreversibly deletes all local project data and should only be used for an intentional reset.
 
 The local API server is only an HTTP adapter. It invokes the same authorizer and route handlers used by Lambda, so domain behavior and Kafka event publication are not forked for development.
 
 ## AWS deployment with Terraform
 
-Prerequisites: Terraform 1.5 or newer, Python 3, internet access for provider and Python package installation, and AWS credentials allowed to manage Lambda, IAM, API Gateway, CloudWatch, EC2 networking, and optionally MSK.
+Prerequisites: Terraform 1.5 or newer, Python 3, internet access for provider and Python package installation, and AWS credentials allowed to manage Lambda, IAM, API Gateway, CloudWatch, VPC, RDS, Secrets Manager, S3, and optionally MSK, Glue, Redshift Serverless, EventBridge, and the Redshift Data API.
 
 ```bash
 cp infra/terraform/terraform.tfvars.example infra/terraform/terraform.tfvars
@@ -38,12 +38,23 @@ terraform -chdir=infra/terraform apply deployment.tfplan
 terraform -chdir=infra/terraform output api_url
 ```
 
-Terraform packages `src` and its Lambda dependencies during `plan`/`apply`, creates one Lambda per route, the Keycloak REQUEST authorizer, HTTP API routes and CORS, IAM permissions, X-Ray tracing, and retained CloudWatch log groups.
+Terraform packages `src` and both SQL migrations during `plan`/`apply`. It creates one Lambda per route, the Keycloak REQUEST authorizer, HTTP API routes and CORS, IAM permissions, X-Ray tracing, retained CloudWatch log groups, a private two-AZ VPC, RDS PostgreSQL with a managed master secret and RDS Proxy, and a private encrypted/versioned document bucket. A deployment invocation applies the operational migration after the proxy target is ready.
 
 Two Kafka deployment modes are supported:
 
-- Existing broker: leave `create_msk_serverless=false` and set the bootstrap servers, security protocol, SASL mechanism, VPC subnets, and security groups as applicable.
-- AWS-managed broker: set `create_msk_serverless=true` and `kafka_enabled=true`. Terraform creates an isolated two-AZ VPC and MSK Serverless cluster, selects IAM/SASL automatically, and attaches only event-producing Lambdas to that VPC.
+- Existing broker: leave `create_msk_serverless=false` and set the bootstrap servers and security settings. Because persistent Lambdas run in the application VPC, the broker must be reachable from that VPC through peering, Transit Gateway, PrivateLink, VPN, or equivalent private routing.
+- AWS-managed broker: set `create_msk_serverless=true` and `kafka_enabled=true`. Terraform creates MSK Serverless in the application VPC and selects IAM/SASL automatically.
+
+To enable the analytical platform, set:
+
+```hcl
+analytics_enabled          = true
+analytics_pseudonym_salt   = "a-long-deployment-specific-secret"
+create_msk_serverless      = true
+kafka_enabled              = true
+```
+
+Terraform then creates the analytics bucket, Kafka event source mapping, scheduled Glue transform, Redshift Serverless namespace/workgroup, warehouse migration, hourly loader, and cube APIs. The salt default is rejected when analytics is enabled. Keep it out of source control and shared shell history; use protected variable injection in automated deployments.
 
 MSK Serverless topic administration still requires a Kafka administrative client with VPC access. Create the four topics documented in [Kafka event integration](kafka-events.md) before exercising protected endpoints.
 
@@ -58,7 +69,7 @@ terraform -chdir=infra/terraform plan -destroy -out=destroy.tfplan
 terraform -chdir=infra/terraform apply destroy.tfplan
 ```
 
-Review the destroy plan carefully: it deletes the API, Lambdas, logs, and a Terraform-managed MSK cluster/VPC when enabled.
+Review the destroy plan carefully: it can delete the API, Lambdas, database, buckets in non-production, logs, warehouse, and a Terraform-managed MSK cluster/VPC. Production RDS deletion protection intentionally blocks accidental destruction.
 
 ## Legacy SAM workflow
 
@@ -115,5 +126,7 @@ Verify in this order:
 2. A protected route returns `401` without a token.
 3. A valid token with the wrong client role returns `403`.
 4. A valid role returns the documented `2xx` response.
-5. Kafka contains one correctly keyed, versioned event without student PII.
-6. A deliberately unavailable broker yields `503 EVENT_PUBLISH_UNAVAILABLE`.
+5. A document presigned PUT succeeds and the attached request returns a presigned download URL.
+6. PostgreSQL contains the request plus one pending or published outbox row in the same transaction.
+7. Kafka eventually contains one correctly keyed, versioned event without student PII; retrying a consumer event is harmless.
+8. When analytics is enabled, raw S3 contains only pseudonymized identity fields, Glue produces Parquet, warehouse load succeeds, and each cube endpoint returns tenant-scoped data.

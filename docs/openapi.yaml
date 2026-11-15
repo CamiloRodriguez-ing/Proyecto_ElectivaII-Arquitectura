@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
   title: Student Requests API
-  version: 1.0.0
-  description: Stateless academic request API protected by Keycloak and publishing Kafka events.
+  version: 2.0.0
+  description: Persistent academic-request API protected by Keycloak, with private documents and OLAP queries.
 servers:
-  - url: http://localhost:3000
+  - url: http://localhost:8080
 security:
   - KeycloakBearer: []
 paths:
@@ -13,61 +13,213 @@ paths:
       operationId: getHealth
       security: []
       responses:
-        '200':
-          description: Service health
-          content: {application/json: {schema: {$ref: '#/components/schemas/SuccessResponse'}}}
+        '200': {description: Service health}
   /v1/requests/validate:
     post:
       operationId: validateRequest
-      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/RequestInput'}}}}
+      requestBody: {$ref: '#/components/requestBodies/RequestInput'}
       responses:
         '200': {description: Validation result}
         '400': {$ref: '#/components/responses/BadRequest'}
   /v1/requests/prepare:
     post:
-      operationId: prepareRequest
-      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/RequestInput'}}}}
+      operationId: createRequest
+      requestBody: {$ref: '#/components/requestBodies/RequestInput'}
       responses:
-        '201': {description: Prepared non-persisted request}
+        '201': {description: Persisted request, content: {application/json: {schema: {$ref: '#/components/schemas/SuccessResponse'}}}}
         '422': {$ref: '#/components/responses/ValidationError'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /v1/requests:
+    get:
+      operationId: listRequests
+      parameters:
+        - {in: query, name: limit, schema: {type: integer, minimum: 1, maximum: 100, default: 50}}
+      responses:
+        '200': {description: Tenant-scoped requests}
+  /v1/requests/{request_id}:
+    get:
+      operationId: getRequest
+      parameters:
+        - {$ref: '#/components/parameters/RequestId'}
+      responses:
+        '200': {description: Authorized request detail}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /v1/documents/upload-url:
+    post:
+      operationId: createDocumentUpload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DocumentMetadata'}
+      responses:
+        '201': {description: Pending document ID and short-lived presigned PUT URL}
+        '400': {$ref: '#/components/responses/BadRequest'}
+  /v1/documents/{document_id}/download-url:
+    get:
+      operationId: createDocumentDownload
+      parameters:
+        - {in: path, name: document_id, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200': {description: Short-lived presigned GET URL after authorization}
+        '404': {$ref: '#/components/responses/NotFound'}
   /v1/reviews/evaluate:
     post:
       operationId: evaluateRequest
-      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/EvaluationInput'}}}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/EvaluationInput'}
       responses:
-        '200': {description: Evaluated request and domain event}
+        '200': {description: Persisted review and updated request}
+        '404': {$ref: '#/components/responses/NotFound'}
         '409': {$ref: '#/components/responses/Conflict'}
   /v1/notifications/preview:
     post:
       operationId: previewNotification
-      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/NotificationInput'}}}}
-      responses: {'200': {description: Notification preview}}
+      requestBody:
+        required: true
+        content: {application/json: {schema: {$ref: '#/components/schemas/NotificationInput'}}}
+      responses:
+        '200': {description: Notification preview}
+  /v1/notifications:
+    get:
+      operationId: listNotifications
+      responses:
+        '200': {description: Notifications visible to the authenticated subject}
+  /v1/notifications/{notification_id}/read:
+    patch:
+      operationId: markNotificationRead
+      parameters:
+        - {in: path, name: notification_id, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200': {description: Updated notification}
+        '404': {$ref: '#/components/responses/NotFound'}
   /v1/analytics/summary:
     post:
-      operationId: summarizeRequests
-      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [requests], properties: {requests: {type: array, maxItems: 100, items: {$ref: '#/components/schemas/Request'}}}}}}}
-      responses: {'200': {description: Analytics summary}}
+      operationId: summarizeOperationalRequests
+      responses:
+        '200': {description: Summary calculated from tenant-scoped operational data}
+  /v1/analytics/cube/requests:
+    get:
+      operationId: queryRequestCube
+      parameters:
+        - {$ref: '#/components/parameters/Dimensions'}
+      responses:
+        '200': {description: Request-volume, outcome, credit, and resolution measures}
+  /v1/analytics/cube/equivalences:
+    get:
+      operationId: queryEquivalenceCube
+      parameters:
+        - {$ref: '#/components/parameters/Dimensions'}
+      responses:
+        '200': {description: Equivalence measures by source and target course}
+  /v1/analytics/cube/processing-times:
+    get:
+      operationId: queryProcessingCube
+      parameters:
+        - {$ref: '#/components/parameters/Dimensions'}
+      responses:
+        '200': {description: Review volume and weighted response-time measures}
 components:
   securitySchemes:
     KeycloakBearer:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Keycloak access token with audience academic-api and the route's required client role.
+      description: Keycloak access token with audience academic-api and an allowed client role.
+  parameters:
+    RequestId: {in: path, name: request_id, required: true, schema: {type: string, format: uuid}}
+    Dimensions:
+      in: query
+      name: dimensions
+      schema: {type: string}
+      description: Comma-separated endpoint-specific dimension names; identifiers are server-whitelisted.
+  requestBodies:
+    RequestInput:
+      required: true
+      content: {application/json: {schema: {$ref: '#/components/schemas/RequestInput'}}}
   responses:
-    BadRequest: {description: Invalid JSON or incomplete request}
+    BadRequest: {description: Invalid JSON, metadata, or query parameter}
     ValidationError: {description: Business validation error}
-    Conflict: {description: State transition is not allowed}
+    Conflict: {description: State transition or optimistic version conflict}
+    NotFound: {description: Resource does not exist or is not visible to this principal}
     Unauthorized: {description: Missing Keycloak access token}
-    Forbidden: {description: Invalid token or token without an allowed academic-api client role}
-    EventUnavailable: {description: Kafka did not acknowledge the operation event; the caller may retry}
+    Forbidden: {description: Invalid token or missing academic-api client role}
   schemas:
-    SuccessResponse: {type: object, required: [data, meta], properties: {data: {type: object}, meta: {$ref: '#/components/schemas/Meta'}}}
-    Meta: {type: object, required: [request_id, api_version], properties: {request_id: {type: string}, api_version: {type: string, example: v1}, timestamp: {type: string, format: date-time}}}
-    Student: {type: object, required: [student_code, name, email], properties: {student_code: {type: string}, name: {type: string}, email: {type: string, format: email}}}
-    Document: {type: object, required: [name, mime_type, size_bytes], properties: {name: {type: string}, mime_type: {type: string, enum: [application/pdf]}, size_bytes: {type: integer, minimum: 1, maximum: 10000000}}}
-    AcademicData: {type: object, required: [source_course, target_course, source_credits, target_credits], properties: {source_course: {type: string}, target_course: {type: string}, source_credits: {type: integer}, target_credits: {type: integer}}}
-    RequestInput: {type: object, required: [student, type, academic_data], properties: {student: {$ref: '#/components/schemas/Student'}, type: {type: string, enum: [CREDIT_TRANSFER]}, academic_data: {$ref: '#/components/schemas/AcademicData'}, documents: {type: array, items: {$ref: '#/components/schemas/Document'}}}}
-    Request: {allOf: [{$ref: '#/components/schemas/RequestInput'}, {type: object, required: [request_id, status, version], properties: {request_id: {type: string, format: uuid}, status: {type: string}, version: {type: integer}}}]}
-    EvaluationInput: {type: object, required: [request, evaluation], properties: {request: {$ref: '#/components/schemas/Request'}, evaluation: {type: object, required: [decision, observation, actor], properties: {decision: {type: string, enum: [APPROVE, REJECT, REQUEST_CHANGES]}, observation: {type: string}, actor: {type: object, required: [id, role], properties: {id: {type: string}, role: {type: string}}}}}}}
-    NotificationInput: {type: object, required: [event, recipient], properties: {event: {type: object}, recipient: {type: object, required: [email], properties: {email: {type: string, format: email}}}}}
+    SuccessResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data: {type: object}
+        meta: {$ref: '#/components/schemas/Meta'}
+    Meta:
+      type: object
+      required: [request_id, api_version]
+      properties:
+        request_id: {type: string}
+        api_version: {type: string, example: v1}
+        timestamp: {type: string, format: date-time}
+    Student:
+      type: object
+      required: [student_code, name, email]
+      properties:
+        student_code: {type: string}
+        name: {type: string}
+        email: {type: string, format: email}
+    DocumentMetadata:
+      type: object
+      required: [name, mime_type, size_bytes]
+      properties:
+        document_id: {type: string, format: uuid, description: Returned by the upload-url endpoint}
+        name: {type: string}
+        mime_type: {type: string, enum: [application/pdf]}
+        size_bytes: {type: integer, minimum: 1, maximum: 10000000}
+        checksum_sha256: {type: string, pattern: '^[a-fA-F0-9]{64}$'}
+    AcademicData:
+      type: object
+      required: [source_course, target_course, source_credits, target_credits]
+      properties:
+        source_course: {type: string}
+        target_course: {type: string}
+        source_credits: {type: integer}
+        target_credits: {type: integer}
+    RequestInput:
+      type: object
+      required: [student, type, academic_data]
+      properties:
+        student: {$ref: '#/components/schemas/Student'}
+        type: {type: string, enum: [CREDIT_TRANSFER]}
+        academic_data: {$ref: '#/components/schemas/AcademicData'}
+        documents: {type: array, items: {$ref: '#/components/schemas/DocumentMetadata'}}
+    Request:
+      allOf:
+        - {$ref: '#/components/schemas/RequestInput'}
+        - type: object
+          required: [request_id, status, version]
+          properties:
+            request_id: {type: string, format: uuid}
+            status: {type: string}
+            version: {type: integer, minimum: 1}
+    EvaluationInput:
+      type: object
+      required: [request, evaluation]
+      properties:
+        request: {$ref: '#/components/schemas/Request'}
+        evaluation:
+          type: object
+          required: [decision, observation]
+          properties:
+            decision: {type: string, enum: [APPROVE, REJECT, REQUEST_CHANGES]}
+            observation: {type: string}
+            actor: {type: object, deprecated: true, description: Ignored; actor identity comes from the token.}
+    NotificationInput:
+      type: object
+      required: [event, recipient]
+      properties:
+        event: {type: object}
+        recipient:
+          type: object
+          required: [email]
+          properties: {email: {type: string, format: email}}

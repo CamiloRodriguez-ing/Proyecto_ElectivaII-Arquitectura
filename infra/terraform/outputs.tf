@@ -15,3 +15,19 @@ output "kafka_bootstrap_servers" {
   value     = local.effective_bootstrap_servers
   sensitive = true
 }
+
+output "database_proxy_endpoint" {
+  value = try(aws_db_proxy.this[0].endpoint, null)
+}
+
+output "documents_bucket" {
+  value = aws_s3_bucket.documents.id
+}
+
+output "analytics_bucket" {
+  value = try(aws_s3_bucket.analytics[0].id, null)
+}
+
+output "redshift_workgroup" {
+  value = try(aws_redshiftserverless_workgroup.this[0].workgroup_name, null)
+}

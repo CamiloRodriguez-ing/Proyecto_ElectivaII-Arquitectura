@@ -10,9 +10,18 @@ from jose import JWTError, jwt
 ROLE_MATRIX = {
     "POST /v1/requests/validate": {"STUDENT", "ADMINISTRATOR"},
     "POST /v1/requests/prepare": {"STUDENT", "ADMINISTRATOR"},
+    "GET /v1/requests": {"STUDENT", "REVIEWER", "ANALYST", "ADMINISTRATOR"},
+    "GET /v1/requests/{request_id}": {"STUDENT", "REVIEWER", "ANALYST", "ADMINISTRATOR"},
+    "POST /v1/documents/upload-url": {"STUDENT", "ADMINISTRATOR"},
+    "GET /v1/documents/{document_id}/download-url": {"STUDENT", "REVIEWER", "ADMINISTRATOR"},
     "POST /v1/reviews/evaluate": {"REVIEWER", "ADMINISTRATOR"},
     "POST /v1/notifications/preview": {"REVIEWER", "NOTIFICATION_SERVICE", "ADMINISTRATOR"},
+    "GET /v1/notifications": {"STUDENT", "REVIEWER", "NOTIFICATION_SERVICE", "ADMINISTRATOR"},
+    "PATCH /v1/notifications/{notification_id}/read": {"STUDENT", "REVIEWER", "ADMINISTRATOR"},
     "POST /v1/analytics/summary": {"ANALYST", "ADMINISTRATOR"},
+    "GET /v1/analytics/cube/requests": {"ANALYST", "ADMINISTRATOR"},
+    "GET /v1/analytics/cube/equivalences": {"ANALYST", "ADMINISTRATOR"},
+    "GET /v1/analytics/cube/processing-times": {"ANALYST", "ADMINISTRATOR"},
 }
 
 _jwks_cache: dict[str, Any] | None = None

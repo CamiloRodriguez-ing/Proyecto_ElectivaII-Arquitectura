@@ -169,49 +169,9 @@ export class DashboardComponent implements OnInit {
         this.fetchSummary(data);
       },
       error: () => {
-        // Fallback to simulated data if no backend
-        setTimeout(() => {
-          const simulatedData: AcademicRequestResponseData[] = [
-            {
-              request_id: '89f21234-abcd', type: 'CREDIT_TRANSFER', status: 'APPROVED', version: 2, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), observations: [],
-              student: { student_code: '123', name: 'Carlos Andrés Fuentes', email: 'c@u.edu' },
-              academic_data: { source_course: 'Cálculo Diferencial I', target_course: 'Análisis Matemático I', source_credits: 3, target_credits: 3 },
-              documents: []
-            },
-            {
-              request_id: '77c11234-abcd', type: 'CREDIT_TRANSFER', status: 'UNDER_REVIEW', version: 1, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), observations: [],
-              student: { student_code: '124', name: 'Marina del Pilar Gómez', email: 'm@u.edu' },
-              academic_data: { source_course: 'Estructuras de Datos', target_course: 'Algoritmos y Programación II', source_credits: 3, target_credits: 3 },
-              documents: []
-            },
-            {
-              request_id: '64b81234-abcd', type: 'CREDIT_TRANSFER', status: 'CHANGES_REQUESTED', version: 1, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), observations: [],
-              student: { student_code: '125', name: 'Diego Armando Salazar', email: 'd@u.edu' },
-              academic_data: { source_course: 'Física Mecánica', target_course: 'Introducción a la Física Clásica', source_credits: 3, target_credits: 3 },
-              documents: []
-            },
-            {
-              request_id: '53a91234-abcd', type: 'CREDIT_TRANSFER', status: 'REJECTED', version: 2, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), observations: [],
-              student: { student_code: '126', name: 'Valentina Riaño Ortiz', email: 'v@u.edu' },
-              academic_data: { source_course: 'Microeconomía Aplicada', target_course: 'Economía General y de Empresas', source_credits: 3, target_credits: 3 },
-              documents: []
-            },
-            {
-              request_id: '41d31234-abcd', type: 'CREDIT_TRANSFER', status: 'SUBMITTED', version: 1, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), observations: [],
-              student: { student_code: '127', name: 'Santiago Pérez Mendoza', email: 's@u.edu' },
-              academic_data: { source_course: 'Bases de Datos Relacionales', target_course: 'Sistemas de Bases de Datos', source_credits: 3, target_credits: 3 },
-              documents: []
-            }
-          ];
-          
-          // Replicate 28 requests for the mockup 28 items
-          for(let i=0; i<23; i++) {
-             simulatedData.push({...simulatedData[0], request_id: 'mock-'+i});
-          }
-          
-          this.requests.set(simulatedData);
-          this.fetchSummary(simulatedData);
-        }, 800);
+        this.requests.set([]);
+        this.summary.set(null);
+        this.isLoading.set(false);
       }
     });
   }
@@ -227,30 +187,7 @@ export class DashboardComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        // Fallback local calculation
-        const total = requestsData.length;
-        const by_type: Record<string, number> = {};
-        const by_status: Record<string, number> = {};
-        
-        requestsData.forEach(r => {
-          by_type[r.type] = (by_type[r.type] || 0) + 1;
-          by_status[r.status] = (by_status[r.status] || 0) + 1;
-        });
-
-        const approved = by_status['APPROVED'] || 0;
-        const rejected = by_status['REJECTED'] || 0;
-        const changes = by_status['CHANGES_REQUESTED'] || 0;
-
-        this.summary.set({
-          total,
-          by_type,
-          by_status,
-          approval_percentage: total > 0 ? (approved / total) * 100 : 0,
-          rejection_percentage: total > 0 ? (rejected / total) * 100 : 0,
-          average_resolution_hours: 0,
-          changes_requested: changes
-        });
-        
+        this.summary.set(null);
         this.isLoading.set(false);
       }
     });

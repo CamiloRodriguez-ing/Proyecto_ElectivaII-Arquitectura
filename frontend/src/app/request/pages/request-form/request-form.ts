@@ -36,6 +36,7 @@ export class RequestForm {
   };
 
   fileName = "";
+  private selectedFile: File | null = null;
 
   isValidating = signal(false);
   validationOk = signal(false);
@@ -48,6 +49,7 @@ export class RequestForm {
   onFileChange(event: any) {
     const file = event.target.files[0];
     if (file) {
+      this.selectedFile = file;
       this.fileName = file.name;
       this.payload.documents = [
         {
@@ -57,6 +59,7 @@ export class RequestForm {
         }
       ];
     } else {
+      this.selectedFile = null;
       this.fileName = "";
       this.payload.documents = [];
     }
@@ -98,7 +101,7 @@ export class RequestForm {
     this.apiError.set(null);
     this.successResponse.set(null);
 
-    this.requestService.prepareRequest(this.payload).subscribe({
+    const submit = () => this.requestService.prepareRequest(this.payload).subscribe({
       next: (res) => {
         this.successResponse.set(res.data);
         this.isSubmitting.set(false);
@@ -108,5 +111,20 @@ export class RequestForm {
         this.apiError.set(err);
       }
     });
+
+    if (this.selectedFile) {
+      this.requestService.uploadDocument(this.selectedFile).subscribe({
+        next: ({ document_id }) => {
+          this.payload.documents[0].document_id = document_id;
+          submit();
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          this.apiError.set(err);
+        }
+      });
+    } else {
+      submit();
+    }
   }
 }

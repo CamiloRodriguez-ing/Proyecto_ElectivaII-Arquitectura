@@ -38,8 +38,8 @@ export class RequestList implements OnInit {
       },
       error: (err) => {
         console.error('Error fetching requests:', err);
-        // Fallback for simulation purposes if API is not fully implemented
-        this.requests.set(this.getSimulatedRequests());
+        this.error.set(err?.error?.message || 'No fue posible cargar las solicitudes.');
+        this.requests.set([]);
         this.isLoading.set(false);
       }
     });
@@ -60,44 +60,4 @@ export class RequestList implements OnInit {
     this.selectedRequest.set(null);
   }
 
-  private getSimulatedRequests(): AcademicRequestResponseData[] {
-    return [
-      {
-        type: 'CREDIT_TRANSFER',
-        request_id: '8A41F2C9-1234',
-        status: 'UNDER_REVIEW',
-        version: 1,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        observations: [],
-        student: { student_code: '202012345', name: 'Laura Martínez', email: 'laura@uni.edu.co' },
-        academic_data: { source_course: 'Cálculo I', target_course: 'Cálculo diferencial', source_credits: 3, target_credits: 3 },
-        documents: [{ name: 'contenido-programatico-calculo.pdf', mime_type: 'application/pdf', size_bytes: 1258291 }]
-      },
-      {
-        type: 'CREDIT_TRANSFER',
-        request_id: '5F21B904-5678',
-        status: 'APPROVED',
-        version: 2,
-        created_at: '2025-03-12T10:00:00Z',
-        updated_at: '2025-03-13T10:00:00Z',
-        observations: [],
-        student: { student_code: '202012345', name: 'Laura Martínez', email: 'laura@uni.edu.co' },
-        academic_data: { source_course: 'Programación I', target_course: 'Fundamentos de programación', source_credits: 4, target_credits: 4 },
-        documents: [{ name: 'syllabus-prog-1.pdf', mime_type: 'application/pdf', size_bytes: 2516582 }]
-      },
-      {
-        type: 'CREDIT_TRANSFER',
-        request_id: '1D88E3A2-9012',
-        status: 'CHANGES_REQUESTED',
-        version: 1,
-        created_at: '2025-03-10T14:30:00Z',
-        updated_at: '2025-03-11T09:00:00Z',
-        observations: ['El programa no detalla el módulo de inferencia bayesiana ni las horas prácticas de laboratorio requeridas para los 4 créditos.'],
-        student: { student_code: '202012345', name: 'Laura Martínez', email: 'laura@uni.edu.co' },
-        academic_data: { source_course: 'Estadística básica', target_course: 'Probabilidad y estadística', source_credits: 3, target_credits: 4 },
-        documents: []
-      }
-    ];
-  }
 }

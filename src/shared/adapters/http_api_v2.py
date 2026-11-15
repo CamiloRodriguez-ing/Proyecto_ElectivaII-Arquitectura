@@ -42,7 +42,12 @@ def handler_for(
         error = DomainError("INVALID_JSON", "The request body must be valid JSON")
         return error_response(error, 400, request_id, origin)
     except DomainError as error:
-        status = 409 if error.code == "STATE_TRANSITION_NOT_ALLOWED" else 422
+        status = {
+            "NOT_FOUND": 404,
+            "FORBIDDEN": 403,
+            "STATE_TRANSITION_NOT_ALLOWED": 409,
+            "VERSION_CONFLICT": 409,
+        }.get(error.code, 422)
         return error_response(error, status, request_id, origin)
     except ValueError as error:
         return error_response(DomainError("VALIDATION_ERROR", str(error)), 422, request_id, origin)

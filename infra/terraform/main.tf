@@ -10,24 +10,71 @@ locals {
   functions = {
     health = {
       handler = "functions.health.handler.lambda_handler"
+      vpc     = false
     }
     authorizer = {
       handler = "functions.keycloak_authorizer.handler.lambda_handler"
+      vpc     = false
     }
     validate-request = {
       handler = "functions.validate_request.handler.lambda_handler"
+      vpc     = false
     }
     prepare-request = {
       handler = "functions.prepare_request.handler.lambda_handler"
+      vpc     = true
     }
     evaluate-review = {
       handler = "functions.evaluate_review.handler.lambda_handler"
+      vpc     = true
     }
     preview-notification = {
       handler = "functions.preview_notification.handler.lambda_handler"
+      vpc     = false
     }
     analytics-summary = {
       handler = "functions.analytics_summary.handler.lambda_handler"
+      vpc     = true
+    }
+    request-query = {
+      handler = "functions.request_query.handler.lambda_handler"
+      vpc     = true
+    }
+    document-upload = {
+      handler = "functions.document_upload.handler.lambda_handler"
+      vpc     = true
+    }
+    document-download = {
+      handler = "functions.document_download.handler.lambda_handler"
+      vpc     = true
+    }
+    notification-query = {
+      handler = "functions.notification_query.handler.lambda_handler"
+      vpc     = true
+    }
+    outbox-publisher = {
+      handler = "functions.outbox_publisher.handler.lambda_handler"
+      vpc     = true
+    }
+    db-migrate = {
+      handler = "functions.db_migrate.handler.lambda_handler"
+      vpc     = true
+    }
+    analytics-ingest = {
+      handler = "functions.analytics_ingest.handler.lambda_handler"
+      vpc     = false
+    }
+    analytics-cube = {
+      handler = "functions.analytics_cube.handler.lambda_handler"
+      vpc     = false
+    }
+    warehouse-migrate = {
+      handler = "functions.warehouse_migrate.handler.lambda_handler"
+      vpc     = false
+    }
+    warehouse-load = {
+      handler = "functions.warehouse_load.handler.lambda_handler"
+      vpc     = false
     }
   }
 
@@ -47,6 +94,26 @@ locals {
       function_key  = "prepare-request"
       authorization = "CUSTOM"
     }
+    list-requests = {
+      route_key     = "GET /v1/requests"
+      function_key  = "request-query"
+      authorization = "CUSTOM"
+    }
+    get-request = {
+      route_key     = "GET /v1/requests/{request_id}"
+      function_key  = "request-query"
+      authorization = "CUSTOM"
+    }
+    document-upload = {
+      route_key     = "POST /v1/documents/upload-url"
+      function_key  = "document-upload"
+      authorization = "CUSTOM"
+    }
+    document-download = {
+      route_key     = "GET /v1/documents/{document_id}/download-url"
+      function_key  = "document-download"
+      authorization = "CUSTOM"
+    }
     evaluate-review = {
       route_key     = "POST /v1/reviews/evaluate"
       function_key  = "evaluate-review"
@@ -57,24 +124,48 @@ locals {
       function_key  = "preview-notification"
       authorization = "CUSTOM"
     }
+    list-notifications = {
+      route_key     = "GET /v1/notifications"
+      function_key  = "notification-query"
+      authorization = "CUSTOM"
+    }
+    read-notification = {
+      route_key     = "PATCH /v1/notifications/{notification_id}/read"
+      function_key  = "notification-query"
+      authorization = "CUSTOM"
+    }
     analytics-summary = {
       route_key     = "POST /v1/analytics/summary"
       function_key  = "analytics-summary"
       authorization = "CUSTOM"
     }
+    analytics-cube = {
+      route_key     = "GET /v1/analytics/cube/requests"
+      function_key  = "analytics-cube"
+      authorization = "CUSTOM"
+    }
+    analytics-equivalences = {
+      route_key     = "GET /v1/analytics/cube/equivalences"
+      function_key  = "analytics-cube"
+      authorization = "CUSTOM"
+    }
+    analytics-processing = {
+      route_key     = "GET /v1/analytics/cube/processing-times"
+      function_key  = "analytics-cube"
+      authorization = "CUSTOM"
+    }
   }
 
-  source_root = abspath("${path.module}/../../src")
+  source_root    = abspath("${path.module}/../../src")
+  migration_root = abspath("${path.module}/../../db/migrations")
   source_hash = sha256(join("", concat(
     [for file in sort(fileset(local.source_root, "**")) : filesha256("${local.source_root}/${file}") if !endswith(file, ".pyc") && !strcontains(file, "__pycache__/")],
     [filesha256("${local.source_root}/requirements.txt")],
+    [for file in sort(fileset(local.migration_root, "*.sql")) : filesha256("${local.migration_root}/${file}")],
   )))
 
-  managed_msk_subnet_ids         = var.create_msk_serverless ? aws_subnet.msk[*].id : []
-  managed_msk_security_group_ids = var.create_msk_serverless ? [aws_security_group.msk[0].id] : []
-  effective_subnet_ids           = var.create_msk_serverless ? local.managed_msk_subnet_ids : var.kafka_subnet_ids
-  effective_security_group_ids   = var.create_msk_serverless ? local.managed_msk_security_group_ids : var.kafka_security_group_ids
-  effective_use_kafka_vpc        = var.create_msk_serverless || var.use_kafka_vpc
+  effective_subnet_ids         = aws_subnet.msk[*].id
+  effective_security_group_ids = [aws_security_group.lambda.id]
   effective_bootstrap_servers = var.create_msk_serverless ? one(
     data.aws_msk_bootstrap_brokers.managed[*].bootstrap_brokers_sasl_iam
   ) : var.kafka_bootstrap_servers
@@ -86,7 +177,7 @@ resource "terraform_data" "lambda_build" {
   triggers_replace = [local.source_hash]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/build-lambda.sh '${local.source_root}' '${path.module}/.terraform/build/lambda'"
+    command = "${path.module}/scripts/build-lambda.sh '${local.source_root}' '${path.module}/.terraform/build/lambda' '${local.migration_root}'"
   }
 }
 
@@ -136,6 +227,30 @@ resource "aws_iam_role_policy" "lambda" {
         Resource = "*"
       },
       {
+        Sid      = "PersistenceSecrets"
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue"]
+        Resource = var.persistence_enabled ? aws_db_instance.this[0].master_user_secret[0].secret_arn : "*"
+      },
+      {
+        Sid      = "DocumentStorage"
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:HeadObject"]
+        Resource = "${aws_s3_bucket.documents.arn}/*"
+      },
+      {
+        Sid      = "AnalyticsStorage"
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
+        Resource = var.analytics_enabled ? [aws_s3_bucket.analytics[0].arn, "${aws_s3_bucket.analytics[0].arn}/*"] : [aws_s3_bucket.documents.arn]
+      },
+      {
+        Sid      = "Analytics"
+        Effect   = "Allow"
+        Action   = ["redshift-data:ExecuteStatement", "redshift-data:DescribeStatement", "redshift-data:GetStatementResult", "redshift-serverless:GetCredentials"]
+        Resource = "*"
+      },
+      {
         Sid    = "VpcNetworking"
         Effect = "Allow"
         Action = [
@@ -160,6 +275,8 @@ resource "aws_iam_role_policy" "lambda" {
           "kafka-cluster:Connect",
           "kafka-cluster:DescribeCluster",
           "kafka-cluster:DescribeTopic",
+          "kafka-cluster:DescribeGroup",
+          "kafka-cluster:ReadData",
           "kafka-cluster:WriteData",
         ]
         Resource = "*"
@@ -205,23 +322,25 @@ resource "aws_lambda_function" "this" {
       KAFKA_TOPIC_REVIEWS       = "academic-reviews"
       KAFKA_TOPIC_NOTIFICATIONS = "academic-notifications"
       KAFKA_TOPIC_ANALYTICS     = "academic-analytics"
+      PERSISTENCE_ENABLED       = tostring(var.persistence_enabled)
+      DATABASE_HOST             = var.persistence_enabled ? aws_db_proxy.this[0].endpoint : "disabled"
+      DATABASE_PORT             = "5432"
+      DATABASE_NAME             = "academic_requests"
+      DATABASE_SECRET_ARN       = var.persistence_enabled ? aws_db_instance.this[0].master_user_secret[0].secret_arn : ""
+      DATABASE_SSLMODE          = "require"
+      DOCUMENT_BUCKET           = aws_s3_bucket.documents.id
+      ANALYTICS_BUCKET          = var.analytics_enabled ? aws_s3_bucket.analytics[0].id : "disabled"
+      ANALYTICS_PSEUDONYM_SALT  = var.analytics_pseudonym_salt
+      REDSHIFT_WORKGROUP        = var.analytics_enabled ? aws_redshiftserverless_workgroup.this[0].workgroup_name : "disabled"
+      REDSHIFT_DATABASE         = "analytics"
     }
   }
 
   dynamic "vpc_config" {
-    for_each = local.effective_use_kafka_vpc && !contains(["health", "authorizer"], each.key) ? [1] : []
+    for_each = each.value.vpc ? [1] : []
     content {
       subnet_ids         = local.effective_subnet_ids
       security_group_ids = local.effective_security_group_ids
-    }
-  }
-
-  lifecycle {
-    precondition {
-      condition = !local.effective_use_kafka_vpc || (
-        length(local.effective_subnet_ids) > 0 && length(local.effective_security_group_ids) > 0
-      )
-      error_message = "Kafka VPC attachment requires at least one subnet and one security group."
     }
   }
 
@@ -234,7 +353,7 @@ resource "aws_apigatewayv2_api" "this" {
 
   cors_configuration {
     allow_headers = ["Content-Type", "X-Request-Id", "Authorization"]
-    allow_methods = ["GET", "POST", "OPTIONS"]
+    allow_methods = ["GET", "POST", "PATCH", "OPTIONS"]
     allow_origins = [var.frontend_origin]
   }
 }
@@ -297,4 +416,26 @@ resource "aws_lambda_permission" "authorizer" {
   function_name = aws_lambda_function.this["authorizer"].function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.this.execution_arn}/authorizers/*"
+}
+
+resource "aws_lambda_invocation" "database_migration" {
+  count         = var.persistence_enabled ? 1 : 0
+  function_name = aws_lambda_function.this["db-migrate"].function_name
+  input         = jsonencode({ migration = "001_operational.sql" })
+  triggers = {
+    source_hash = local.source_hash
+    database    = aws_db_instance.this[0].id
+  }
+  depends_on = [aws_db_proxy_target.this]
+}
+
+resource "aws_lambda_invocation" "warehouse_migration" {
+  count         = var.analytics_enabled ? 1 : 0
+  function_name = aws_lambda_function.this["warehouse-migrate"].function_name
+  input         = jsonencode({ migration = "002_warehouse.sql" })
+  triggers = {
+    source_hash = local.source_hash
+    namespace   = aws_redshiftserverless_namespace.this[0].namespace_id
+  }
+  depends_on = [aws_redshiftserverless_workgroup.this]
 }

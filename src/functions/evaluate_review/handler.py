@@ -2,16 +2,31 @@ import os
 
 from shared.adapters.http_api_v2 import handler_for
 from shared.adapters.kafka_events import publish_event
+from shared.adapters.postgres_repository import evaluate_persisted_request, persistence_enabled
 from shared.application.evaluate_request import evaluate_request
 
 
 def _trusted_actor(body, principal):
     evaluation = {**body.get("evaluation", {})}
-    evaluation["actor"] = {"id": principal.subject, "role": sorted(principal.roles)[0], "tenant_id": principal.tenant_id}
-    return {**body, "evaluation": evaluation}
+    evaluation["actor"] = {
+        "id": principal.subject,
+        "role": min(principal.roles),
+        "tenant_id": principal.tenant_id,
+    }
+    return {
+        **body,
+        "evaluation": evaluation,
+        "_principal": {
+            "subject": principal.subject,
+            "roles": list(principal.roles),
+            "tenant_id": principal.tenant_id,
+        },
+    }
 
 
 def _publish(_body, result, principal, request_id):
+    if persistence_enabled():
+        return
     domain_event = result["event"]
     publish_event(
         topic=os.environ["KAFKA_TOPIC_REVIEWS"],
@@ -25,8 +40,20 @@ def _publish(_body, result, principal, request_id):
 
 
 def lambda_handler(event, context):
+    def execute(body):
+        principal = body.pop("_principal", {})
+        if not persistence_enabled():
+            return evaluate_request(body)
+        return evaluate_persisted_request(
+            body,
+            tenant_id=principal["tenant_id"],
+            actor_subject=principal["subject"],
+            actor_roles=set(principal["roles"]),
+            correlation_id=event.get("headers", {}).get("x-request-id", "review"),
+        )
+
     return handler_for(
-        evaluate_request,
+        execute,
         event,
         required_roles={"REVIEWER", "ADMINISTRATOR"},
         prepare_body=_trusted_actor,

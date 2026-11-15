@@ -21,6 +21,10 @@ ROUTES = {
         "POST /v1/requests/prepare",
         "functions.prepare_request.handler",
     ),
+    ("GET", "/v1/requests"): ("GET /v1/requests", "functions.request_query.handler"),
+    ("POST", "/v1/documents/upload-url"): (
+        "POST /v1/documents/upload-url", "functions.document_upload.handler",
+    ),
     ("POST", "/v1/reviews/evaluate"): (
         "POST /v1/reviews/evaluate",
         "functions.evaluate_review.handler",
@@ -29,9 +33,19 @@ ROUTES = {
         "POST /v1/notifications/preview",
         "functions.preview_notification.handler",
     ),
+    ("GET", "/v1/notifications"): ("GET /v1/notifications", "functions.notification_query.handler"),
     ("POST", "/v1/analytics/summary"): (
         "POST /v1/analytics/summary",
         "functions.analytics_summary.handler",
+    ),
+    ("GET", "/v1/analytics/cube/requests"): (
+        "GET /v1/analytics/cube/requests", "functions.analytics_cube.handler",
+    ),
+    ("GET", "/v1/analytics/cube/equivalences"): (
+        "GET /v1/analytics/cube/equivalences", "functions.analytics_cube.handler",
+    ),
+    ("GET", "/v1/analytics/cube/processing-times"): (
+        "GET /v1/analytics/cube/processing-times", "functions.analytics_cube.handler",
     ),
 }
 
@@ -51,9 +65,22 @@ class ApiHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:  # noqa: N802
         self._dispatch()
 
+    def do_PATCH(self) -> None:  # noqa: N802
+        self._dispatch()
+
     def _dispatch(self) -> None:
         path = urlsplit(self.path).path.rstrip("/") or "/"
         route = ROUTES.get((self.command, path))
+        path_parameters: dict[str, str] = {}
+        if route is None and self.command == "GET" and path.startswith("/v1/requests/"):
+            route = ("GET /v1/requests/{request_id}", "functions.request_query.handler")
+            path_parameters["request_id"] = path.removeprefix("/v1/requests/")
+        if route is None and self.command == "GET" and path.startswith("/v1/documents/") and path.endswith("/download-url"):
+            route = ("GET /v1/documents/{document_id}/download-url", "functions.document_download.handler")
+            path_parameters["document_id"] = path.removeprefix("/v1/documents/").removesuffix("/download-url")
+        if route is None and self.command == "PATCH" and path.startswith("/v1/notifications/") and path.endswith("/read"):
+            route = ("PATCH /v1/notifications/{notification_id}/read", "functions.notification_query.handler")
+            path_parameters["notification_id"] = path.removeprefix("/v1/notifications/").removesuffix("/read")
         if route is None:
             self._json_response(404, {"error": {"code": "NOT_FOUND", "message": "Route not found"}})
             return
@@ -68,6 +95,11 @@ class ApiHandler(BaseHTTPRequestHandler):
             "rawPath": path,
             "headers": headers,
             "body": body,
+            "pathParameters": path_parameters,
+            "queryStringParameters": dict(
+                item.split("=", 1) if "=" in item else (item, "")
+                for item in urlsplit(self.path).query.split("&") if item
+            ),
             "requestContext": {
                 "http": {"method": self.command, "path": path},
                 "requestId": headers.get("x-request-id", str(uuid4())),
@@ -118,7 +150,7 @@ class ApiHandler(BaseHTTPRequestHandler):
         if configured != "*" and origin == configured:
             allowed = origin
         self.send_header("access-control-allow-origin", allowed)
-        self.send_header("access-control-allow-methods", "GET,POST,OPTIONS")
+        self.send_header("access-control-allow-methods", "GET,POST,PATCH,OPTIONS")
         self.send_header("access-control-allow-headers", "Content-Type,X-Request-Id,Authorization")
 
     def log_message(self, fmt: str, *args: Any) -> None:
