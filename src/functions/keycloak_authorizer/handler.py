@@ -56,7 +56,7 @@ def _verified_claims(token: str) -> dict[str, Any]:
         token,
         jwks,
         algorithms=["RS256"],
-        options={"verify_aud": False},
+        audience=os.environ["KEYCLOAK_AUDIENCE"],
         issuer=issuer,
     )
 
@@ -69,7 +69,8 @@ def _jwks(force_refresh: bool = False) -> dict[str, Any]:
             _jwks_cache = json.loads(bundled_jwks.read_text(encoding="utf-8"))
     if _jwks_cache is None or force_refresh:
         issuer = os.environ["KEYCLOAK_ISSUER"].rstrip("/")
-        response = requests.get(f"{issuer}/protocol/openid-connect/certs", timeout=5)
+        jwks_url = os.environ.get("KEYCLOAK_JWKS_URL", f"{issuer}/protocol/openid-connect/certs")
+        response = requests.get(jwks_url, timeout=5)
         response.raise_for_status()
         _jwks_cache = response.json()
     return _jwks_cache
@@ -91,5 +92,3 @@ def _guess_tenant(claims: dict) -> str:
     if 'minas' in email: return 'minas'
     if 'electronica' in email: return 'electronica'
     return 'sistemas'
-
-

@@ -58,6 +58,20 @@
               "extractLicenses": false,
               "sourceMap": true
             },
+            "local": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "security": {
+                "allowedHosts": ["localhost", "127.0.0.1"]
+              },
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.local.ts"
+                }
+              ]
+            },
             "minas": {
               "fileReplacements": [
                 {
@@ -96,6 +110,9 @@
             },
             "development": {
               "buildTarget": "frontend:build:development"
+            },
+            "local": {
+              "buildTarget": "frontend:build:local"
             },
             "minas": {
               "buildTarget": "frontend:build:minas"

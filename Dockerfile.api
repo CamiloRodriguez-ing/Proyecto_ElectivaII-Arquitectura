@@ -1,0 +1,16 @@
+FROM python:3.11.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/src
+
+WORKDIR /app
+
+COPY src/requirements.txt /app/src/requirements.txt
+RUN pip install --no-cache-dir --requirement /app/src/requirements.txt
+
+COPY src /app/src
+COPY local/api_server.py /app/local/api_server.py
+
+EXPOSE 8080
+CMD ["python", "/app/local/api_server.py"]

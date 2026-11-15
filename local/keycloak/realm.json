@@ -1,0 +1,103 @@
+{
+  "realm": "academic-requests",
+  "enabled": true,
+  "displayName": "Academic Requests (local)",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "roles": {
+    "client": {
+      "academic-api": [
+        { "name": "STUDENT", "description": "Validate and prepare requests" },
+        { "name": "REVIEWER", "description": "Evaluate requests" },
+        { "name": "ANALYST", "description": "Read aggregate indicators" },
+        { "name": "NOTIFICATION_SERVICE", "description": "Generate notification previews" },
+        { "name": "ADMINISTRATOR", "description": "Application administrator" }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "academic-api",
+      "name": "Academic API",
+      "protocol": "openid-connect",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false
+    },
+    {
+      "clientId": "academic-frontend",
+      "name": "Academic Portal (local)",
+      "protocol": "openid-connect",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "redirectUris": ["http://localhost:4200/*"],
+      "webOrigins": ["http://localhost:4200"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:4200/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "academic-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "academic-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "estudiante.sistemas",
+      "enabled": true,
+      "email": "estudiante@sistemas.local",
+      "emailVerified": true,
+      "firstName": "Estudiante",
+      "lastName": "Sistemas",
+      "credentials": [{ "type": "password", "value": "estudiante", "temporary": false }],
+      "clientRoles": { "academic-api": ["STUDENT"] }
+    },
+    {
+      "username": "revisor.sistemas",
+      "enabled": true,
+      "email": "revisor@sistemas.local",
+      "emailVerified": true,
+      "firstName": "Revisor",
+      "lastName": "Sistemas",
+      "credentials": [{ "type": "password", "value": "revisor", "temporary": false }],
+      "clientRoles": { "academic-api": ["REVIEWER"] }
+    },
+    {
+      "username": "analista.sistemas",
+      "enabled": true,
+      "email": "analista@sistemas.local",
+      "emailVerified": true,
+      "firstName": "Analista",
+      "lastName": "Sistemas",
+      "credentials": [{ "type": "password", "value": "analista", "temporary": false }],
+      "clientRoles": { "academic-api": ["ANALYST"] }
+    },
+    {
+      "username": "admin.sistemas",
+      "enabled": true,
+      "email": "admin@sistemas.local",
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "Sistemas",
+      "credentials": [{ "type": "password", "value": "admin", "temporary": false }],
+      "clientRoles": { "academic-api": ["ADMINISTRATOR"] }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+aws_region      = "us-east-1"
+environment     = "dev"
+frontend_origin = "*"
+
+keycloak_issuer   = "https://auth.example.edu/realms/academic-requests"
+keycloak_audience = "academic-api"
+
+# Safe default: deploy the API without attempting event publication.
+kafka_enabled = false
+
+# Set both values to true to provision and use Amazon MSK Serverless.
+create_msk_serverless = false
+
+# To retain an existing external Kafka broker instead, leave
+# create_msk_serverless=false and configure these values:
+# kafka_enabled           = true
+# kafka_bootstrap_servers = "broker.example.edu:9094"
+# kafka_security_protocol = "PLAINTEXT"
+# kafka_sasl_mechanism    = "NONE"

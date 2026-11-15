@@ -1,0 +1,158 @@
+name: academic-requests
+
+services:
+  postgres:
+    image: postgres:16.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-local-keycloak-db}
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [application]
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.7
+    restart: unless-stopped
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-local-keycloak-db}
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-local-admin}
+      KC_HOSTNAME: http://localhost:8081
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./local/keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/9000; printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3; grep -q '200 OK' <&3"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    networks: [application]
+
+  kafka:
+    image: redpandadata/redpanda:v24.3.18
+    restart: unless-stopped
+    command:
+      - redpanda
+      - start
+      - --mode
+      - dev-container
+      - --smp
+      - "1"
+      - --memory
+      - 512M
+      - --reserve-memory
+      - 0M
+      - --node-id
+      - "0"
+      - --check=false
+      - --kafka-addr
+      - internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr
+      - internal://kafka:9092,external://localhost:19092
+    ports:
+      - "19092:19092"
+    volumes:
+      - kafka_data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health -X brokers=localhost:9092 | grep -q 'Healthy:.*true'"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [application]
+
+  kafka-init:
+    image: redpandadata/redpanda:v24.3.18
+    restart: "no"
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        rpk topic create academic-requests academic-reviews academic-notifications academic-analytics -X brokers=kafka:9092 || true
+        for topic in academic-requests academic-reviews academic-notifications academic-analytics; do
+          rpk topic describe "$$topic" -X brokers=kafka:9092 >/dev/null
+        done
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks: [application]
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    restart: unless-stopped
+    environment:
+      APP_ENV: local
+      PORT: "8080"
+      FRONTEND_ORIGIN: http://localhost:4200
+      KEYCLOAK_ISSUER: http://localhost:8081/realms/academic-requests
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/academic-requests/protocol/openid-connect/certs
+      KEYCLOAK_AUDIENCE: academic-api
+      KAFKA_ENABLED: "true"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_SECURITY_PROTOCOL: PLAINTEXT
+      KAFKA_SASL_MECHANISM: NONE
+      KAFKA_TOPIC_REQUESTS: academic-requests
+      KAFKA_TOPIC_REVIEWS: academic-reviews
+      KAFKA_TOPIC_NOTIFICATIONS: academic-notifications
+      KAFKA_TOPIC_ANALYTICS: academic-analytics
+    ports:
+      - "8080:8080"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8080/v1/health', timeout=2)"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [application]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "4200:4000"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [application]
+
+volumes:
+  keycloak_data:
+  kafka_data:
+
+networks:
+  application:
