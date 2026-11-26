@@ -1,5 +1,10 @@
 # Guía de arquitectura e implementación serverless
 
+> Nota de vigencia (2026-11-25): este documento describe la línea base original.
+> La arquitectura analítica vigente usa Kafka + Apache Druid, archivo S3
+> inmutable y `GET /v1/analytics/summary`. Consulte `docs/architecture.md`,
+> `docs/persistence-and-olap.md` y ADR-008 a ADR-024 para las decisiones actuales.
+
 ## Sistema de solicitudes estudiantiles
 
 Versión documental para la primera etapa del proyecto. Esta guía no implementa el proyecto ni entrega un repositorio de código. Define el alcance, la arquitectura, los contratos y el proceso que debe seguirse cuando se autorice la implementación.

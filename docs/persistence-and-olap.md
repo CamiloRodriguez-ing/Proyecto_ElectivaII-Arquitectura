@@ -2,42 +2,77 @@
 
 ## Operational model
 
-PostgreSQL stores `academic_requests`, `request_documents`, `request_reviews`, `notifications`, and `outbox_events`. Foreign keys keep dependent records attached to a request; tenant and owner indexes support authorization-aware reads. Review updates lock the request row and compare `version`, preventing two reviewers from silently overwriting each other.
+PostgreSQL is the transactional source of truth for requests, documents,
+reviews, notifications, optimistic versions, and the outbox. A request or review
+mutation and its event intent commit in one transaction. The publisher claims
+pending rows with `FOR UPDATE SKIP LOCKED`, publishes with `acks=all`, and records
+`published_at`; failures remain retryable.
 
-Document upload is a three-step flow:
+Document bytes stay in private S3. PostgreSQL stores metadata only, and every
+upload/download uses a short-lived presigned URL after tenant and owner/role
+authorization.
 
-1. `POST /v1/documents/upload-url` validates PDF metadata, creates a pending document row, and returns a five-minute S3 PUT URL.
-2. The browser uploads bytes directly to the private bucket.
-3. `POST /v1/requests/prepare` references the returned `document_id`; the repository verifies the physical S3 object and expected size before attaching it transactionally.
+## Analytical path
 
-Downloads follow the inverse path and enforce tenant plus owner/role access before returning a short-lived GET URL. Database rows never contain document bytes.
-
-## Event consistency
-
-Submitting or reviewing a request changes operational rows and inserts an outbox envelope in one PostgreSQL transaction. The scheduled publisher uses `FOR UPDATE SKIP LOCKED`, publishes with the outbox UUID as `event_id`, and marks successful rows. A broker failure leaves the row pending for retry. This is at-least-once delivery: consumers must make `event_id` unique in their projections.
-
-## Analytical pipeline
-
-```text
-PostgreSQL transaction -> outbox -> Kafka/MSK -> analytics-ingest Lambda
-  -> S3 raw JSON -> Glue normalized Parquet -> Redshift Serverless
-  -> star-schema facts/dimensions -> materialized CUBE views -> analytics API
+```mermaid
+flowchart LR
+  PG[(PostgreSQL)] --> O[Transactional outbox]
+  O --> K[Kafka / MSK Serverless]
+  K --> D[(Apache Druid)]
+  K --> A[Archive consumer]
+  A --> S[(Immutable S3 raw zone)]
+  D --> Q[Analytical API]
+  Q --> UI[Angular dashboard]
 ```
 
-The ingestion Lambda hashes actor and student identifiers with a deployment-specific salt before writing the raw zone. It does not copy student names, email addresses, access tokens, or documents. Raw objects are immutable and partitioned by event type and event time. Glue deduplicates stable event IDs and rebuilds curated Parquet; the Redshift loader uses `MERGE` and recomputed counters so reruns are idempotent.
+Druid uses native Kafka streaming ingestion and normally exposes accepted events
+within 60 seconds. The analytical API never queries operational tables and the
+browser never sends a copy of requests for aggregation. An analytical outage
+therefore cannot roll back a committed academic transaction.
 
-The warehouse contains date, tenant, request-type, status, decision, and course dimensions; request, status-transition, review, and daily-snapshot facts. Its current grains are one request, one status transition, one review decision, and one open request per daily snapshot. Materialized cubes provide:
+The S3 consumer is independent from Druid. It writes one deterministic object
+per `event_id`, partitioned by event type and event time. Actor and student
+sources are salted and hashed before persistence. Names, emails, codes,
+observations, documents, tokens, and reviewer identities are excluded.
+Writes use the S3 create-only precondition, so a replay can acknowledge an
+existing event but cannot replace it. Bucket versioning provides an additional
+recovery trail.
 
-- request volume, decisions, credits, and resolution time;
-- equivalence outcomes by source and target course;
-- review volume and response time by role and decision.
+## Event-state reconstruction
 
-Cube endpoints whitelist dimensions and SQL identifiers. Non-administrators are always restricted to the tenant from their signed token. Weighted sums/counts are used for correct roll-up of averages.
+Submission and review contracts are version 2. Every review event is
+self-contained with request type, course pair, credits, decision, reviewer role,
+submission time, and review time. Druid does not join to PostgreSQL.
 
-## Migrations and recovery
+The request and equivalence cubes group by stable `request_id` and use
+`LATEST_BY(value, __time)` to reconstruct the latest state. This prevents status
+events from double-counting requests. Review processing uses one row per unique
+review event. The supported views are:
 
-- `001_operational.sql` is applied to PostgreSQL by the deployment migration Lambda and by `app-migrate` locally.
-- `002_warehouse.sql` is applied through the Redshift Data API when analytics is enabled.
-- The Glue transform runs every 30 minutes; the warehouse load and cube refresh run hourly.
+- request outcomes by year, month, tenant, type, and status;
+- course equivalences by source course, target course, status, and credits;
+- processing time by year, month, tenant, reviewer role, and decision.
 
-RDS automated backups protect transactional data. S3 versioning protects document replacement and the raw analytical zone is the warehouse rebuild source. In production, test restore procedures regularly and do not use Terraform destroy as a recovery mechanism.
+All SQL identifiers come from server allow lists. Values use Druid SQL
+parameters. Non-administrator calls always inject the tenant from the verified
+token; a browser-provided tenant is rejected.
+
+## Local oracle
+
+`scripts/seed_demo.py` is restricted to `APP_ENV=local|dev`, uses stable UUIDv5
+identifiers, and is idempotent. Its expected totals are in
+`analytics/demo-expected.json`. It inserts operational and outbox rows only, so
+the same Kafka ingestion, archive, and Druid code is exercised by both demo and
+live writes.
+
+Terraform invokes the same generator once inside the private VPC when
+`load_demo_dataset=true`. A configuration guard permits that option only for a
+complete `dev` deployment with persistence and MSK enabled.
+
+## Recovery and retention
+
+Operational recovery uses RDS backups/snapshots. Druid deep storage and the raw
+archive use S3. Kafka retention covers short replay windows, while the raw zone
+is the durable analytical replay source. The dev Terraform lifecycle expires
+archive versions after seven days and destroys non-production data during the
+approved teardown because the dataset is reproducible.

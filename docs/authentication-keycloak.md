@@ -1,457 +1,117 @@
-# Keycloak Authentication and Authorization
+# Autenticación con formulario propio y Keycloak
 
-## Document status
+## Estado
 
-This document describes the implemented backend identity architecture for Student Requests. An API Gateway REQUEST Lambda authorizer validates Keycloak JWT access tokens and the client-role matrix before an endpoint is invoked. Each route Lambda repeats the role check as defense in depth. The frontend login flow is not implemented by this backend change.
+Implementado para ejecución local y preparado en Terraform para AWS. El portal
+presenta su propio formulario; el navegador no se redirige a Keycloak y no
+almacena tokens en `localStorage`, `sessionStorage` ni JavaScript.
 
-Keycloak is the required identity provider. The application remains stateless: Keycloak owns identities, credentials, clients, roles, and identity sessions; the Student Requests API still owns no database and stores no academic requests.
-
-## Security objectives
-
-- Authenticate browser users with OpenID Connect (OIDC).
-- Use OAuth 2.0 access tokens, never ID tokens, to call the API.
-- Keep browser and machine clients separate.
-- Put API permissions in client roles belonging to `academic-api`.
-- Validate the token issuer, RS256 signature, expiration, and audience in the Lambda authorizer attached to API Gateway.
-- Enforce the route-to-role matrix before executing a use case.
-- Derive the actor identity from the validated token instead of trusting `actor`, email, or role values sent in a request body.
-
-Authentication answers **who the caller is**. Authorization answers **what that caller may do**. Both controls are required.
-
-## Implemented topology
+## Flujo
 
 ```text
-                         OIDC login / PKCE
-Browser ───────────────────────────────────────────┐
-   │                                               v
-   │ Bearer access token                  Keycloak (remote HTTPS)
-   │                                      realm: academic-requests
-   v                                               │
-API Gateway HTTP API
-   │
-   v
-Keycloak authorizer Lambda <──── public signing keys ────┘
-   │ validated subject and roles
-   v
-endpoint role guard
-   │
-   ├── validate-request Lambda
-   ├── prepare-request Lambda
-   ├── evaluate-review Lambda
-   ├── preview-notification Lambda
-   └── analytics-summary Lambda
+Angular /login
+  │ POST /v1/auth/login {username,password}
+  v
+Auth facade Lambda/Python ── Direct Grant confidencial ──> Keycloak
+  │
+  ├─ academic_access  HttpOnly; SameSite=Strict; Path=/v1
+  ├─ academic_refresh HttpOnly; SameSite=Strict; Path=/v1/auth
+  └─ academic_csrf    SameSite=Strict; Path=/ (legible por rutas Angular)
+  v
+Rutas /v1/* ── authorizer valida firma, issuer, audience, expiración y rol
 ```
 
-The current development issuer configured by SAM is:
+En AWS, Angular y `/v1/*` comparten el hostname HTTPS de CloudFront. CloudFront
+envía `/v1/*` a API Gateway sin caché y conserva cookies, consultas y los
+encabezados necesarios. En local, Nginx hace el mismo proxy a `api:8080`.
 
-```text
-https://keycloak-3a73e53a-a0c9-4484-ba06-7bfbeca55673.moonshard-wow.com/realms/academic-requests
-```
+## Endpoints de sesión
 
-For a controlled institutional deployment, use an issuer such as:
+| Método y ruta | Protección | Propósito |
+|---|---|---|
+| `POST /v1/auth/login` | Pública + límite de tasa | Intercambia credenciales con Keycloak y crea cookies de sesión. |
+| `GET /v1/auth/me` | Access token validado | Devuelve identidad, tenant y roles seguros. |
+| `POST /v1/auth/refresh` | Refresh cookie + CSRF | Rota access token, refresh token y token CSRF. |
+| `POST /v1/auth/logout` | CSRF si existe sesión | Cierra la sesión en Keycloak y elimina las tres cookies. |
 
-```text
-https://auth.example.edu/realms/academic-requests
-```
+El formulario acepta solamente usuario y contraseña. El backend reenvía esos
+valores inmediatamente al endpoint de tokens y nunca los registra ni persiste.
+Los errores de credenciales son genéricos para evitar enumeración de usuarios.
+Alta de usuarios, cambio/recuperación de contraseña y MFA quedan fuera del
+portal; los administra Keycloak.
 
-`auth.example.edu` is a placeholder and must be replaced with the real public hostname everywhere. The issuer must match the discovery document exactly; changing the realm name, scheme, host, port, or path changes the issuer.
+## Clientes y roles
 
-## Realm and multi-client model
-
-Create one realm named `academic-requests`. Do not configure application users in the `master` realm.
-
-| Client ID | Type | Purpose | Enabled flow |
+| Cliente | Tipo | Uso | Flujos habilitados |
 |---|---|---|---|
-| `academic-portal` | Public browser client | Current static frontend | Authorization Code with PKCE S256 |
-| `academic-api` | Resource/API client | Audience and namespace for API roles | No interactive or direct grant flow |
-| `academic-automation` | Confidential machine client | Future trusted notification or operational job | Service Accounts / Client Credentials only |
-
-This separation is the multi-client design. A browser never receives a client secret. A machine secret never appears in frontend files. The API accepts only tokens whose `aud` contains `academic-api`.
-
-### `academic-portal`
-
-Configure the client as follows:
-
-- Client type: `OpenID Connect`.
-- Client authentication: `Off` (public client).
-- Standard flow: `On`.
-- Implicit flow: `Off`.
-- Direct access grants: `Off`.
-- Service accounts: `Off`.
-- PKCE method: `S256`.
-- Valid redirect URIs: the exact production frontend paths, for example `https://portal.example.edu/*`.
-- Valid post-logout redirect URIs: the exact production frontend paths.
-- Web origins: the exact production origin, for example `https://portal.example.edu`.
-
-Do not use `*` for redirect URIs or web origins in production. A JavaScript application is a public client because it cannot keep a secret. Keycloak also recommends specific redirect URIs and web origins for browser clients.
-
-### `academic-api`
-
-Use this client only as the resource-server identity and role namespace:
-
-- Client authentication: `On`.
-- Standard flow, direct access grants, implicit flow, and service accounts: `Off`.
-- Define all application roles in this client's **Roles** tab.
-- Do not distribute this client's secret to the frontend or Lambda functions; token validation uses the realm's public signing keys.
-
-For `academic-portal`, create an Audience protocol mapper in its dedicated client scope:
-
-- Name: `academic-api-audience`.
-- Included Client Audience: `academic-api`.
-- Add to access token: `On`.
-- Add to ID token: `Off`.
-
-Apply the same audience mapper to `academic-automation`. The resulting access token must have `academic-api` in `aud`. This prevents a token intended only for another client from being accepted by this API.
-
-### `academic-automation`
-
-- Client authentication: `On`.
-- Service accounts: `On`.
-- Standard flow, implicit flow, and direct access grants: `Off`.
-- Store its secret in a server-side secret manager, never in Git or the frontend.
-- Assign only the `NOTIFICATION_SERVICE` client role to its service account unless another permission is explicitly justified.
-- Rotate the secret after exposure and periodically according to the operating policy.
-
-This client obtains an access token from:
-
-```text
-POST https://auth.example.edu/realms/academic-requests/protocol/openid-connect/token
-Content-Type: application/x-www-form-urlencoded
-
-grant_type=client_credentials&client_id=academic-automation&client_secret=REDACTED
-```
-
-## API roles
-
-Create these as **client roles of `academic-api`**, not as realm roles:
-
-| Role | Meaning |
-|---|---|
-| `STUDENT` | Validate and prepare the caller's academic request. |
-| `REVIEWER` | Evaluate an academic request and preview its resulting notification. |
-| `ANALYST` | Read the aggregate demonstration indicators. |
-| `NOTIFICATION_SERVICE` | Machine-only permission to generate notification previews. |
-| `ADMINISTRATOR` | Application administrator with all human-facing API permissions. |
-
-Make `ADMINISTRATOR` a composite of `STUDENT`, `REVIEWER`, and `ANALYST`. Grant it explicit access to notification preview as shown below; do not make human administrators members of the machine client.
-
-`ADMINISTRATOR` is an application role. It must not imply Keycloak realm administration or access to the Keycloak Admin Console.
-
-### Groups and assignments
-
-Use realm groups to simplify user administration:
-
-| Group | Assigned `academic-api` client role |
-|---|---|
-| `/students` | `STUDENT` |
-| `/reviewers` | `REVIEWER` |
-| `/analysts` | `ANALYST` |
-| `/api-administrators` | `ADMINISTRATOR` |
-
-Assign users to groups instead of repeatedly assigning roles directly. Do not place the `NOTIFICATION_SERVICE` role in a human group; assign it only to the `academic-automation` service account.
-
-## Route authorization matrix
-
-The matrix is deny-by-default. A protected route not present in the matrix must be rejected until its permission is explicitly designed.
-
-| Method and route | Public | Allowed `academic-api` roles |
-|---|:---:|---|
-| `GET /v1/health` | Yes | None required |
-| `POST /v1/requests/validate` | No | `STUDENT`, `ADMINISTRATOR` |
-| `POST /v1/requests/prepare` | No | `STUDENT`, `ADMINISTRATOR` |
-| `POST /v1/reviews/evaluate` | No | `REVIEWER`, `ADMINISTRATOR` |
-| `POST /v1/notifications/preview` | No | `REVIEWER`, `NOTIFICATION_SERVICE`, `ADMINISTRATOR` |
-| `POST /v1/analytics/summary` | No | `ANALYST`, `ADMINISTRATOR` |
-
-The current stateless API cannot prove ownership of a request received in the body. In a persistence phase, `STUDENT` access must additionally require that the token subject owns the request. A role check alone is not object-level authorization.
-
-## Access-token contract
-
-A browser sends the access token in the standard header:
-
-```http
-Authorization: Bearer eyJ...
-```
-
-The relevant decoded claims should look like this:
-
-```json
-{
-  "iss": "https://auth.example.edu/realms/academic-requests",
-  "sub": "9e3c5e1d-...",
-  "aud": ["academic-api"],
-  "azp": "academic-portal",
-  "exp": 1788541200,
-  "resource_access": {
-    "academic-api": {
-      "roles": ["STUDENT"]
-    }
-  }
-}
-```
-
-Authorization must read only `resource_access.academic-api.roles`. It must not accept a similarly named role from `realm_access` or another client.
-
-### HTTP outcomes
-
-- `401 Unauthorized`: the `Authorization` identity source is missing, so API Gateway does not invoke the authorizer.
-- `403 Forbidden`: token malformed, expired, signed by an unknown key, wrong issuer/audience, or valid without an allowed `academic-api` role.
-- `2xx`: both token validation and route authorization passed, then the business operation succeeded.
-
-## Enforcement with API Gateway and Lambda
-
-The deployed HTTP API uses a payload-format `2.0` REQUEST Lambda authorizer with simple responses. Configure:
-
-```text
-Identity source: $request.header.Authorization
-Authorizer:      functions.keycloak_authorizer.handler.lambda_handler
-Issuer env:      https://auth.example.edu/realms/academic-requests
-Audience env:    academic-api
-```
-
-Attach this authorizer to every route except `GET /v1/health` and `OPTIONS` preflight requests.
-
-The native API Gateway JWT authorizer was not used in the current development deployment because AWS could not retrieve the configured issuer discovery endpoint. The same network restriction also prevents Lambda from refreshing JWKS. The current RS256 public signing JWK is therefore packaged with the authorizer for offline validation. Public keys are not secrets, but a Keycloak signing-key rotation requires updating `src/functions/keycloak_authorizer/jwks.json` and redeploying before new tokens are accepted.
-
-1. API Gateway rejects requests missing the configured `Authorization` identity source.
-2. The authorizer verifies the token's `kid` against the packaged Keycloak JWK and validates RS256 signature, `iss`, `aud`, `exp`, `nbf`, and `iat`.
-3. It reads only `resource_access.academic-api.roles` and applies a deny-by-default route matrix.
-4. For an allowed request it returns only trusted `sub` and client roles in authorizer context; tokens are never forwarded in context.
-5. The endpoint adapter reads `requestContext.authorizer.lambda`, repeats the role check, and derives the actor from `sub`.
-
-The implementation also:
-
-- Adds `Authorization` to API Gateway CORS `AllowHeaders`.
-- Keeps `OPTIONS` unauthenticated so browser preflight succeeds.
-- Uses `sub` as the stable actor ID.
-- Replaces the body-provided evaluation actor with the validated token subject and role.
-- Never logs access tokens, refresh tokens, authorization headers, passwords, or client secrets.
-
-## Keycloak configuration procedure
-
-After the remote server is available:
-
-1. Sign in to the Admin Console with the one-time bootstrap administrator.
-2. Create the `academic-requests` realm and require TLS for external requests.
-3. Create the three clients using the settings in this document.
-4. Create the five client roles under `Clients` → `academic-api` → `Roles`.
-5. Configure the `ADMINISTRATOR` composite roles.
-6. Add the explicit `academic-api` audience mapper to the portal and automation clients; enable it only for access tokens.
-7. Create the four realm groups and map the corresponding client roles.
-8. Create demonstration users and add each one to the appropriate group.
-9. Assign `NOTIFICATION_SERVICE` to the `academic-automation` service account.
-10. Inspect a decoded test access token and confirm `iss`, `aud`, `azp`, `exp`, and `resource_access.academic-api.roles` before integrating the API.
-
-Use separate realms for materially isolated environments, for example `academic-requests-dev` and `academic-requests-prod`. Never use production credentials in a development realm.
-
-## Remote deployment: single-node academic environment
-
-This is a concrete, low-complexity deployment for a class demonstration. It runs on a remote Linux VM such as an AWS EC2 instance or a VPS, not on a developer laptop:
-
-```text
-Internet
-   │ 80/443
-   v
-Caddy (automatic TLS)
-   │ private Docker network :8080
-   v
-Keycloak
-   │ private Docker network :5432
-   v
-PostgreSQL persistent volume
-```
-
-PostgreSQL here belongs only to the identity platform. It stores realms, users, roles, clients, and Keycloak state; it is not an application-request database. A durable supported database is required for a production-mode Keycloak deployment.
-
-This single VM is appropriate for an academic demo but is a single point of failure. For production availability, run multiple Keycloak instances behind a load balancer and use a managed, backed-up PostgreSQL service such as Amazon RDS.
-
-### 1. Prepare DNS and the remote host
-
-- Allocate a VM with at least 2 vCPU and 4 GiB RAM for a small demonstration.
-- Install Docker Engine and the Docker Compose plugin.
-- Point an `A`/`AAAA` record such as `auth.example.edu` to the VM.
-- Allow inbound TCP `80` and `443` from the Internet.
-- Restrict SSH to administrator IP addresses.
-- Do **not** expose `5432`, `8080`, or `9000` publicly.
-
-Create a deployment directory on the remote host, for example `/opt/academic-keycloak`. The following files are deployment examples to create on that host; they are not application source files.
-
-### 2. Build an optimized Keycloak image
-
-Create `Containerfile`:
-
-```dockerfile
-ARG KEYCLOAK_VERSION
-FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS builder
-
-ENV KC_DB=postgres
-ENV KC_HEALTH_ENABLED=true
-ENV KC_METRICS_ENABLED=true
-
-RUN /opt/keycloak/bin/kc.sh build
-
-FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}
-COPY --from=builder /opt/keycloak/ /opt/keycloak/
-ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
-```
-
-Pin `KEYCLOAK_VERSION` to an explicit version tested by the team. Do not deploy the floating `latest` tag.
-
-### 3. Define the containers
-
-Create `compose.yaml`:
-
-```yaml
-name: academic-identity
-
-services:
-  postgres:
-    image: postgres:${POSTGRES_VERSION}
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    networks: [identity]
-
-  keycloak:
-    build:
-      context: .
-      dockerfile: Containerfile
-      args:
-        KEYCLOAK_VERSION: ${KEYCLOAK_VERSION}
-    restart: unless-stopped
-    environment:
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      KC_DB_USERNAME: ${POSTGRES_USER}
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      KC_HOSTNAME: https://${AUTH_HOSTNAME}
-      KC_HTTP_ENABLED: "true"
-      KC_PROXY_HEADERS: xforwarded
-      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD}
-    command: ["start", "--optimized"]
-    depends_on:
-      postgres:
-        condition: service_healthy
-    expose: ["8080", "9000"]
-    networks: [identity]
-
-  caddy:
-    image: caddy:${CADDY_VERSION}
-    restart: unless-stopped
-    environment:
-      AUTH_HOSTNAME: ${AUTH_HOSTNAME}
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on: [keycloak]
-    networks: [identity]
-
-networks:
-  identity:
-
-volumes:
-  postgres_data:
-  caddy_data:
-  caddy_config:
-```
-
-Create `Caddyfile`:
-
-```caddyfile
-{$AUTH_HOSTNAME} {
-    encode zstd gzip
-    reverse_proxy keycloak:8080
-}
-```
-
-Create `.env` on the remote host and protect it with `chmod 600 .env`:
-
-```dotenv
-AUTH_HOSTNAME=auth.example.edu
-KEYCLOAK_VERSION=<PINNED_KEYCLOAK_VERSION>
-POSTGRES_VERSION=<PINNED_POSTGRES_VERSION>-alpine
-CADDY_VERSION=<PINNED_CADDY_VERSION>-alpine
-POSTGRES_DB=keycloak
-POSTGRES_USER=keycloak
-POSTGRES_PASSWORD=<LONG_RANDOM_DATABASE_PASSWORD>
-KC_BOOTSTRAP_ADMIN_USERNAME=<NON_DEFAULT_ADMIN_NAME>
-KC_BOOTSTRAP_ADMIN_PASSWORD=<LONG_RANDOM_BOOTSTRAP_PASSWORD>
-```
-
-Replace every placeholder. Keep `.env` outside source control. In a stricter deployment, inject these values from a secret manager instead of a file.
-
-### 4. Start and verify
-
-From the deployment directory on the remote VM:
+| `academic-api` | Recurso | Audiencia y roles de la API | Ninguno |
+| `academic-bff` | Confidencial | Fachada de login | Direct Access Grants únicamente |
+
+No existe un cliente OAuth público en el frontend. El secreto de `academic-bff`
+vive solamente en variables del backend; local usa un valor de demostración y
+Terraform genera un valor aleatorio para AWS.
+
+La autorización acepta exclusivamente
+`resource_access.academic-api.roles`. No acepta roles del realm ni roles de
+otro cliente. Los roles humanos son `STUDENT`, `REVIEWER`, `ANALYST` y
+`ADMINISTRATOR`. El `tenant_id` proviene del token y se compara con el tenant
+configurado.
+
+## Controles implementados
+
+- Cookies de sesión no persistentes; al cerrar el navegador finaliza su vida en
+  el cliente. `Secure` es obligatorio en AWS y se desactiva solo para HTTP local.
+- `HttpOnly` protege access y refresh tokens frente a lectura desde JavaScript.
+- `SameSite=Strict`, origen único y token CSRF HMAC con patrón double-submit
+  protegen operaciones `POST`, `PATCH`, `PUT` y `DELETE`.
+- El refresh se rota automáticamente después de un `401`; una sola solicitud de
+  refresh se comparte entre llamadas concurrentes del frontend.
+- El authorizer no usa `Authorization` como fuente obligatoria, porque también
+  admite la cookie. Sigue aceptando Bearer para pruebas y clientes de máquina.
+- Caché del authorizer desactivada y matriz de rutas deny-by-default.
+- Límite AWS para login: ráfaga 5, tasa sostenida 2 solicitudes/segundo.
+- Respuestas de autenticación llevan `Cache-Control: no-store`.
+- CloudFront agrega CSP, HSTS, `X-Frame-Options: DENY`, protección MIME y una
+  política restrictiva de referrer a las respuestas del portal y la API.
+- AWS WAF no se incluye en el demo efímero por la prioridad explícita de costo;
+  un entorno duradero debe añadir reglas administradas y rate limiting por IP.
+
+## Excepción de seguridad aceptada
+
+El requisito de capturar la contraseña en el formulario propio sin redirección
+obliga a usar Resource Owner Password Credentials, llamado Direct Access Grants
+en Keycloak. OAuth 2.0 Security Best Current Practice establece que este grant
+no debe usarse porque expone la credencial al cliente y no se adapta a MFA ni a
+flujos modernos. La decisión se acepta únicamente para esta demostración
+académica y queda registrada en [ADR-025](ADR-025-custom-login-keycloak-bff.md).
+
+Una evolución productiva debe volver a Authorization Code + PKCE o usar un
+flujo administrado por el proveedor de identidad, aunque eso implique una
+redirección visible.
+
+Referencias: [Keycloak OIDC endpoints](https://www.keycloak.org/securing-apps/oidc-layers),
+[RFC 9700, sección 2.4](https://www.rfc-editor.org/rfc/rfc9700.html#section-2.4),
+[AWS HTTP API Lambda authorizers](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html).
+
+## Prueba local
+
+Para que el nuevo cliente se importe en una instalación que ya tiene volumen de
+Keycloak, se requiere un único reinicio limpio del entorno local. Esto elimina
+solo datos Docker locales y debe ejecutarse conscientemente:
 
 ```bash
-docker compose config
-docker compose build --pull
-docker compose up -d
-docker compose ps
-docker compose logs --tail=100 keycloak caddy
+docker compose down --volumes
+docker compose up -d --build
 ```
 
-Verify the public discovery endpoint:
+Después se ingresa en <http://localhost:4200> con cualquiera de estas cuentas:
 
-```bash
-curl --fail --silent --show-error \
-  https://auth.example.edu/realms/academic-requests/.well-known/openid-configuration
-```
+| Usuario | Contraseña | Destino inicial |
+|---|---|---|
+| `estudiante.sistemas` | `estudiante` | Solicitudes |
+| `revisor.sistemas` | `revisor` | Validación |
+| `analista.sistemas` | `analista` | Reportes OLAP |
+| `admin.sistemas` | `admin` | Reportes OLAP |
 
-The realm endpoint returns `404` until the realm has been created. Before that, verify the Admin Console over `https://auth.example.edu/admin/` and inspect the internal readiness endpoint from the Docker network. The management port `9000` must remain private.
-
-After the first successful sign-in:
-
-1. Create a permanent named administrator with only the required realm-management privileges.
-2. Remove `KC_BOOTSTRAP_ADMIN_USERNAME` and `KC_BOOTSTRAP_ADMIN_PASSWORD` from `.env` and `compose.yaml`.
-3. Recreate the Keycloak container with `docker compose up -d`.
-
-### 5. Backups, updates, and monitoring
-
-- Back up the PostgreSQL database and test restoration. A realm JSON export is useful for configuration portability but is not a complete database backup.
-- Back up Caddy data so certificate state is recoverable.
-- Enable alerts for container restarts, disk usage, certificate failures, Keycloak login failures, and readiness failures.
-- Keep health and metrics on private port `9000`; do not proxy it to the Internet.
-- Test a pinned Keycloak upgrade against a restored backup before updating the remote instance.
-- Review realm administrator memberships and confidential-client secrets periodically.
-
-## Integration acceptance criteria
-
-Deployment acceptance is not complete until all of the following pass in the deployed environment:
-
-- Discovery and JWKS endpoints are reachable through HTTPS with a valid certificate.
-- A portal login uses Authorization Code with PKCE S256.
-- An access token includes `aud=academic-api` and the correct client role.
-- Missing, expired, wrong-issuer, and wrong-audience tokens receive `401` on every protected route.
-- Each role receives `2xx` only on the routes allowed by the matrix and `403` on the others.
-- `GET /v1/health` and CORS preflight remain available without a token.
-- A machine token can preview notifications but cannot evaluate requests or read analytics.
-- Evaluation audit identity comes from token `sub`, not the request body.
-- Neither browser storage, logs, Git history, nor API responses expose a client secret or token.
-
-## Authoritative references
-
-- [Keycloak: Running Keycloak in a container](https://www.keycloak.org/server/containers)
-- [Keycloak: Configuring Keycloak for production](https://www.keycloak.org/server/configuration-production)
-- [Keycloak: Configuring the hostname](https://www.keycloak.org/server/hostname)
-- [Keycloak: Configuring a reverse proxy](https://www.keycloak.org/server/reverseproxy)
-- [Keycloak: Configuring the database](https://www.keycloak.org/server/db)
-- [Keycloak: JavaScript adapter](https://www.keycloak.org/securing-apps/javascript-adapter)
-- [Keycloak: Server Administration Guide](https://www.keycloak.org/docs/latest/server_admin/)
-- [Keycloak: Health checks](https://www.keycloak.org/observability/health)
-- [AWS: Working with Lambda authorizers for HTTP APIs](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html)
+La URL debe permanecer en `localhost:4200`; abrir Keycloak solo es necesario
+para administración de usuarios.

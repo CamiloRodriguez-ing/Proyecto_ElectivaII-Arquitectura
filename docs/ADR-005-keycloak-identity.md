@@ -1,6 +1,6 @@
 # ADR-005: Keycloak identity and role-based API authorization
 
-Status: Accepted and implemented
+Status: Superseded in its browser-flow decision by ADR-025
 
 ## Context
 
@@ -18,7 +18,8 @@ The complete configuration, role matrix, deployment procedure, and acceptance cr
 
 ## Consequences
 
-- Browser applications use Authorization Code with PKCE and contain no client secret.
+- The original browser PKCE decision was replaced by the documented academic
+  exception in [ADR-025](ADR-025-custom-login-keycloak-bff.md).
 - Machine integrations use a separate confidential client with least-privilege service-account roles.
 - The SAM template configures a REQUEST Lambda authorizer, explicit protected routes and CORS; each business Lambda repeats the client-role check as defense in depth.
 - Keycloak requires durable identity storage, backup, TLS, monitoring, and lifecycle management.

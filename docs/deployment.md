@@ -2,131 +2,160 @@
 
 ## Complete local environment
 
-Prerequisite: Docker Engine with the Compose plugin. The Compose project runs the Angular SSR frontend, the Lambda-compatible Python API, separate application and Keycloak PostgreSQL databases, an S3-compatible object store, and a single-node Redpanda Kafka-compatible broker.
+The workstation must provide Docker Engine, Docker Compose, at least 12 GiB of
+free RAM, and approximately 12 GiB of free disk for first-time image pulls.
 
 ```bash
 cp .env.example .env
-docker compose up --build
+docker compose up -d --build
+docker compose --profile seed run --rm demo-seed
 ```
 
-Wait until `api` and `keycloak` are healthy, then open <http://localhost:4200>. Keycloak is available at <http://localhost:8081>, API health at <http://localhost:8080/v1/health>, Kafka at `localhost:19092`, and the S3-compatible endpoint at <http://localhost:9090>. The `app-migrate` one-shot service applies the operational schema before API startup.
+The first command starts PostgreSQL, Keycloak, Redpanda, S3Mock, the API, the
+static Angular SPA, and the Apache Druid micro-quickstart services. The second
+command explicitly creates the idempotent `olap-demo-v1` dataset: 300 requests
+and 270 reviews across 12 months and three tenants. It writes operational rows
+and outbox intent only; Kafka, Druid, and the archive consume the regular path.
 
-The realm fixture creates these local-only accounts:
+| Component | Local endpoint |
+|---|---|
+| Angular SPA | <http://localhost:4200> |
+| API health | <http://localhost:8080/v1/health> |
+| Keycloak | <http://localhost:8081> |
+| Druid console and SQL | <http://localhost:8888> |
+| Kafka from host | `localhost:19092` |
+| S3Mock | <http://localhost:9090> |
 
-| Username | Password | API role |
-|---|---|---|
-| `estudiante.sistemas` | `estudiante` | `STUDENT` |
-| `revisor.sistemas` | `revisor` | `REVIEWER` |
-| `analista.sistemas` | `analista` | `ANALYST` |
-| `admin.sistemas` | `admin` | `ADMINISTRATOR` |
+The realm fixture provides `estudiante.sistemas`, `revisor.sistemas`,
+`analista.sistemas`, and `admin.sistemas`; each password is the first word of
+its username. These credentials are local-only.
 
-Use `docker compose logs -f api app-postgres keycloak kafka s3mock` to inspect the core services and `docker compose down` to stop them. Named volumes retain application, identity, Kafka, and object data. `docker compose down --volumes` irreversibly deletes all local project data and should only be used for an intentional reset.
+The portal renders its own username/password form at
+<http://localhost:4200>. Nginx proxies `/v1/*` to the API, so the browser remains
+on one origin and is never redirected to Keycloak. If the Keycloak volume was
+created before ADR-025, re-import the changed realm once with
+`docker compose down --volumes` followed by `docker compose up -d --build`.
+This intentionally removes all local Docker data; do not run it against data
+that must be retained.
 
-The local API server is only an HTTP adapter. It invokes the same authorizer and route handlers used by Lambda, so domain behavior and Kafka event publication are not forked for development.
+Useful verification commands:
 
-## AWS deployment with Terraform
+```bash
+curl -fsS http://localhost:8888/druid/indexer/v1/supervisor/academic_events/status
+docker compose exec -T api python -c \
+  "from shared.adapters.druid import summary_for_tenant; print(summary_for_tenant(None))"
+docker compose exec -T app-postgres psql -U academic_app -d academic_requests \
+  -c "select count(*), count(published_at) from outbox_events"
+SMOKE_USERNAME=analista.sistemas SMOKE_PASSWORD=analista \
+  .venv/bin/python scripts/smoke_local_analytics.py
+```
 
-Prerequisites: Terraform 1.5 or newer, Python 3, internet access for provider and Python package installation, and AWS credentials allowed to manage Lambda, IAM, API Gateway, CloudWatch, VPC, RDS, Secrets Manager, S3, and optionally MSK, Glue, Redshift Serverless, EventBridge, and the Redshift Data API.
+The expected summary is stored in `analytics/demo-expected.json`. Stop services
+with `docker compose down`. Do not add `--volumes` unless an irreversible local
+data reset is intended.
+
+## AWS deployment gate
+
+> **Plan invalidation (2026-11-25):** `deployment.tfplan` predates ADR-025 and
+> must not be applied. It does not contain the auth facade, cookie-aware
+> authorizer, CloudFront `/v1/*` behavior, or generated BFF/CSRF secrets. Generate
+> a new saved plan only after the AWS account decision is resumed.
+
+AWS deployment uses Terraform, `us-east-1`, environment `dev`, and short-lived
+IAM Identity Center credentials. No Terraform apply is allowed before all of
+the following are true:
+
+1. local unit, build, and end-to-end checks pass;
+2. the SSO caller, account, and region are verified;
+3. the AWS promotional-credit expiration is checked in Billing;
+4. a budget notification email is configured;
+5. a saved Terraform plan and its cost estimate are reviewed and explicitly
+   approved by the user.
+
+The pre-plan 48-hour estimate and its assumptions are in
+[`aws-cost-estimate.md`](aws-cost-estimate.md). The current approval ceiling is
+USD 65; exceeding it requires a new explicit decision even if credits remain.
+
+Configure and authenticate a named profile outside the repository:
+
+```bash
+aws configure sso --profile academic-demo
+aws sso login --profile academic-demo
+AWS_PROFILE=academic-demo aws sts get-caller-identity
+```
+
+Do not place SSO tokens, account IDs, or credentials in `terraform.tfvars`.
+
+## Reviewable Terraform plan
 
 ```bash
 cp infra/terraform/terraform.tfvars.example infra/terraform/terraform.tfvars
-terraform -chdir=infra/terraform init
-terraform -chdir=infra/terraform fmt -check
-terraform -chdir=infra/terraform validate
-terraform -chdir=infra/terraform plan -out=deployment.tfplan
-terraform -chdir=infra/terraform apply deployment.tfplan
-terraform -chdir=infra/terraform output api_url
+# Replace the pseudonym salt and budget email in the ignored tfvars file.
+AWS_PROFILE=academic-demo terraform -chdir=infra/terraform init
+AWS_PROFILE=academic-demo terraform -chdir=infra/terraform fmt -check
+AWS_PROFILE=academic-demo terraform -chdir=infra/terraform validate
+AWS_PROFILE=academic-demo terraform -chdir=infra/terraform plan -out=deployment.tfplan
+AWS_PROFILE=academic-demo terraform -chdir=infra/terraform show deployment.tfplan
 ```
 
-Terraform packages `src` and both SQL migrations during `plan`/`apply`. It creates one Lambda per route, the Keycloak REQUEST authorizer, HTTP API routes and CORS, IAM permissions, X-Ray tracing, retained CloudWatch log groups, a private two-AZ VPC, RDS PostgreSQL with a managed master secret and RDS Proxy, and a private encrypted/versioned document bucket. A deployment invocation applies the operational migration after the proxy target is ready.
+The full configuration provisions:
 
-Two Kafka deployment modes are supported:
+- API Gateway and Python Lambdas;
+- RDS PostgreSQL `db.t4g.small` and RDS Proxy;
+- private S3 document, frontend, and immutable analytical buckets;
+- MSK Serverless with IAM authentication;
+- Druid 38 on one private on-demand `t3.large` EC2 instance;
+- Keycloak 26 on one private ARM `t4g.small` EC2 instance;
+- isolated `keycloak` and `druid` logical databases and users on the shared RDS
+  instance, with credentials in Secrets Manager;
+- a private Keycloak ALB exposed only through a CloudFront VPC Origin;
+- a private S3 Angular origin exposed through a separate CloudFront hostname,
+  with `/v1/*` forwarded to API Gateway for same-origin session cookies;
+- budget alerts at USD 25, 50, and 80 when an email is configured.
 
-- Existing broker: leave `create_msk_serverless=false` and set the bootstrap servers and security settings. Because persistent Lambdas run in the application VPC, the broker must be reachable from that VPC through peering, Transit Gateway, PrivateLink, VPN, or equivalent private routing.
-- AWS-managed broker: set `create_msk_serverless=true` and `kafka_enabled=true`. Terraform creates MSK Serverless in the application VPC and selects IAM/SASL automatically.
+Druid's Docker tasks obtain short-lived MSK and S3 credentials from the EC2
+instance profile through IMDSv2. The Druid host alone uses response hop limit 2
+so container networking can reach IMDS; no static AWS keys are injected.
 
-To enable the analytical platform, set:
+After CloudFront assigns its generated hostname, Terraform uses SSM to set that
+full HTTPS URL as Keycloak's strict public hostname and restart the container.
+This prevents the private HTTP ALB hop from leaking an `http` issuer into OIDC
+discovery; no SSH port or public EC2 address is required.
 
-```hcl
-analytics_enabled          = true
-analytics_pseudonym_salt   = "a-long-deployment-specific-secret"
-create_msk_serverless      = true
-kafka_enabled              = true
-```
+During the `dev` apply, private one-shot Lambdas also create the three MSK topics,
+apply the operational schema, create the isolated service databases, and load
+`olap-demo-v1` when `load_demo_dataset=true`. The seed is not an HTTP endpoint
+and refuses to run outside `dev`.
 
-Terraform then creates the analytics bucket, Kafka event source mapping, scheduled Glue transform, Redshift Serverless namespace/workgroup, warehouse migration, hourly loader, and cube APIs. The salt default is rejected when analytics is enabled. Keep it out of source control and shared shell history; use protected variable injection in automated deployments.
+The Angular build is uploaded during apply. Terraform writes `/v1` to
+`runtime-config.json`; the SPA uses the generated frontend CloudFront hostname
+for both static assets and API calls. Keycloak remains reachable over its own
+CloudFront hostname only for backend token exchange and identity administration.
 
-MSK Serverless topic administration still requires a Kafka administrative client with VPC access. Create the four topics documented in [Kafka event integration](kafka-events.md) before exercising protected endpoints.
-
-`terraform.tfvars` and Terraform state can contain deployment details and are gitignored. Store shared state in an encrypted, locked remote backend before multiple people manage the environment; the repository intentionally does not hard-code an account-specific backend.
-
-The existing SAM/CloudFormation deployment is not automatically adopted into Terraform state. Applying this configuration creates a separately managed deployment. If the same physical resources must be adopted instead, import each resource into Terraform state and verify a no-replacement plan before retiring the CloudFormation stack. Never let CloudFormation and Terraform manage the same resource concurrently.
-
-To remove a Terraform-owned academic environment:
+After plan and cost approval only:
 
 ```bash
-terraform -chdir=infra/terraform plan -destroy -out=destroy.tfplan
-terraform -chdir=infra/terraform apply destroy.tfplan
+AWS_PROFILE=academic-demo terraform -chdir=infra/terraform apply deployment.tfplan
+AWS_PROFILE=academic-demo terraform -chdir=infra/terraform output
 ```
 
-Review the destroy plan carefully: it can delete the API, Lambdas, database, buckets in non-production, logs, warehouse, and a Terraform-managed MSK cluster/VPC. Production RDS deletion protection intentionally blocks accidental destruction.
+CloudFront and VPC Origin creation can take 15–25 minutes. EC2 bootstrap logs
+are available through SSM without opening SSH. Retrieve the Keycloak bootstrap
+secret from the output ARN through Secrets Manager; never include its value in
+presentation evidence.
 
-## Legacy SAM workflow
+## 48-hour lifecycle and teardown
 
-The original SAM template is retained as a migration and comparison artifact. Terraform is the primary deployment path.
+Record the deployment timestamp and schedule a human reminder no later than 48
+hours. Budgets alert but do not automatically stop or destroy resources. MSK
+Serverless, NAT Gateway, RDS, EC2, and the ALB accrue cost while idle.
 
-Prerequisites: Python 3.11, Docker Desktop, AWS SAM CLI, and configured AWS credentials.
-
-```powershell
-sam validate --lint
-sam build
-sam deploy --guided
+```bash
+AWS_PROFILE=academic-demo terraform -chdir=infra/terraform plan -destroy -out=destroy.tfplan
+AWS_PROFILE=academic-demo terraform -chdir=infra/terraform show destroy.tfplan
+AWS_PROFILE=academic-demo terraform -chdir=infra/terraform apply destroy.tfplan
 ```
 
-During the guided deployment set the exact Keycloak realm issuer, `academic-api` audience, Kafka bootstrap brokers, and network parameters. Do not deploy with placeholder identity or broker hostnames.
-
-For later deployments:
-
-```powershell
-sam build
-sam deploy
-```
-
-To roll back, use AWS CloudFormation to select a previous successful stack update, or deploy the last known-good commit with the same stack name. Confirm the change set before applying it.
-
-The first academic demo uses `FRONTEND_ORIGIN=*` because the Cloudflare Pages hostname is assigned during deployment. The API does not use cookies or credentialed requests. After receiving the final Pages hostname, replace the wildcard with that exact origin for a stricter CORS policy.
-
-## Identity deployment
-
-Keycloak is deployed independently because it is a long-running identity platform, not a Lambda workload. Its Docker Compose topology, DNS/TLS requirements, multi-client configuration, and post-deployment checks are documented in [Keycloak Authentication and Authorization](authentication-keycloak.md#remote-deployment-single-node-academic-environment).
-
-Deploy and verify Keycloak first. Configure `KeycloakIssuer` with the exact realm issuer and `KeycloakAudience=academic-api`. The SAM stack creates a REQUEST Lambda authorizer that validates Keycloak JWTs, protects every business route, leaves health public, permits the `Authorization` CORS header, and deploys a second role guard in each business Lambda.
-
-The current development Keycloak hostname rejects connectivity from AWS. Its active public RS256 JWK is packaged in `src/functions/keycloak_authorizer/jwks.json`, allowing offline signature verification. Before and after every Keycloak key rotation, refresh this public file, run the authorizer tests, and redeploy; otherwise tokens signed by the new key are denied.
-
-## Kafka deployment
-
-For AWS-native Kafka, deploy [the MSK Serverless template](../infra/msk-serverless.yaml), obtain its IAM bootstrap brokers, and pass its subnet and security-group outputs to the SAM deployment. Full commands and topic settings are in [Kafka event integration](kafka-events.md#deploy-amazon-msk-serverless).
-
-For local API work without a broker:
-
-```powershell
-sam local start-api --parameter-overrides KafkaEnabled=false
-```
-
-For MSK Serverless use `KafkaEnabled=true`, `KafkaSaslMechanism=AWS_MSK_IAM`, `UseKafkaVpc=true`, and the real broker, subnet and security-group values. Create all four topics before smoke testing.
-
-The current `dev` deployment uses the existing external broker on port `9094` with `KafkaSecurityProtocol=PLAINTEXT` and `KafkaSaslMechanism=NONE` because the AWS account is not subscribed to Amazon MSK. This fallback is suitable only for development: it has neither transport encryption nor broker authentication. Enable MSK in the account and redeploy with IAM before treating the environment as production.
-
-## Post-deployment verification
-
-Verify in this order:
-
-1. `GET /v1/health` returns `200` without a token.
-2. A protected route returns `401` without a token.
-3. A valid token with the wrong client role returns `403`.
-4. A valid role returns the documented `2xx` response.
-5. A document presigned PUT succeeds and the attached request returns a presigned download URL.
-6. PostgreSQL contains the request plus one pending or published outbox row in the same transaction.
-7. Kafka eventually contains one correctly keyed, versioned event without student PII; retrying a consumer event is harmless.
-8. When analytics is enabled, raw S3 contains only pseudonymized identity fields, Glue produces Parquet, warehouse load succeeds, and each cube endpoint returns tenant-scoped data.
+Confirm afterward that no MSK cluster, NAT Gateway, RDS instance, EC2 instance,
+ALB, VPC Origin, or CloudFront distribution remains. Non-production buckets use
+`force_destroy`; the synthetic dataset is reproducible and is not a backup.

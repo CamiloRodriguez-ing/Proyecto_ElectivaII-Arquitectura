@@ -1,70 +1,88 @@
-# Kafka event integration
+# Kafka Event Integration
 
-## Implemented architecture
+## Topics and producers
 
-State-changing request and review Lambdas persist a versioned event envelope in `outbox_events` in the same transaction as operational data. A scheduled publisher uses row locks to claim pending envelopes and publishes with `acks=all`; success records `published_at`, while a broker failure records the error and leaves the row retryable. Stateless validation/preview operations retain direct publication when Kafka is enabled.
-
-The safe local/template default is `KAFKA_ENABLED=false`. A deployed event-producing environment must explicitly set `KafkaEnabled=true` together with reachable broker and network settings; this prevents an incomplete broker configuration from making every business route return `503`.
-
-| Route | Topic | Event type | Partition key |
+| Operation | Topic | Event type | Key |
 |---|---|---|---|
-| `POST /v1/requests/validate` | `academic-requests` | `request.validated.v1` | Keycloak subject |
-| `POST /v1/requests/prepare` | `academic-requests` | `request.submitted.v1` | request ID (outbox) |
-| `POST /v1/reviews/evaluate` | `academic-reviews` | `request.status_changed.v1` | request ID (outbox) |
-| `POST /v1/notifications/preview` | `academic-notifications` | `notification.previewed.v1` | Keycloak subject |
-| `POST /v1/analytics/summary` | `academic-analytics` | `analytics.summarized.v1` | Keycloak subject |
+| create request | `academic-requests` | `request.submitted.v2` | request ID |
+| evaluate request | `academic-reviews` | `request.status_changed.v2` | request ID |
+| validation preview | `academic-requests` | `request.validated.v1` | subject |
+| notification preview | `academic-notifications` | `notification.previewed.v1` | subject |
 
-Events contain `event_id`, `event_type`, `occurred_at`, `source`, `schema_version`, `correlation_id`, aggregate and tenant identifiers, the trusted Keycloak actor, and a minimal event-specific `data` object. Student names, email addresses, document names, access tokens, and complete HTTP bodies are deliberately excluded. The analytics ingestion projection hashes actor and owner identifiers before writing S3.
+The analytical `GET` endpoints do not publish events. Request and review events
+originate in the transactional outbox. Acknowledgement uses `acks=all`; an event
+can be delivered more than once if the process fails after broker acknowledgement
+and before updating the outbox.
 
-## Deploy Amazon MSK Serverless
+## Version-2 envelope
 
-The optional infrastructure template creates an isolated two-AZ VPC, a self-referencing security group and an IAM-authenticated MSK Serverless cluster:
-
-```bash
-aws cloudformation deploy \
-  --template-file infra/msk-serverless.yaml \
-  --stack-name academic-events-dev
-
-CLUSTER_ARN=$(aws cloudformation describe-stacks \
-  --stack-name academic-events-dev \
-  --query "Stacks[0].Outputs[?OutputKey=='ClusterArn'].OutputValue" \
-  --output text)
-
-aws kafka get-bootstrap-brokers --cluster-arn "$CLUSTER_ARN"
+```json
+{
+  "event_id": "stable-uuid",
+  "event_type": "request.status_changed.v2",
+  "occurred_at": "2026-11-25T18:00:00Z",
+  "source": "academic-requests-api",
+  "schema_version": 2,
+  "correlation_id": "request-correlation-id",
+  "aggregate_type": "request",
+  "aggregate_id": "request-uuid",
+  "tenant_id": "sistemas",
+  "actor": {"id": "trusted-keycloak-subject", "roles": ["REVIEWER"]},
+  "data": {
+    "request_id": "request-uuid",
+    "type": "CREDIT_TRANSFER",
+    "source_course": "CALCULO-I",
+    "target_course": "MATEMATICAS-I",
+    "source_credits": 4,
+    "target_credits": 4,
+    "previous_status": "SUBMITTED",
+    "new_status": "APPROVED",
+    "decision": "APPROVE",
+    "reviewer_role": "REVIEWER",
+    "submitted_at": "2026-11-23T18:00:00Z",
+    "occurred_at": "2026-11-25T18:00:00Z"
+  }
+}
 ```
 
-Use `BootstrapBrokerStringSaslIam` from the last command. Also copy the `LambdaSubnetIds` and `LambdaSecurityGroupIds` stack outputs into the application deployment parameters:
+Druid explicitly flattens only analytical fields. The archive consumer hashes
+the actor and optional owner source. Names, emails, student codes, observations,
+documents, URLs, and tokens are not part of the analytical contract.
 
-```bash
-sam deploy --guided \
-  --parameter-overrides \
-    KafkaEnabled=true \
-    KafkaBootstrapServers='b-1....amazonaws.com:9098,b-2....amazonaws.com:9098' \
-    KafkaSaslMechanism=AWS_MSK_IAM \
-    UseKafkaVpc=true \
-    KafkaSubnetIds='subnet-a,subnet-b' \
-    KafkaSecurityGroupIds='sg-123'
-```
+## Consumers
 
-The application template grants the producer Lambdas `Connect`, `DescribeTopic` and `WriteData`. Narrow the wildcard resources to the deployed cluster and topic ARNs after the first deployment, when the generated MSK cluster UUID is known.
+- Druid uses one native Kafka supervisor with the pattern
+  `academic-requests|academic-reviews`, one ingestion task, and earliest offsets
+  for the first run.
+- The archive consumer uses an independent group and writes one S3 object per
+  event ID. `If-None-Match: *` makes the write create-only; reprocessing reports
+  the existing object as a duplicate and never replaces its bytes.
+- Both consumers monitor their own lag and do not share offsets.
 
-Create the four topics from an administrative client placed in the VPC. Recommended demonstration settings are three partitions, replication managed by MSK Serverless, `cleanup.policy=delete`, and a retention appropriate to the environment. Automatic topic creation must not be relied upon in production.
+## Local broker
 
-## Connectivity and authentication
+Redpanda provides a Kafka-compatible endpoint inside Docker at `kafka:9092` and
+from the host at `localhost:19092`. `kafka-init` creates the three topics. The API,
+outbox worker, Druid, and archive consumer all use the internal endpoint.
 
-- MSK Serverless uses `SASL_SSL` on port `9098` with IAM/OAUTHBEARER tokens generated from the Lambda execution role.
-- Attach only event-producing Lambdas to the MSK VPC. The public health Lambda remains outside it.
-- The isolated VPC needs no NAT gateway for MSK traffic. The Keycloak Lambda authorizer uses the packaged public JWK described in the authentication guide; refreshing that key from Keycloak requires outbound HTTPS connectivity.
-- For an externally hosted Kafka service, set `UseKafkaVpc=false` and select its SASL mechanism. Use `NONE` only for an isolated development broker; it provides no transport or identity protection. PLAIN/SCRAM credentials can be loaded from Secrets Manager through `KAFKA_CREDENTIALS_SECRET_ID`; grant that secret explicitly to the Lambda role before using it.
+## Amazon MSK Serverless
 
-## Delivery semantics
+Terraform creates the two-AZ MSK Serverless cluster when
+`create_msk_serverless=true`. Clients use `SASL_SSL` port 9098 and IAM:
 
-Outbox publication is asynchronous and at least once. A process can publish and fail before recording `published_at`, so consumers must enforce uniqueness on `event_id`. The outbox makes the database change and event intent atomic, but it does not promise exactly-once broker delivery. Broker outages delay events without rejecting already committed HTTP writes.
+- Python producers generate OAUTHBEARER tokens with their Lambda role.
+- Druid's pinned image adds the official `aws-msk-iam-auth` uber JAR and uses
+  `AWS_MSK_IAM` with the EC2 instance role.
+- Security groups allow only Lambda and Druid sources to the broker.
 
-Monitor pending outbox age/count, attempts and `last_error`, publisher errors/duration, MSK connection/authentication failures, topic bytes, and consumer lag. Alert when the oldest pending event exceeds the agreed service level. Never log payloads containing identity or academic data.
+Terraform invokes a private, IAM-authenticated bootstrap Lambda after MSK is
+ready. It idempotently creates the three topics with two partitions each and the
+broker-managed replication factor; the deployment does not depend on automatic
+topic creation or an SSH session. Recommended demo retention is 48 hours or more
+than the planned environment lifetime.
 
-## Authoritative references
+## Operational checks
 
-- [AWS: Configure clients for IAM access control](https://docs.aws.amazon.com/msk/latest/developerguide/configure-clients-for-iam-access-control.html)
-- [AWS: MSK Serverless CloudFormation resource](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-msk-serverlesscluster.html)
-- [AWS: IAM access control requirements for MSK](https://docs.aws.amazon.com/msk/latest/developerguide/iam-access-control.html)
+Monitor oldest pending outbox age, publication attempts/errors, MSK authentication
+failures, per-consumer lag, Druid supervisor health, and S3 archive counts. Never
+log full event payloads or credentials.

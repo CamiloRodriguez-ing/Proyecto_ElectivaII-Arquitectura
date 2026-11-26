@@ -2,7 +2,11 @@
 
 ## Configuración Global
 - **Base URL:** `/v1` (Relativa al dominio configurado, ej: `https://<api-id>.execute-api.<region>.amazonaws.com/v1`)
-- **Autenticación:** `Authorization: Bearer <access-token>` de Keycloak en todas las rutas excepto `/health`. El token debe tener audiencia `academic-api`; cada ruta aplica además roles de cliente.
+- **Autenticación del portal:** cookie `academic_access` `HttpOnly` emitida por
+  `POST /auth/login`. Las operaciones mutables envían también `X-CSRF-Token`.
+  Los clientes de máquina y las pruebas pueden continuar usando
+  `Authorization: Bearer <access-token>`. En ambos casos el token debe tener
+  audiencia `academic-api` y un rol de cliente permitido.
 - **Formato por defecto:** `application/json`
 - **Estructura de Respuesta General:**
   Todas las respuestas exitosas devuelven los datos bajo la propiedad `data` y metadatos en `meta`:
@@ -39,13 +43,31 @@
 | Ruta | Roles permitidos |
 |---|---|
 | `GET /health` | Pública |
+| `POST /auth/login` | Pública, limitada por tasa |
+| `POST /auth/refresh` | Refresh cookie + CSRF |
+| `POST /auth/logout` | CSRF cuando existe sesión |
+| `GET /auth/me` | Cualquier rol humano válido |
 | `POST /requests/validate` | `STUDENT`, `ADMINISTRATOR` |
 | `POST /requests/prepare` | `STUDENT`, `ADMINISTRATOR` |
 | `POST /reviews/evaluate` | `REVIEWER`, `ADMINISTRATOR` |
 | `POST /notifications/preview` | `REVIEWER`, `NOTIFICATION_SERVICE`, `ADMINISTRATOR` |
-| `POST /analytics/summary` | `ANALYST`, `ADMINISTRATOR` |
+| `GET /analytics/summary` | `ANALYST`, `ADMINISTRATOR` |
 
-Una credencial ausente produce `401`; un token inválido o sin un rol permitido produce `403` desde el Lambda authorizer. En evaluaciones, la API ignora cualquier identidad de actor enviada por el cliente y usa `sub` y los roles del token. Si Kafka no confirma el evento posterior a una operación exitosa, la API devuelve `503 EVENT_PUBLISH_UNAVAILABLE` para que el cliente reintente.
+Una credencial ausente o inválida produce `401`; una identidad válida sin el
+rol permitido se rechaza antes de ejecutar la operación. En evaluaciones, la API
+ignora cualquier identidad de actor enviada por el cliente y usa `sub` y los
+roles del token. Si Kafka no confirma el evento posterior a una operación
+exitosa, la API devuelve `503 EVENT_PUBLISH_UNAVAILABLE` para que el cliente
+reintente.
+
+## Sesión del portal
+
+`POST /auth/login` recibe `{ "username": "...", "password": "..." }`. La
+contraseña se reenvía a Keycloak y nunca se persiste. La respuesta crea cookies
+no persistentes `academic_access`, `academic_refresh` y `academic_csrf`; solo la
+última puede leerla Angular para el patrón double-submit CSRF. `GET /auth/me`
+devuelve identidad, tenant y roles; `POST /auth/refresh` rota la sesión y
+`POST /auth/logout` la elimina. Véase [ADR-025](docs/ADR-025-custom-login-keycloak-bff.md).
 
 ---
 
@@ -200,11 +222,11 @@ Una credencial ausente produce `401`; un token inválido o sin un rol permitido 
     },
     "event": {
       "event_id": "...",
-      "event_type": "request.status_changed.v1",
+      "event_type": "request.status_changed.v2",
       "aggregate_type": "request",
       "aggregate_id": "...",
       "occurred_at": "YYYY-MM-DDTHH:mm:ss.sssZ",
-      "schema_version": 1,
+      "schema_version": 2,
       "data": {
         "previous_status": "SUBMITTED",
         "new_status": "APPROVED"
@@ -261,40 +283,30 @@ Una credencial ausente produce `401`; un token inválido o sin un rol permitido 
 
 ### Endpoint 4.2: Resumen Analítico
 - **URL:** `/analytics/summary`
-- **Método:** `POST`
-- **Propósito:** Generar métricas resumen a partir de un listado de solicitudes proveídas.
+- **Método:** `GET`
+- **Propósito:** Consultar métricas históricas desde Apache Druid. El tenant se toma del token; el navegador no envía solicitudes operacionales ni un tenant arbitrario.
 
-#### Petición (Request - Body)
-```json
-{
-  "requests": [
-    {
-      "type": "CREDIT_TRANSFER",
-      "status": "APPROVED"
-    }
-  ]
-}
-```
-*(Nota: Límite máximo de 100 solicitudes en el listado).*
+#### Petición
+Sin cuerpo.
 
 #### Respuesta Exitosa (Response - 200 OK)
 ```json
 {
   "data": {
-    "total": 1,
+    "total": 300,
     "by_type": {
-      "CREDIT_TRANSFER": 1
+      "CREDIT_TRANSFER": 300
     },
     "by_status": {
-      "APPROVED": 1
+      "APPROVED": 120
     },
-    "approval_percentage": 100.0,
-    "rejection_percentage": 0,
-    "average_resolution_hours": 0,
-    "changes_requested": 0
+    "approval_percentage": 66.67,
+    "rejection_percentage": 33.33,
+    "average_resolution_hours": 51.73,
+    "changes_requested": 90
   },
   "meta": { ... }
 }
 ```
 #### Manejo de Errores Esperado
-- **422 Unprocessable Entity:** `VALIDATION_ERROR` si el arreglo excede los 100 items.
+- **503 Service Unavailable:** `ANALYTICS_UNAVAILABLE` si Druid no puede responder temporalmente.

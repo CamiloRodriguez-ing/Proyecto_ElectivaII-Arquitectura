@@ -1,28 +1,69 @@
 # Architecture
 
-The platform separates transactional processing from analytical processing. API Gateway HTTP API uses payload format 2.0 and invokes a different Lambda for every endpoint. Handlers adapt HTTP events, application services coordinate use cases, and domain rules remain independent from AWS.
+The platform separates transactional, event, identity, and analytical
+responsibilities. API Gateway invokes small Python Lambdas; PostgreSQL remains
+the operational source of truth; Kafka transports durable outbox events; Apache
+Druid serves historical OLAP queries; and S3 retains a privacy-safe immutable
+event archive.
 
-PostgreSQL is the operational source of truth for requests, reviews, notifications, document metadata, optimistic versions, and the transactional outbox. Lambdas connect through RDS Proxy. Document bytes are stored in a private, encrypted, versioned S3 bucket and transferred with short-lived presigned URLs.
+```mermaid
+flowchart TB
+  Browser[Static Angular SPA] -->|HTTPS same-origin /v1| CFSPA[CloudFront SPA]
+  CFSPA --> APIGW[API Gateway]
+  APIGW -->|backend token exchange| CFKeycloak[CloudFront Keycloak endpoint]
+  CFKeycloak --> ALB[Private ALB]
+  ALB --> KC[Keycloak EC2]
+  APIGW --> L[Route Lambdas]
+  L --> Proxy[RDS Proxy]
+  Proxy --> RDS[(Shared RDS PostgreSQL)]
+  L --> Docs[(Private document S3)]
+  RDS --> Outbox[Outbox publisher]
+  Outbox --> MSK[MSK Serverless IAM]
+  MSK --> Druid[Single-node Druid EC2]
+  MSK --> Archive[Archive Lambda]
+  Archive --> Raw[(Immutable analytical S3)]
+  L -->|Druid SQL, private VPC| Druid
+```
 
-Request and review mutations insert an outbox row in the same database transaction. A scheduled publisher locks pending rows, publishes versioned envelopes to Kafka, and marks them delivered. Consumers deduplicate by `event_id` because delivery is at least once.
+## Runtime boundaries
 
-The optional analytical path consumes Kafka into an immutable, pseudonymized S3 raw zone. AWS Glue normalizes those events into Parquet, and an hourly loader maintains a Redshift Serverless star schema, daily snapshot, and three materialized OLAP cubes. Analytical failures cannot roll back operational transactions.
+- `src/functions`: Lambda/HTTP/event entry points.
+- `src/shared/application`: use cases independent of infrastructure.
+- `src/shared/domain`: validation, enums, and state transitions.
+- `src/shared/adapters`: PostgreSQL, Kafka, Druid SQL, HTTP, and identity adapters.
+- `analytics/druid`: pinned Druid image extension and Kafka supervisor specs.
+- `db/migrations`: operational PostgreSQL schema.
+- `frontend`: static Angular SPA with runtime URL configuration.
+- `infra/terraform`: AWS networking, compute, identity origin, persistence,
+  Kafka, archives, CloudFront, budgets, and deployment scripts.
 
-An externally deployed Keycloak realm owns identity. An API Gateway Lambda authorizer validates issuer, audience, signature, time claims and client roles; the shared endpoint adapter repeats the route-role check. See [Keycloak Authentication and Authorization](authentication-keycloak.md) and [ADR-005](ADR-005-keycloak-identity.md). Kafka event publication is described in [Kafka event integration](kafka-events.md) and [ADR-006](ADR-006-kafka-events.md).
+## Identity and tenant boundary
 
-## Boundaries
+Keycloak owns users, credentials, roles, sessions, and tokens. API Gateway uses
+a Lambda auth facade for the custom login and a Lambda authorizer for protected
+routes. Tokens remain in HttpOnly cookies; unsafe requests also require a signed
+CSRF token. Every business handler repeats its required-role check.
+Repository queries and Druid queries inject the tenant from verified claims;
+tenant scope is never trusted from a request body or query string.
 
-- `src/functions`: AWS entry points.
-- `src/shared/application`: use cases.
-- `src/shared/domain`: pure rules and enums.
-- `src/shared/adapters`: HTTP response and event translation.
-- `db/migrations`: operational PostgreSQL and analytical Redshift schemas.
-- `analytics/glue`: raw-to-curated analytics transformation.
-- `infra/terraform`: AWS networking, persistence, eventing, and warehouse resources.
-- `docs/openapi.yaml`: external contract.
+On AWS, Keycloak and Druid run on different private EC2 instances and share the
+physical RDS instance only for cost. A bootstrap Lambda creates separate logical
+databases, users, and Secrets Manager values. Neither EC2 instance accepts
+public ingress. CloudFront reaches Keycloak through a VPC Origin and the SPA
+through Origin Access Control to private S3.
 
-## Identity boundary
+## Consistency and failure model
 
-Keycloak owns users, credentials, groups, clients, roles, and identity sessions. The application stores only trusted subject and tenant identifiers required for ownership and audit; it never stores credentials or access tokens. Tenant and owner predicates are applied inside repository queries, not accepted from request bodies.
+The operational transaction and event intent are atomic, but broker delivery is
+at least once. Consumers use stable `event_id` values for idempotency. Druid and
+the raw archive consume independently, so either can recover without blocking
+the other. Analytical freshness is eventual and targets 60 seconds; committed
+academic operations remain successful during an analytical delay.
 
-See [Persistence and OLAP](persistence-and-olap.md) for data models, flow, recovery, and analytical grain.
+Archive keys are deterministic and S3 writes are create-only. A replay of an
+already archived `event_id` is therefore idempotent and cannot overwrite the
+original privacy-filtered record.
+
+The accepted decisions are recorded in ADR-008 through ADR-025. ADR-008
+supersedes the earlier Glue/Redshift analytical engine in ADR-007 while retaining
+the immutable archive and transactional-outbox principles.
