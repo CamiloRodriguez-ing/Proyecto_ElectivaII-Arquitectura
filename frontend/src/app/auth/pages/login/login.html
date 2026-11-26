@@ -106,26 +106,64 @@
                 <span class="w-2 h-2 rounded-full bg-primary"></span>
                 Portal de Identidad
               </span>
-              <span class="font-label-sm text-label-sm text-on-surface-variant">SSO v2.4</span>
+              <span class="font-label-sm text-label-sm text-on-surface-variant">Acceso seguro</span>
             </div>
             <h2 class="font-headline-lg text-headline-lg font-bold text-on-surface mb-1">Bienvenido</h2>
             <p class="font-body-md text-body-md text-on-surface-variant mb-space-lg">
               Ingresa con tu cuenta institucional para continuar con el expediente académico.
             </p>
             
-            <!-- Botón Principal: Autenticación Institucional (Keycloak) -->
-            <button 
-              (click)="loginWithKeycloak()"
-              [disabled]="isLoading()"
-              class="w-full h-10 px-space-md bg-primary hover:bg-primary-container text-white rounded-lg font-label-lg text-label-lg font-semibold flex items-center justify-center gap-space-sm shadow-sm transition duration-150" 
-              type="button"
-            >
-              <span *ngIf="!isLoading()" class="material-symbols-outlined text-[20px]">account_balance</span>
-              <span *ngIf="isLoading()" class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
-              Continuar con cuenta institucional
-            </button>
-            <div class="mt-2 text-center">
-              <span class="font-body-sm text-body-sm text-on-surface-variant">Autenticación segura federada vía Keycloak</span>
+            <form [formGroup]="loginForm" (ngSubmit)="submit()" class="flex flex-col gap-space-md" novalidate>
+              <label class="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface" for="username">
+                Usuario institucional
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[19px]">person</span>
+                  <input
+                    id="username"
+                    formControlName="username"
+                    autocomplete="username"
+                    autocapitalize="none"
+                    spellcheck="false"
+                    class="w-full h-11 pl-10 pr-3 rounded-lg border border-outline-variant bg-surface-container-lowest focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="usuario.facultad"
+                    type="text"
+                  />
+                </div>
+                <span *ngIf="loginForm.controls.username.touched && loginForm.controls.username.invalid" class="text-error font-body-sm">
+                  Ingresa tu usuario institucional.
+                </span>
+              </label>
+
+              <label class="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface" for="password">
+                Contraseña
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[19px]">lock</span>
+                  <input
+                    id="password"
+                    formControlName="password"
+                    autocomplete="current-password"
+                    class="w-full h-11 pl-10 pr-3 rounded-lg border border-outline-variant bg-surface-container-lowest focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="Tu contraseña"
+                    type="password"
+                  />
+                </div>
+                <span *ngIf="loginForm.controls.password.touched && loginForm.controls.password.invalid" class="text-error font-body-sm">
+                  Ingresa tu contraseña.
+                </span>
+              </label>
+
+              <button
+                [disabled]="isLoading()"
+                class="w-full h-11 px-space-md bg-primary hover:bg-primary-container disabled:opacity-60 text-white rounded-lg font-label-lg text-label-lg font-semibold flex items-center justify-center gap-space-sm shadow-sm transition duration-150"
+                type="submit"
+              >
+                <span *ngIf="!isLoading()" class="material-symbols-outlined text-[20px]">login</span>
+                <span *ngIf="isLoading()" class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+                {{ isLoading() ? 'Verificando…' : 'Ingresar' }}
+              </button>
+            </form>
+            <div class="mt-3 text-center">
+              <span class="font-body-sm text-body-sm text-on-surface-variant">La identidad y los permisos son administrados por Keycloak.</span>
             </div>
 
             <!-- Error Banner (if any) -->

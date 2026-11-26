@@ -4,8 +4,5 @@ export const environment = {
   tenantId: 'sistemas',
   tenantName: 'Ing. Sistemas',
   themeClass: 'theme-sistemas',
-  logo: 'sistemas.png',
-  keycloak: {
-    issuer: 'http://localhost:8081/realms/academic-requests'
-  }
+  logo: 'sistemas.png'
 };

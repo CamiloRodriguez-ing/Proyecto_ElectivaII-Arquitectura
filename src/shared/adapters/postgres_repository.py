@@ -130,8 +130,9 @@ def create_request(
 
         _insert_outbox(
             conn, event_id=event_id, topic=os.environ.get("KAFKA_TOPIC_REQUESTS", "academic-requests"),
-            event_type="request.submitted.v1", aggregate_id=prepared["request_id"], correlation_id=correlation_id,
+            event_type="request.submitted.v2", aggregate_id=prepared["request_id"], correlation_id=correlation_id,
             actor_subject=owner_subject, actor_roles=actor_roles, tenant_id=prepared["tenant_id"],
+            schema_version=2,
             payload={
                 "request_id": prepared["request_id"], "tenant_id": prepared["tenant_id"],
                 "type": prepared["type"], "status": prepared["status"],
@@ -139,7 +140,7 @@ def create_request(
                 "target_course": prepared["academic_data"].get("target_course"),
                 "source_credits": prepared["academic_data"].get("source_credits"),
                 "target_credits": prepared["academic_data"].get("target_credits"),
-                "owner_hash_source": owner_subject, "created_at": prepared["created_at"],
+                "owner_hash_source": owner_subject, "submitted_at": prepared["created_at"],
             },
         )
         return _serialize_request(row, [_document_payload(item) for item in updated] if document_ids else [])
@@ -235,11 +236,17 @@ def evaluate_persisted_request(
             "request_id": str(request_id), "tenant_id": tenant_id, "previous_status": previous.value,
             "new_status": new_status.value, "decision": decision.value, "reviewer_role": actor_role,
             "occurred_at": now.isoformat(), "submitted_at": current["created_at"].isoformat(),
+            "type": current["request_type"],
+            "source_course": current["academic_data"].get("source_course"),
+            "target_course": current["academic_data"].get("target_course"),
+            "source_credits": current["academic_data"].get("source_credits"),
+            "target_credits": current["academic_data"].get("target_credits"),
         }
         _insert_outbox(
             conn, event_id=event_id, topic=os.environ.get("KAFKA_TOPIC_REVIEWS", "academic-reviews"),
-            event_type="request.status_changed.v1", aggregate_id=str(request_id), correlation_id=correlation_id,
+            event_type="request.status_changed.v2", aggregate_id=str(request_id), correlation_id=correlation_id,
             actor_subject=actor_subject, actor_roles=actor_roles, tenant_id=tenant_id, payload=event_payload,
+            schema_version=2,
         )
         request_payload = _serialize_request(
             {**updated, "observations": [observation]}, _documents(conn, str(request_id))
@@ -247,9 +254,9 @@ def evaluate_persisted_request(
         return {
             "request": request_payload,
             "event": {
-                "event_id": str(event_id), "event_type": "request.status_changed.v1",
+                "event_id": str(event_id), "event_type": "request.status_changed.v2",
                 "aggregate_type": "request", "aggregate_id": str(request_id),
-                "occurred_at": now.isoformat().replace("+00:00", "Z"), "schema_version": 1,
+                "occurred_at": now.isoformat().replace("+00:00", "Z"), "schema_version": 2,
                 "data": {"previous_status": previous.value, "new_status": new_status.value},
             },
         }
@@ -353,33 +360,6 @@ def mark_notification_read(*, notification_id: str, tenant_id: str, subject: str
     return {"success": True, "notification_id": notification_id}
 
 
-def operational_summary(*, tenant_id: str) -> dict[str, Any]:
-    with connection() as conn:
-        rows = conn.execute(
-            "SELECT status, request_type, count(*) AS count FROM academic_requests WHERE tenant_id=%s GROUP BY status, request_type",
-            (tenant_id,),
-        ).fetchall()
-        avg = conn.execute(
-            "SELECT avg(extract(epoch FROM (resolved_at-created_at))/3600.0) AS value "
-            "FROM academic_requests WHERE tenant_id=%s AND resolved_at IS NOT NULL", (tenant_id,),
-        ).fetchone()["value"]
-    by_status: dict[str, int] = {}
-    by_type: dict[str, int] = {}
-    for row in rows:
-        by_status[row["status"]] = by_status.get(row["status"], 0) + row["count"]
-        by_type[row["request_type"]] = by_type.get(row["request_type"], 0) + row["count"]
-    total = sum(by_status.values())
-    approved, rejected = by_status.get("APPROVED", 0), by_status.get("REJECTED", 0)
-    decisions = approved + rejected
-    return {
-        "total": total, "by_type": by_type, "by_status": by_status,
-        "approval_percentage": round(approved / decisions * 100, 2) if decisions else 0,
-        "rejection_percentage": round(rejected / decisions * 100, 2) if decisions else 0,
-        "average_resolution_hours": round(float(avg), 2) if avg is not None else None,
-        "changes_requested": by_status.get("CHANGES_REQUESTED", 0),
-    }
-
-
 def _documents(conn: Any, request_id: str) -> list[dict[str, Any]]:
     rows = conn.execute("SELECT * FROM request_documents WHERE request_id=%s ORDER BY created_at", (request_id,)).fetchall()
     return [_document_payload(row) for row in rows]
@@ -415,12 +395,13 @@ def _verify_uploaded_documents(document_ids: list[str], tenant_id: str, owner_su
 def _insert_outbox(
     conn: Any, *, event_id: Any, topic: str, event_type: str, aggregate_id: str, correlation_id: str,
     actor_subject: str, actor_roles: set[str] | frozenset[str], tenant_id: str, payload: dict[str, Any],
+    schema_version: int = 1,
 ) -> None:
     conn.execute(
         """INSERT INTO outbox_events
            (event_id, aggregate_type, aggregate_id, topic, event_type, correlation_id,
-            actor_subject, actor_roles, tenant_id, payload)
-           VALUES (%s,'request',%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb)""",
+            actor_subject, actor_roles, tenant_id, payload, schema_version)
+           VALUES (%s,'request',%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s)""",
         (event_id, aggregate_id, topic, event_type, correlation_id, actor_subject,
-         json.dumps(sorted(actor_roles)), tenant_id, json.dumps(payload)),
+         json.dumps(sorted(actor_roles)), tenant_id, json.dumps(payload), schema_version),
     )

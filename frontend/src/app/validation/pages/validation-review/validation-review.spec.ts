@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ValidationReview } from './validation-review';
+import { provideRouter } from '@angular/router';
 
 describe('ValidationReview', () => {
   let component: ValidationReview;
@@ -8,6 +9,7 @@ describe('ValidationReview', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ValidationReview],
+      providers: [provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ValidationReview);

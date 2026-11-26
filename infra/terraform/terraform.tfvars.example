@@ -2,20 +2,22 @@ aws_region      = "us-east-1"
 environment     = "dev"
 frontend_origin = "*"
 persistence_enabled = true
-
-# OLAP resources are opt-in because Redshift Serverless and Glue incur cost.
-# Set a strong, environment-specific salt before enabling them.
-analytics_enabled        = false
+deploy_full_stack        = true
+analytics_enabled        = true
+load_demo_dataset        = true
 analytics_pseudonym_salt = "replace-with-a-long-random-secret"
+database_instance_class  = "db.t4g.small"
+druid_instance_type      = "t3.large"
+keycloak_instance_type   = "t4g.small"
+budget_notification_email = "replace-with-your-email"
 
-keycloak_issuer   = "https://auth.example.edu/realms/academic-requests"
 keycloak_audience = "academic-api"
 
 # Safe default: deploy the API without attempting event publication.
-kafka_enabled = false
+kafka_enabled = true
 
 # Set both values to true to provision and use Amazon MSK Serverless.
-create_msk_serverless = false
+create_msk_serverless = true
 
 # To retain an existing external Kafka broker instead, leave
 # create_msk_serverless=false and configure these values:

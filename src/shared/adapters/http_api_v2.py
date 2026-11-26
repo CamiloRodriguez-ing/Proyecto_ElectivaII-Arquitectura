@@ -1,17 +1,18 @@
 import json
 import os
-from datetime import datetime, timezone
-from typing import Any, Callable
+from collections.abc import Callable
+from datetime import UTC, datetime
+from typing import Any
 from uuid import uuid4
 
-from shared.domain.errors import DomainError
 from shared.adapters.kafka_events import KafkaPublishError
+from shared.domain.errors import DomainError
 from shared.security.keycloak import AuthenticationError, AuthorizationError, Principal, require_any_role
 
 
 def response(data: Any, status_code: int = 200, request_id: str = "", origin: str = "http://localhost:5173") -> dict[str, Any]:
     allowed_origin = _allowed_origin(origin)
-    return {"statusCode": status_code, "headers": {"content-type": "application/json", "access-control-allow-origin": allowed_origin}, "body": json.dumps({"data": data, "meta": {"request_id": request_id, "api_version": "v1", "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")}})}
+    return {"statusCode": status_code, "headers": {"content-type": "application/json", "access-control-allow-origin": allowed_origin}, "body": json.dumps({"data": data, "meta": {"request_id": request_id, "api_version": "v1", "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z")}})}
 
 
 def handler_for(
@@ -45,6 +46,7 @@ def handler_for(
         status = {
             "NOT_FOUND": 404,
             "FORBIDDEN": 403,
+            "ANALYTICS_UNAVAILABLE": 503,
             "STATE_TRANSITION_NOT_ALLOWED": 409,
             "VERSION_CONFLICT": 409,
         }.get(error.code, 422)

@@ -5,14 +5,17 @@ import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib import import_module
 from typing import Any
-from urllib.parse import urlsplit
+from urllib.parse import parse_qsl, urlsplit
 from uuid import uuid4
 
 from functions.keycloak_authorizer.handler import lambda_handler as authorize
 
-
 ROUTES = {
     ("GET", "/v1/health"): ("GET /v1/health", "functions.health.handler"),
+    ("POST", "/v1/auth/login"): ("POST /v1/auth/login", "functions.auth_session.handler"),
+    ("POST", "/v1/auth/refresh"): ("POST /v1/auth/refresh", "functions.auth_session.handler"),
+    ("POST", "/v1/auth/logout"): ("POST /v1/auth/logout", "functions.auth_session.handler"),
+    ("GET", "/v1/auth/me"): ("GET /v1/auth/me", "functions.auth_session.handler"),
     ("POST", "/v1/requests/validate"): (
         "POST /v1/requests/validate",
         "functions.validate_request.handler",
@@ -34,8 +37,8 @@ ROUTES = {
         "functions.preview_notification.handler",
     ),
     ("GET", "/v1/notifications"): ("GET /v1/notifications", "functions.notification_query.handler"),
-    ("POST", "/v1/analytics/summary"): (
-        "POST /v1/analytics/summary",
+    ("GET", "/v1/analytics/summary"): (
+        "GET /v1/analytics/summary",
         "functions.analytics_summary.handler",
     ),
     ("GET", "/v1/analytics/cube/requests"): (
@@ -49,23 +52,30 @@ ROUTES = {
     ),
 }
 
+PUBLIC_ROUTES = {
+    "GET /v1/health",
+    "POST /v1/auth/login",
+    "POST /v1/auth/refresh",
+    "POST /v1/auth/logout",
+}
+
 
 class ApiHandler(BaseHTTPRequestHandler):
     server_version = "AcademicRequestsLocal/1.0"
 
-    def do_OPTIONS(self) -> None:  # noqa: N802
+    def do_OPTIONS(self) -> None:
         self.send_response(204)
         self._cors_headers()
         self.send_header("content-length", "0")
         self.end_headers()
 
-    def do_GET(self) -> None:  # noqa: N802
+    def do_GET(self) -> None:
         self._dispatch()
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         self._dispatch()
 
-    def do_PATCH(self) -> None:  # noqa: N802
+    def do_PATCH(self) -> None:
         self._dispatch()
 
     def _dispatch(self) -> None:
@@ -94,30 +104,22 @@ class ApiHandler(BaseHTTPRequestHandler):
             "routeKey": route_key,
             "rawPath": path,
             "headers": headers,
+            "cookies": [headers["cookie"]] if headers.get("cookie") else [],
             "body": body,
             "pathParameters": path_parameters,
-            "queryStringParameters": dict(
-                item.split("=", 1) if "=" in item else (item, "")
-                for item in urlsplit(self.path).query.split("&") if item
-            ),
+            "queryStringParameters": dict(parse_qsl(urlsplit(self.path).query, keep_blank_values=True)),
             "requestContext": {
                 "http": {"method": self.command, "path": path},
                 "requestId": headers.get("x-request-id", str(uuid4())),
             },
         }
 
-        if route_key != "GET /v1/health":
-            if not headers.get("authorization"):
-                self._json_response(
-                    401,
-                    {"error": {"code": "UNAUTHENTICATED", "message": "A bearer access token is required"}},
-                )
-                return
+        if route_key not in PUBLIC_ROUTES:
             authorization = authorize(event, None)
             if not authorization.get("isAuthorized"):
                 self._json_response(
-                    403,
-                    {"error": {"code": "FORBIDDEN", "message": "The token or role is not allowed"}},
+                    401,
+                    {"error": {"code": "UNAUTHENTICATED", "message": "The session or role is not allowed"}},
                 )
                 return
             event["requestContext"]["authorizer"] = {"lambda": authorization.get("context", {})}
@@ -130,6 +132,8 @@ class ApiHandler(BaseHTTPRequestHandler):
         self.send_response(int(result.get("statusCode", 200)))
         for key, value in response_headers.items():
             self.send_header(key, value)
+        for cookie in result.get("cookies", []):
+            self.send_header("set-cookie", cookie)
         self.send_header("content-length", str(len(encoded)))
         self.end_headers()
         self.wfile.write(encoded)
@@ -151,7 +155,9 @@ class ApiHandler(BaseHTTPRequestHandler):
             allowed = origin
         self.send_header("access-control-allow-origin", allowed)
         self.send_header("access-control-allow-methods", "GET,POST,PATCH,OPTIONS")
-        self.send_header("access-control-allow-headers", "Content-Type,X-Request-Id,Authorization")
+        self.send_header("access-control-allow-headers", "Content-Type,X-Request-Id,Authorization,X-CSRF-Token")
+        if allowed != "*":
+            self.send_header("access-control-allow-credentials", "true")
 
     def log_message(self, fmt: str, *args: Any) -> None:
         print(f"{self.address_string()} - {fmt % args}", flush=True)

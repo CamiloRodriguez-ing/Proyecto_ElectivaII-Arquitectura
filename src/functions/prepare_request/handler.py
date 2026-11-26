@@ -11,12 +11,23 @@ def _publish(_body, result, principal, request_id):
         return
     publish_event(
         topic=os.environ["KAFKA_TOPIC_REQUESTS"],
-        event_type="request.submitted.v1",
+        event_type="request.submitted.v2",
         actor_id=principal.subject,
         actor_roles=principal.roles,
         correlation_id=request_id,
         aggregate_id=result["request_id"],
-        data={"request_id": result["request_id"], "type": result["type"], "status": result["status"]},
+        data={
+            "request_id": result["request_id"],
+            "tenant_id": result["tenant_id"],
+            "type": result["type"],
+            "status": result["status"],
+            "source_course": result["academic_data"].get("source_course"),
+            "target_course": result["academic_data"].get("target_course"),
+            "source_credits": result["academic_data"].get("source_credits"),
+            "target_credits": result["academic_data"].get("target_credits"),
+            "submitted_at": result["created_at"],
+        },
+        schema_version=2,
     )
 
 

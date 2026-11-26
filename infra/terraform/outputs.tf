@@ -28,6 +28,22 @@ output "analytics_bucket" {
   value = try(aws_s3_bucket.analytics[0].id, null)
 }
 
-output "redshift_workgroup" {
-  value = try(aws_redshiftserverless_workgroup.this[0].workgroup_name, null)
+output "frontend_url" {
+  value = try("https://${aws_cloudfront_distribution.frontend[0].domain_name}", null)
+}
+
+output "keycloak_url" {
+  value = try("https://${aws_cloudfront_distribution.keycloak[0].domain_name}", null)
+}
+
+output "keycloak_admin_secret_arn" {
+  value = try(aws_secretsmanager_secret.keycloak_admin[0].arn, null)
+}
+
+output "druid_instance_id" {
+  value = try(aws_instance.druid[0].id, null)
+}
+
+output "keycloak_instance_id" {
+  value = try(aws_instance.keycloak[0].id, null)
 }

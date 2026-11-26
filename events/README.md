@@ -5,5 +5,8 @@ Fixtures include synthetic claims for direct Lambda invocation. They do not vali
 ```powershell
 sam local invoke ValidateRequestFunction --event events\validate-request.json --parameter-overrides KafkaEnabled=false
 sam local invoke EvaluateReviewFunction --event events\evaluate-request.json --parameter-overrides KafkaEnabled=false
-sam local invoke AnalyticsSummaryFunction --event events\analytics-request.json --parameter-overrides KafkaEnabled=false
 ```
+
+The analytical fixture documents the GET event shape, but its handler requires a
+reachable Druid SQL endpoint. Use the Docker Compose environment for analytical
+invocation and end-to-end testing.

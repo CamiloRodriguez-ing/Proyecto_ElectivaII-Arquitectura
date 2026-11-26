@@ -1,5 +1,6 @@
-﻿from functions.keycloak_authorizer import handler
-import requests
+﻿
+from functions.keycloak_authorizer import handler
+
 
 def event(route_key, authorization="Bearer token"):
     return {"routeKey": route_key, "headers": {"authorization": authorization}}
@@ -39,3 +40,17 @@ def test_authorizer_denies_wrong_role(monkeypatch):
 def test_authorizer_denies_malformed_authorization_header():
     result = handler.lambda_handler(event("POST /v1/requests/prepare", "Basic invalid"), None)
     assert result == {"isAuthorized": False, "context": {}}
+
+
+def test_authorizer_does_not_accept_realm_or_legacy_frontend_roles(monkeypatch):
+    monkeypatch.setattr(
+        handler,
+        "_verified_claims",
+        lambda token: {
+            "sub": "student-1",
+            "realm_access": {"roles": ["STUDENT"]},
+            "resource_access": {"academic-frontend": {"roles": ["STUDENT"]}},
+        },
+    )
+    result = handler.lambda_handler(event("POST /v1/requests/prepare"), None)
+    assert result["isAuthorized"] is False

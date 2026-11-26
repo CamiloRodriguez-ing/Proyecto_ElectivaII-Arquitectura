@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: Student Requests API - one Lambda per route, Keycloak JWT authorization, and Kafka events.
+Description: Legacy partial SAM reference. Terraform is the canonical AWS deployment for browser-session auth, OLAP, and the complete stack.
 
 Parameters:
   Environment:
@@ -66,7 +66,6 @@ Globals:
         KAFKA_TOPIC_REQUESTS: academic-requests
         KAFKA_TOPIC_REVIEWS: academic-reviews
         KAFKA_TOPIC_NOTIFICATIONS: academic-notifications
-        KAFKA_TOPIC_ANALYTICS: academic-analytics
 
 Resources:
   KafkaProducerRole:
@@ -108,7 +107,7 @@ Resources:
       CorsConfiguration:
         AllowOrigins: [!Ref FrontendOrigin]
         AllowMethods: [GET, POST, OPTIONS]
-        AllowHeaders: [Content-Type, X-Request-Id, Authorization]
+        AllowHeaders: [Content-Type, X-Request-Id, Authorization, X-CSRF-Token]
 
   HealthFunction:
     Type: AWS::Serverless::Function
@@ -198,8 +197,6 @@ Resources:
       AuthorizerPayloadFormatVersion: "2.0"
       AuthorizerUri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthorizerFunction.Arn}/invocations"
       EnableSimpleResponses: true
-      IdentitySource:
-        - "$request.header.Authorization"
       Name: keycloak-academic-api
 
   AuthorizerPermission:
@@ -329,7 +326,7 @@ Resources:
       ApiId: !Ref AcademicRequestsApi
       AuthorizationType: CUSTOM
       AuthorizerId: !Ref KeycloakJwtAuthorizer
-      RouteKey: "POST /v1/analytics/summary"
+      RouteKey: "GET /v1/analytics/summary"
       Target: !Join ["/", [integrations, !Ref AnalyticsSummaryIntegration]]
 
   AnalyticsSummaryPermission:
@@ -338,7 +335,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref AnalyticsSummaryFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${AcademicRequestsApi}/*/POST/v1/analytics/summary"
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${AcademicRequestsApi}/*/GET/v1/analytics/summary"
 
 Outputs:
   ApiUrl:

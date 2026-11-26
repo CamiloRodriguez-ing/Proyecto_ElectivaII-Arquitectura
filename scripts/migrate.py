@@ -17,7 +17,7 @@ def main() -> None:
         )
         applied = {row[0] for row in connection.execute("SELECT version FROM schema_migrations")}
         for path in files:
-            if path.name == "002_warehouse.sql" or path.name in applied:
+            if path.name in applied:
                 continue
             with connection.transaction():
                 connection.execute(path.read_text(encoding="utf-8"))

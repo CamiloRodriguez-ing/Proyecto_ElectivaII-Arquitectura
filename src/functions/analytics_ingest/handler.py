@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 
 import boto3
+from botocore.exceptions import ClientError
 
 ANALYTICS_DATA_FIELDS = {
     "request_id",
@@ -15,12 +16,12 @@ ANALYTICS_DATA_FIELDS = {
     "source_credits",
     "target_credits",
     "created_at",
+    "submitted_at",
     "previous_status",
     "new_status",
     "decision",
     "reviewer_role",
     "occurred_at",
-    "submitted_at",
 }
 
 
@@ -34,6 +35,7 @@ def lambda_handler(event, context):
     s3 = boto3.client("s3", endpoint_url=endpoint) if endpoint else boto3.client("s3")
     bucket = os.environ["ANALYTICS_BUCKET"]
     written = 0
+    duplicates = 0
     for records in event.get("records", {}).values():
         for record in records:
             payload = json.loads(base64.b64decode(record["value"]).decode("utf-8"))
@@ -58,12 +60,20 @@ def lambda_handler(event, context):
                 f"raw/event_type={payload['event_type']}/year={occurred:%Y}/month={occurred:%m}/"
                 f"day={occurred:%d}/hour={occurred:%H}/{event_id}.json"
             )
-            s3.put_object(
-                Bucket=bucket,
-                Key=key,
-                Body=json.dumps(analytics_record, separators=(",", ":")).encode(),
-                ContentType="application/json",
-                ServerSideEncryption="AES256",
-            )
-            written += 1
-    return {"written": written}
+            try:
+                s3.put_object(
+                    Bucket=bucket,
+                    Key=key,
+                    Body=json.dumps(analytics_record, separators=(",", ":")).encode(),
+                    ContentType="application/json",
+                    ServerSideEncryption="AES256",
+                    IfNoneMatch="*",
+                )
+                written += 1
+            except ClientError as error:
+                code = str(error.response.get("Error", {}).get("Code", ""))
+                status = error.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+                if code not in {"PreconditionFailed", "412"} and status != 412:
+                    raise
+                duplicates += 1
+    return {"written": written, "duplicates": duplicates}

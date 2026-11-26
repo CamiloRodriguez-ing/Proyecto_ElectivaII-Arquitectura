@@ -1,146 +1,136 @@
-﻿import { Injectable, signal } from '@angular/core';
-import { OAuthService, AuthConfig } from 'angular-oauth2-oidc';
-import { jwtDecode } from 'jwt-decode';
-import { environment } from '../../../environments/environment';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { Observable, finalize, firstValueFrom, map, shareReplay, tap } from 'rxjs';
+import { RuntimeConfigService } from '../../core/services/runtime-config.service';
+
+export interface SessionUser {
+  subject: string;
+  username: string;
+  name: string;
+  email: string;
+  tenant_id: string;
+  roles: string[];
+}
 
 export interface UserRole {
   id: string;
   name: string;
   description: string;
-  username?: string;
-  email?: string;
+  username: string;
+  email: string;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+interface AuthResponse {
+  data: { user: SessionUser; expires_in?: number };
+}
+
+@Injectable({ providedIn: 'root' })
 export class AuthService {
-  public currentUser = signal<UserRole | null>(null);
-  public isLoading = signal<boolean>(false);
-  public error = signal<string | null>(null);
+  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+  private readonly runtimeConfig = inject(RuntimeConfigService);
+  private refreshRequest?: Observable<SessionUser>;
 
-  constructor(private oauthService: OAuthService) {
-    this.configureOAuth();
-  }
+  readonly currentUser = signal<UserRole | null>(null);
+  readonly isLoading = signal(false);
+  readonly error = signal<string | null>(null);
 
-  private configureOAuth() {
-    if (typeof window === 'undefined') return;
-
-    const authConfig: AuthConfig = {
-      issuer: (environment as any).keycloak?.issuer || 'https://keycloak-3a73e53a-a0c9-4484-ba06-7bfbeca55673.moonshard-wow.com/realms/academic-requests',
-      redirectUri: window.location.origin + '/',
-      clientId: 'academic-frontend',
-      responseType: 'code',
-      scope: 'openid profile email',
-      showDebugInformation: true,
-      requireHttps: false,
-      postLogoutRedirectUri: window.location.origin + '/'
-    };
-
-    this.oauthService.configure(authConfig);
-    this.oauthService.setupAutomaticSilentRefresh();
-
-    this.oauthService.loadDiscoveryDocumentAndTryLogin().then(() => {
-      if (this.oauthService.hasValidAccessToken()) {
-        this.decodeAndSetUser(this.oauthService.getAccessToken());
-        
-        // Only redirect if we are on the login page or root, to avoid loop
-        if (window.location.pathname === '/' || window.location.pathname === '/login') {
-          this.redirectBasedOnRole();
-        }
-      }
-    }).catch(err => {
-      // silent
-    });
-  }
-
-  public loginRedirect() {
-    this.oauthService.initCodeFlow();
-  }
-
-  private decodeAndSetUser(token: string) {
+  async login(username: string, password: string): Promise<void> {
+    this.isLoading.set(true);
+    this.error.set(null);
     try {
-      const decoded: any = jwtDecode(token);
-      let roleId = 'estudiante';
-      let roleName = 'Estudiante';
-      
-      const username = decoded.preferred_username || '';
-      if (username.startsWith('admin')) {
-        roleId = 'admin'; roleName = 'Administrador';
-      } else if (username.startsWith('analista')) {
-        roleId = 'analista'; roleName = 'Analista';
-      } else if (username.startsWith('revisor')) {
-        roleId = 'revisor'; roleName = 'Revisor Docente';
-      }
-
-            const email = (decoded.email || '').toLowerCase();
-      const tenant = environment.tenantId.toLowerCase();
-      
-      // BLOQUEO ESTRICTO DE MULTI-TENANCY A NIVEL DE APLICACIÓN
-      if (email && tenant && tenant !== 'default') {
-        if (!email.includes(tenant)) {
-          alert('ACCESO DENEGADO (Tenant Isolation):\nEl usuario ' + email + ' no tiene permitido ingresar al portal de Ingeniería de ' + tenant);
-          this.logout();
-          return;
-        }
-      }
-
-      this.currentUser.set({
-        id: roleId,
-        name: roleName,
-        description: decoded.name || username,
-        username: username,
-        email: decoded.email || ''
-      });
-      
-      localStorage.setItem('access_token', token);
-    } catch (e) {
-      // silent
+      const response = await firstValueFrom(
+        this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, { username, password }, { withCredentials: true }),
+      );
+      this.setUser(response.data.user);
+      await this.router.navigateByUrl(this.routeFor(response.data.user.roles));
+    } catch (error) {
+      this.currentUser.set(null);
+      this.error.set(this.messageFor(error));
+      throw error;
+    } finally {
+      this.isLoading.set(false);
     }
   }
 
-  private redirectBasedOnRole() {
-    const user = this.currentUser();
-    let targetRoute = '/requests'; // Default for students
-
-    if (user?.id === 'revisor') {
-      targetRoute = '/validation';
-    } else if (user?.id === 'analista') {
-      targetRoute = '/validation'; // We can share the validation route for now
-    } else if (user?.id === 'admin') {
-      targetRoute = '/validation'; // Admin can go to validation as well
+  async ensureSession(): Promise<boolean> {
+    if (this.currentUser()) return true;
+    try {
+      const response = await firstValueFrom(
+        this.http.get<AuthResponse>(`${this.apiUrl}/auth/me`, { withCredentials: true }),
+      );
+      this.setUser(response.data.user);
+      return true;
+    } catch {
+      this.currentUser.set(null);
+      return false;
     }
+  }
 
-    import('@angular/router').then(({ Router }) => {
-      const router = (window as any).ng?.getComponent?.(document.body)?.router;
-      if (router) router.navigate([targetRoute]);
-      else window.location.href = targetRoute;
+  refreshSession(): Observable<SessionUser> {
+    if (!this.refreshRequest) {
+      this.refreshRequest = this.http
+        .post<AuthResponse>(`${this.apiUrl}/auth/refresh`, {}, { withCredentials: true })
+        .pipe(
+          map((response) => response.data.user),
+          tap((user) => this.setUser(user)),
+          finalize(() => (this.refreshRequest = undefined)),
+          shareReplay({ bufferSize: 1, refCount: false }),
+        );
+    }
+    return this.refreshRequest;
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await firstValueFrom(this.http.post(`${this.apiUrl}/auth/logout`, {}, { withCredentials: true }));
+    } catch {
+      // The UI still drops its session if Keycloak is temporarily unavailable.
+    } finally {
+      this.currentUser.set(null);
+      await this.router.navigateByUrl('/');
+    }
+  }
+
+  private setUser(user: SessionUser): void {
+    const expectedTenant = this.runtimeConfig.config.tenantId.toLowerCase();
+    if (expectedTenant && expectedTenant !== 'default' && user.tenant_id.toLowerCase() !== expectedTenant) {
+      throw new Error('La cuenta no pertenece al portal académico seleccionado.');
+    }
+    const role = this.primaryRole(user.roles);
+    this.currentUser.set({
+      id: role.id,
+      name: role.name,
+      description: user.name || user.username,
+      username: user.username,
+      email: user.email,
     });
   }
 
-  public logout() {
-    const idToken = this.oauthService.getIdToken();
-    
-    this.oauthService.logOut(true); 
-    
-    if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.removeItem('access_token');
+  private primaryRole(roles: string[]): { id: string; name: string } {
+    if (roles.includes('ADMINISTRATOR')) return { id: 'admin', name: 'Administrador' };
+    if (roles.includes('ANALYST')) return { id: 'analista', name: 'Analista' };
+    if (roles.includes('REVIEWER')) return { id: 'revisor', name: 'Revisor docente' };
+    if (roles.includes('STUDENT')) return { id: 'estudiante', name: 'Estudiante' };
+    throw new Error('La cuenta no tiene un rol habilitado para este portal.');
+  }
+
+  private routeFor(roles: string[]): string {
+    if (roles.includes('ANALYST') || roles.includes('ADMINISTRATOR')) return '/reports';
+    if (roles.includes('REVIEWER')) return '/validation';
+    return '/requests';
+  }
+
+  private messageFor(error: unknown): string {
+    if (error instanceof Error && !(error instanceof HttpErrorResponse)) return error.message;
+    if (error instanceof HttpErrorResponse) {
+      return error.error?.error?.message || 'No fue posible iniciar sesión. Intenta nuevamente.';
     }
-    this.currentUser.set(null);
-    
-    if (typeof window !== 'undefined') {
-      const postLogoutUri = encodeURIComponent(window.location.origin + '/');
-      const issuer = (environment as any).keycloak?.issuer || 'https://keycloak-3a73e53a-a0c9-4484-ba06-7bfbeca55673.moonshard-wow.com/realms/academic-requests';
-      
-      let keycloakLogoutUrl = `${issuer}/protocol/openid-connect/logout?post_logout_redirect_uri=${postLogoutUri}&client_id=academic-frontend`;
-      if (idToken) {
-          keycloakLogoutUrl += `&id_token_hint=${idToken}`;
-      }
-      
-      window.location.href = keycloakLogoutUrl;
-    }
+    return 'No fue posible iniciar sesión. Intenta nuevamente.';
+  }
+
+  private get apiUrl(): string {
+    return this.runtimeConfig.config.apiUrl.replace(/\/$/, '');
   }
 }
-
-
-

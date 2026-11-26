@@ -36,7 +36,6 @@ def disable_kafka(monkeypatch):
     monkeypatch.setenv("KAFKA_TOPIC_REQUESTS", "academic-requests")
     monkeypatch.setenv("KAFKA_TOPIC_REVIEWS", "academic-reviews")
     monkeypatch.setenv("KAFKA_TOPIC_NOTIFICATIONS", "academic-notifications")
-    monkeypatch.setenv("KAFKA_TOPIC_ANALYTICS", "academic-analytics")
 
 
 def valid_request():
@@ -92,9 +91,20 @@ def test_prepare_publishes_minimal_event_with_trusted_actor(monkeypatch):
 
     assert result["statusCode"] == 201
     published = publish.call_args.kwargs
-    assert published["event_type"] == "request.submitted.v1"
+    assert published["event_type"] == "request.submitted.v2"
+    assert published["schema_version"] == 2
     assert published["actor_id"] == "student-1"
-    assert set(published["data"]) == {"request_id", "type", "status"}
+    assert set(published["data"]) == {
+        "request_id",
+        "tenant_id",
+        "type",
+        "status",
+        "source_course",
+        "target_course",
+        "source_credits",
+        "target_credits",
+        "submitted_at",
+    }
 
 
 def test_kafka_failure_returns_retryable_service_unavailable(monkeypatch):
@@ -134,9 +144,10 @@ def test_notification_and_analytics_role_matrix():
         ),
         None,
     )
-    analytics = analytics_handler(
-        authorized_event({"requests": [{"type": "CREDIT_TRANSFER", "status": "APPROVED"}]}, ["ANALYST"]),
-        None,
-    )
+    with patch(
+        "functions.analytics_summary.handler.summary_for_tenant",
+        return_value={"total": 1, "by_status": {"APPROVED": 1}},
+    ):
+        analytics = analytics_handler(authorized_event({}, ["ANALYST"]), None)
     assert notification["statusCode"] == 200
     assert analytics["statusCode"] == 200

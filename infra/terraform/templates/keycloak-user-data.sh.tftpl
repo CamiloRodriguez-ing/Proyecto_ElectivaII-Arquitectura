@@ -1,0 +1,79 @@
+#!/bin/bash
+set -euo pipefail
+dnf install -y docker jq
+systemctl enable --now docker
+
+secret_json=$(aws secretsmanager get-secret-value --region '${region}' --secret-id '${database_secret_arn}' --query SecretString --output text)
+db_user=$(jq -r .username <<<"$secret_json")
+db_password=$(jq -r .password <<<"$secret_json")
+mkdir -p /opt/keycloak/import
+cat >/opt/keycloak/import/realm.json <<'REALM'
+{
+  "realm": "academic-requests",
+  "enabled": true,
+  "sslRequired": "external",
+  "roles": {"client": {"academic-api": [
+    {"name":"STUDENT"},{"name":"REVIEWER"},{"name":"ANALYST"},
+    {"name":"NOTIFICATION_SERVICE"},{"name":"ADMINISTRATOR"}
+  ]}},
+  "clients": [
+    {"clientId":"academic-api","protocol":"openid-connect","enabled":true,"publicClient":false,"standardFlowEnabled":false},
+    {"clientId":"academic-bff","name":"Academic authentication facade","protocol":"openid-connect",
+     "enabled":true,"publicClient":false,"secret":"${keycloak_bff_secret}",
+     "standardFlowEnabled":false,"directAccessGrantsEnabled":true,"implicitFlowEnabled":false,
+     "protocolMappers":[
+       {"name":"academic-api-audience","protocol":"openid-connect",
+        "protocolMapper":"oidc-audience-mapper","config":{"included.client.audience":"academic-api","access.token.claim":"true"}},
+       {"name":"academic-api-roles","protocol":"openid-connect",
+        "protocolMapper":"oidc-usermodel-client-role-mapper","config":{"usermodel.clientRoleMapping.clientId":"academic-api",
+        "claim.name":"resource_access.academic-api.roles","jsonType.label":"String","multivalued":"true","access.token.claim":"true"}},
+       {"name":"tenant-id","protocol":"openid-connect","protocolMapper":"oidc-usermodel-attribute-mapper",
+        "config":{"user.attribute":"tenant_id","claim.name":"tenant_id","jsonType.label":"String",
+        "access.token.claim":"true","id.token.claim":"true","userinfo.token.claim":"true"}}
+     ]}
+  ],
+  "users": [
+    {"username":"estudiante.sistemas","enabled":true,"email":"estudiante@sistemas.local","emailVerified":true,
+     "attributes":{"tenant_id":["sistemas"]},
+     "credentials":[{"type":"password","value":"estudiante","temporary":false}],"clientRoles":{"academic-api":["STUDENT"]}},
+    {"username":"revisor.sistemas","enabled":true,"email":"revisor@sistemas.local","emailVerified":true,
+     "attributes":{"tenant_id":["sistemas"]},
+     "credentials":[{"type":"password","value":"revisor","temporary":false}],"clientRoles":{"academic-api":["REVIEWER"]}},
+    {"username":"analista.sistemas","enabled":true,"email":"analista@sistemas.local","emailVerified":true,
+     "attributes":{"tenant_id":["sistemas"]},
+     "credentials":[{"type":"password","value":"analista","temporary":false}],"clientRoles":{"academic-api":["ANALYST"]}},
+    {"username":"admin.sistemas","enabled":true,"email":"admin@sistemas.local","emailVerified":true,
+     "attributes":{"tenant_id":["sistemas"]},
+     "credentials":[{"type":"password","value":"admin","temporary":false}],"clientRoles":{"academic-api":["ADMINISTRATOR"]}}
+  ]
+}
+REALM
+
+install -m 600 /dev/null /opt/keycloak/keycloak.env
+cat >/opt/keycloak/keycloak.env <<EOF
+KC_DB=postgres
+KC_DB_URL=jdbc:postgresql://${database_host}:5432/keycloak
+KC_DB_USERNAME=$db_user
+KC_DB_PASSWORD=$db_password
+KC_BOOTSTRAP_ADMIN_USERNAME=admin
+KC_BOOTSTRAP_ADMIN_PASSWORD=${keycloak_admin_password}
+KC_HTTP_ENABLED=true
+KC_HEALTH_ENABLED=true
+EOF
+
+cat >/opt/keycloak/run.sh <<'RUN'
+#!/bin/bash
+set -euo pipefail
+docker rm -f keycloak >/dev/null 2>&1 || true
+hostname_args=(-e KC_HOSTNAME_STRICT=false)
+if [[ -s /opt/keycloak/public-hostname ]]; then
+  hostname_args=(-e KC_HOSTNAME="$(cat /opt/keycloak/public-hostname)" -e KC_HOSTNAME_STRICT=true)
+fi
+docker run -d --name keycloak --restart unless-stopped --network host \
+  --env-file /opt/keycloak/keycloak.env \
+  "$${hostname_args[@]}" \
+  -v /opt/keycloak/import:/opt/keycloak/data/import:ro \
+  quay.io/keycloak/keycloak:26.0.7 start --import-realm
+RUN
+chmod 700 /opt/keycloak/run.sh
+/opt/keycloak/run.sh

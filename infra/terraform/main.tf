@@ -16,6 +16,10 @@ locals {
       handler = "functions.keycloak_authorizer.handler.lambda_handler"
       vpc     = false
     }
+    auth-session = {
+      handler = "functions.auth_session.handler.lambda_handler"
+      vpc     = false
+    }
     validate-request = {
       handler = "functions.validate_request.handler.lambda_handler"
       vpc     = false
@@ -60,21 +64,25 @@ locals {
       handler = "functions.db_migrate.handler.lambda_handler"
       vpc     = true
     }
+    platform-bootstrap = {
+      handler = "functions.platform_bootstrap.handler.lambda_handler"
+      vpc     = true
+    }
+    kafka-bootstrap = {
+      handler = "functions.kafka_bootstrap.handler.lambda_handler"
+      vpc     = true
+    }
+    demo-seed = {
+      handler = "functions.demo_seed.handler.lambda_handler"
+      vpc     = true
+    }
     analytics-ingest = {
       handler = "functions.analytics_ingest.handler.lambda_handler"
       vpc     = false
     }
     analytics-cube = {
       handler = "functions.analytics_cube.handler.lambda_handler"
-      vpc     = false
-    }
-    warehouse-migrate = {
-      handler = "functions.warehouse_migrate.handler.lambda_handler"
-      vpc     = false
-    }
-    warehouse-load = {
-      handler = "functions.warehouse_load.handler.lambda_handler"
-      vpc     = false
+      vpc     = true
     }
   }
 
@@ -83,6 +91,26 @@ locals {
       route_key     = "GET /v1/health"
       function_key  = "health"
       authorization = "NONE"
+    }
+    auth-login = {
+      route_key     = "POST /v1/auth/login"
+      function_key  = "auth-session"
+      authorization = "NONE"
+    }
+    auth-refresh = {
+      route_key     = "POST /v1/auth/refresh"
+      function_key  = "auth-session"
+      authorization = "NONE"
+    }
+    auth-logout = {
+      route_key     = "POST /v1/auth/logout"
+      function_key  = "auth-session"
+      authorization = "NONE"
+    }
+    auth-me = {
+      route_key     = "GET /v1/auth/me"
+      function_key  = "auth-session"
+      authorization = "CUSTOM"
     }
     validate-request = {
       route_key     = "POST /v1/requests/validate"
@@ -135,7 +163,7 @@ locals {
       authorization = "CUSTOM"
     }
     analytics-summary = {
-      route_key     = "POST /v1/analytics/summary"
+      route_key     = "GET /v1/analytics/summary"
       function_key  = "analytics-summary"
       authorization = "CUSTOM"
     }
@@ -171,6 +199,34 @@ locals {
   ) : var.kafka_bootstrap_servers
   effective_security_protocol = var.create_msk_serverless ? "SASL_SSL" : var.kafka_security_protocol
   effective_sasl_mechanism    = var.create_msk_serverless ? "AWS_MSK_IAM" : var.kafka_sasl_mechanism
+}
+
+resource "terraform_data" "configuration_guard" {
+  lifecycle {
+    precondition {
+      condition = !var.deploy_full_stack || (
+        var.analytics_enabled && var.persistence_enabled && var.kafka_enabled && var.create_msk_serverless
+      )
+      error_message = "deploy_full_stack requires analytics, persistence, Kafka, and MSK Serverless."
+    }
+
+    precondition {
+      condition = !var.load_demo_dataset || (
+        var.environment == "dev" && var.persistence_enabled && var.kafka_enabled && var.create_msk_serverless
+      )
+      error_message = "load_demo_dataset requires dev, persistence, Kafka, and MSK Serverless."
+    }
+
+    precondition {
+      condition     = !var.analytics_enabled || (length(var.analytics_pseudonym_salt) >= 24 && var.analytics_pseudonym_salt != "replace-before-enabling-analytics")
+      error_message = "Set analytics_pseudonym_salt to a private value of at least 24 characters when analytics is enabled."
+    }
+
+    precondition {
+      condition     = !var.deploy_full_stack || can(regex("^[^@[:space:]]+@[^@[:space:]]+[.][^@[:space:]]+$", var.budget_notification_email))
+      error_message = "A valid budget_notification_email is required for the full demonstration stack."
+    }
+  }
 }
 
 resource "terraform_data" "lambda_build" {
@@ -227,15 +283,19 @@ resource "aws_iam_role_policy" "lambda" {
         Resource = "*"
       },
       {
-        Sid      = "PersistenceSecrets"
-        Effect   = "Allow"
-        Action   = ["secretsmanager:GetSecretValue"]
-        Resource = var.persistence_enabled ? aws_db_instance.this[0].master_user_secret[0].secret_arn : "*"
+        Sid    = "PersistenceSecrets"
+        Effect = "Allow"
+        Action = ["secretsmanager:GetSecretValue"]
+        Resource = var.deploy_full_stack ? [
+          aws_db_instance.this[0].master_user_secret[0].secret_arn,
+          aws_secretsmanager_secret.keycloak_database[0].arn,
+          aws_secretsmanager_secret.druid_database[0].arn,
+        ] : (var.persistence_enabled ? [aws_db_instance.this[0].master_user_secret[0].secret_arn] : ["*"])
       },
       {
         Sid      = "DocumentStorage"
         Effect   = "Allow"
-        Action   = ["s3:GetObject", "s3:PutObject", "s3:HeadObject"]
+        Action   = ["s3:GetObject", "s3:PutObject"]
         Resource = "${aws_s3_bucket.documents.arn}/*"
       },
       {
@@ -245,17 +305,14 @@ resource "aws_iam_role_policy" "lambda" {
         Resource = var.analytics_enabled ? [aws_s3_bucket.analytics[0].arn, "${aws_s3_bucket.analytics[0].arn}/*"] : [aws_s3_bucket.documents.arn]
       },
       {
-        Sid      = "Analytics"
-        Effect   = "Allow"
-        Action   = ["redshift-data:ExecuteStatement", "redshift-data:DescribeStatement", "redshift-data:GetStatementResult", "redshift-serverless:GetCredentials"]
-        Resource = "*"
-      },
-      {
         Sid    = "VpcNetworking"
         Effect = "Allow"
         Action = [
           "ec2:CreateNetworkInterface",
           "ec2:DescribeNetworkInterfaces",
+          "ec2:DescribeVpcs",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeSecurityGroups",
           "ec2:DeleteNetworkInterface",
           "ec2:AssignPrivateIpAddresses",
           "ec2:UnassignPrivateIpAddresses",
@@ -275,6 +332,8 @@ resource "aws_iam_role_policy" "lambda" {
           "kafka-cluster:Connect",
           "kafka-cluster:DescribeCluster",
           "kafka-cluster:DescribeTopic",
+          "kafka-cluster:CreateTopic",
+          "kafka-cluster:AlterTopic",
           "kafka-cluster:DescribeGroup",
           "kafka-cluster:ReadData",
           "kafka-cluster:WriteData",
@@ -301,39 +360,50 @@ resource "aws_lambda_function" "this" {
   architectures    = ["x86_64"]
   filename         = data.archive_file.lambda.output_path
   source_code_hash = data.archive_file.lambda.output_base64sha256
-  timeout          = var.lambda_timeout
-  memory_size      = var.lambda_memory_size
+  timeout = each.key == "demo-seed" ? 120 : (
+    contains(["kafka-bootstrap", "platform-bootstrap", "db-migrate", "outbox-publisher", "analytics-ingest"], each.key)
+    ? 60 : var.lambda_timeout
+  )
+  memory_size = var.lambda_memory_size
 
   tracing_config {
     mode = "Active"
   }
 
   environment {
-    variables = {
-      APP_ENV                   = var.environment
-      FRONTEND_ORIGIN           = var.frontend_origin
-      KEYCLOAK_ISSUER           = var.keycloak_issuer
-      KEYCLOAK_AUDIENCE         = var.keycloak_audience
-      KAFKA_ENABLED             = tostring(var.kafka_enabled)
-      KAFKA_BOOTSTRAP_SERVERS   = local.effective_bootstrap_servers
-      KAFKA_SECURITY_PROTOCOL   = local.effective_security_protocol
-      KAFKA_SASL_MECHANISM      = local.effective_sasl_mechanism
-      KAFKA_TOPIC_REQUESTS      = "academic-requests"
-      KAFKA_TOPIC_REVIEWS       = "academic-reviews"
-      KAFKA_TOPIC_NOTIFICATIONS = "academic-notifications"
-      KAFKA_TOPIC_ANALYTICS     = "academic-analytics"
-      PERSISTENCE_ENABLED       = tostring(var.persistence_enabled)
-      DATABASE_HOST             = var.persistence_enabled ? aws_db_proxy.this[0].endpoint : "disabled"
-      DATABASE_PORT             = "5432"
-      DATABASE_NAME             = "academic_requests"
-      DATABASE_SECRET_ARN       = var.persistence_enabled ? aws_db_instance.this[0].master_user_secret[0].secret_arn : ""
-      DATABASE_SSLMODE          = "require"
-      DOCUMENT_BUCKET           = aws_s3_bucket.documents.id
-      ANALYTICS_BUCKET          = var.analytics_enabled ? aws_s3_bucket.analytics[0].id : "disabled"
-      ANALYTICS_PSEUDONYM_SALT  = var.analytics_pseudonym_salt
-      REDSHIFT_WORKGROUP        = var.analytics_enabled ? aws_redshiftserverless_workgroup.this[0].workgroup_name : "disabled"
-      REDSHIFT_DATABASE         = "analytics"
-    }
+    variables = merge({
+      APP_ENV                      = var.environment
+      TENANT_ID                    = "sistemas"
+      FRONTEND_ORIGIN              = var.frontend_origin
+      KEYCLOAK_ISSUER              = var.deploy_full_stack ? "https://${aws_cloudfront_distribution.keycloak[0].domain_name}/realms/academic-requests" : var.keycloak_issuer
+      KEYCLOAK_AUDIENCE            = var.keycloak_audience
+      KAFKA_ENABLED                = tostring(var.kafka_enabled)
+      KAFKA_BOOTSTRAP_SERVERS      = local.effective_bootstrap_servers
+      KAFKA_SECURITY_PROTOCOL      = local.effective_security_protocol
+      KAFKA_SASL_MECHANISM         = local.effective_sasl_mechanism
+      KAFKA_TOPIC_REQUESTS         = "academic-requests"
+      KAFKA_TOPIC_REVIEWS          = "academic-reviews"
+      KAFKA_TOPIC_NOTIFICATIONS    = "academic-notifications"
+      PERSISTENCE_ENABLED          = tostring(var.persistence_enabled)
+      DATABASE_HOST                = var.persistence_enabled ? aws_db_proxy.this[0].endpoint : "disabled"
+      DATABASE_PORT                = "5432"
+      DATABASE_NAME                = "academic_requests"
+      DATABASE_SECRET_ARN          = var.persistence_enabled ? aws_db_instance.this[0].master_user_secret[0].secret_arn : ""
+      DATABASE_SSLMODE             = "require"
+      DOCUMENT_BUCKET              = aws_s3_bucket.documents.id
+      ANALYTICS_BUCKET             = var.analytics_enabled ? aws_s3_bucket.analytics[0].id : "disabled"
+      ANALYTICS_PSEUDONYM_SALT     = var.analytics_pseudonym_salt
+      DRUID_SQL_URL                = var.deploy_full_stack && var.analytics_enabled ? "http://${aws_instance.druid[0].private_ip}:8888/druid/v2/sql" : "http://disabled"
+      PLATFORM_DATABASE_HOST       = var.persistence_enabled ? aws_db_instance.this[0].address : "disabled"
+      KEYCLOAK_DATABASE_SECRET_ARN = var.deploy_full_stack ? aws_secretsmanager_secret.keycloak_database[0].arn : "disabled"
+      DRUID_DATABASE_SECRET_ARN    = var.deploy_full_stack ? aws_secretsmanager_secret.druid_database[0].arn : "disabled"
+      }, contains(["auth-session", "authorizer"], each.key) ? {
+      AUTH_CSRF_SECRET = var.deploy_full_stack ? random_password.auth_csrf[0].result : var.auth_csrf_secret
+      } : {}, each.key == "auth-session" ? {
+      KEYCLOAK_BFF_CLIENT_ID     = "academic-bff"
+      KEYCLOAK_BFF_CLIENT_SECRET = var.deploy_full_stack ? random_password.keycloak_bff[0].result : var.keycloak_bff_client_secret
+      AUTH_COOKIE_SECURE         = "true"
+    } : {})
   }
 
   dynamic "vpc_config" {
@@ -352,7 +422,7 @@ resource "aws_apigatewayv2_api" "this" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_headers = ["Content-Type", "X-Request-Id", "Authorization"]
+    allow_headers = ["Content-Type", "X-Request-Id", "Authorization", "X-CSRF-Token"]
     allow_methods = ["GET", "POST", "PATCH", "OPTIONS"]
     allow_origins = [var.frontend_origin]
   }
@@ -368,6 +438,12 @@ resource "aws_apigatewayv2_stage" "default" {
     throttling_burst_limit   = 100
     throttling_rate_limit    = 50
   }
+
+  route_settings {
+    route_key              = "POST /v1/auth/login"
+    throttling_burst_limit = 5
+    throttling_rate_limit  = 2
+  }
 }
 
 resource "aws_apigatewayv2_authorizer" "keycloak" {
@@ -377,7 +453,7 @@ resource "aws_apigatewayv2_authorizer" "keycloak" {
   authorizer_uri                    = aws_lambda_function.this["authorizer"].invoke_arn
   authorizer_payload_format_version = "2.0"
   enable_simple_responses           = true
-  identity_sources                  = ["$request.header.Authorization"]
+  authorizer_result_ttl_in_seconds  = 0
 }
 
 resource "aws_apigatewayv2_integration" "lambda" {
@@ -429,13 +505,24 @@ resource "aws_lambda_invocation" "database_migration" {
   depends_on = [aws_db_proxy_target.this]
 }
 
-resource "aws_lambda_invocation" "warehouse_migration" {
-  count         = var.analytics_enabled ? 1 : 0
-  function_name = aws_lambda_function.this["warehouse-migrate"].function_name
-  input         = jsonencode({ migration = "002_warehouse.sql" })
+resource "aws_lambda_invocation" "kafka_bootstrap" {
+  count         = var.create_msk_serverless ? 1 : 0
+  function_name = aws_lambda_function.this["kafka-bootstrap"].function_name
+  input         = jsonencode({ operation = "create-topics" })
   triggers = {
+    cluster     = aws_msk_serverless_cluster.this[0].arn
     source_hash = local.source_hash
-    namespace   = aws_redshiftserverless_namespace.this[0].namespace_id
   }
-  depends_on = [aws_redshiftserverless_workgroup.this]
+  depends_on = [aws_msk_serverless_cluster.this]
+}
+
+resource "aws_lambda_invocation" "demo_seed" {
+  count         = var.load_demo_dataset ? 1 : 0
+  function_name = aws_lambda_function.this["demo-seed"].function_name
+  input         = jsonencode({ dataset = "olap-demo-v1" })
+  triggers = {
+    database    = aws_db_instance.this[0].id
+    source_hash = local.source_hash
+  }
+  depends_on = [aws_lambda_invocation.database_migration]
 }

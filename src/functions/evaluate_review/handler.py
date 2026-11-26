@@ -36,6 +36,7 @@ def _publish(_body, result, principal, request_id):
         correlation_id=request_id,
         aggregate_id=domain_event["aggregate_id"],
         data={**domain_event["data"], "request_id": domain_event["aggregate_id"]},
+        schema_version=domain_event["schema_version"],
     )
 
 

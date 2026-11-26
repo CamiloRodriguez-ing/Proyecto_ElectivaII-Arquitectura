@@ -1,0 +1,64 @@
+{
+  "type": "kafka",
+  "spec": {
+    "dataSchema": {
+      "dataSource": "academic_events",
+      "timestampSpec": {"column": "occurred_at", "format": "iso"},
+      "dimensionsSpec": {
+        "dimensions": [
+          "event_id", "event_type", {"type": "long", "name": "schema_version"},
+          "aggregate_id", "tenant_id", "request_id", "request_type", "status",
+          "previous_status", "new_status", "source_course", "target_course",
+          {"type": "long", "name": "source_credits"},
+          {"type": "long", "name": "target_credits"},
+          "decision", "reviewer_role", "submitted_at"
+        ]
+      },
+      "metricsSpec": [],
+      "granularitySpec": {
+        "type": "uniform", "segmentGranularity": "HOUR", "queryGranularity": "NONE", "rollup": false
+      }
+    },
+    "ioConfig": {
+      "topicPattern": "academic-requests|academic-reviews",
+      "inputFormat": {
+        "type": "json",
+        "flattenSpec": {
+          "useFieldDiscovery": false,
+          "fields": [
+            {"type": "root", "name": "event_id", "expr": "event_id"},
+            {"type": "root", "name": "event_type", "expr": "event_type"},
+            {"type": "root", "name": "occurred_at", "expr": "occurred_at"},
+            {"type": "root", "name": "schema_version", "expr": "schema_version"},
+            {"type": "root", "name": "aggregate_id", "expr": "aggregate_id"},
+            {"type": "root", "name": "tenant_id", "expr": "tenant_id"},
+            {"type": "path", "name": "request_id", "expr": "$.data.request_id"},
+            {"type": "path", "name": "request_type", "expr": "$.data.type"},
+            {"type": "path", "name": "status", "expr": "$.data.status"},
+            {"type": "path", "name": "previous_status", "expr": "$.data.previous_status"},
+            {"type": "path", "name": "new_status", "expr": "$.data.new_status"},
+            {"type": "path", "name": "source_course", "expr": "$.data.source_course"},
+            {"type": "path", "name": "target_course", "expr": "$.data.target_course"},
+            {"type": "path", "name": "source_credits", "expr": "$.data.source_credits"},
+            {"type": "path", "name": "target_credits", "expr": "$.data.target_credits"},
+            {"type": "path", "name": "decision", "expr": "$.data.decision"},
+            {"type": "path", "name": "reviewer_role", "expr": "$.data.reviewer_role"},
+            {"type": "path", "name": "submitted_at", "expr": "$.data.submitted_at"}
+          ]
+        }
+      },
+      "consumerProperties": {
+        "bootstrap.servers": "${bootstrap_servers}",
+        "security.protocol": "SASL_SSL",
+        "sasl.mechanism": "AWS_MSK_IAM",
+        "sasl.jaas.config": "software.amazon.msk.auth.iam.IAMLoginModule required;",
+        "sasl.client.callback.handler.class": "software.amazon.msk.auth.iam.IAMClientCallbackHandler"
+      },
+      "taskCount": 1, "replicas": 1, "taskDuration": "PT1H", "useEarliestOffset": true
+    },
+    "tuningConfig": {
+      "type": "kafka", "maxRowsInMemory": 10000, "maxRowsPerSegment": 100000,
+      "intermediatePersistPeriod": "PT10M", "resetOffsetAutomatically": true
+    }
+  }
+}

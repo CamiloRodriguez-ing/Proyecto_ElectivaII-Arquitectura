@@ -1,0 +1,94 @@
+#!/bin/bash
+set -euo pipefail
+dnf install -y docker jq
+systemctl enable --now docker
+mkdir -p /usr/local/lib/docker/cli-plugins /opt/academic-druid
+curl -fsSL --retry 3 https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-linux-x86_64 \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+secret_json=$(aws secretsmanager get-secret-value --region '${region}' --secret-id '${database_secret_arn}' --query SecretString --output text)
+db_user=$(jq -r .username <<<"$secret_json")
+db_password=$(jq -r .password <<<"$secret_json")
+cd /opt/academic-druid
+echo '${dockerfile_base64}' | base64 -d >Dockerfile
+docker build --build-arg DRUID_VERSION=38.0.0 --build-arg AWS_MSK_IAM_AUTH_VERSION=2.4.0 -t academic-druid:38.0.0 .
+
+cat >environment <<EOF
+DRUID_SINGLE_NODE_CONF=micro-quickstart
+DRUID_XMX=512m
+DRUID_XMS=512m
+DRUID_MAXDIRECTMEMORYSIZE=1024m
+druid_extensions_loadList=["druid-kafka-indexing-service","druid-datasketches","druid-histogram","postgresql-metadata-storage","druid-s3-extensions"]
+druid_zk_service_host=zookeeper
+druid_metadata_storage_type=postgresql
+druid_metadata_storage_connector_connectURI=jdbc:postgresql://${database_host}:5432/druid
+druid_metadata_storage_connector_user=$db_user
+druid_metadata_storage_connector_password=$db_password
+druid_storage_type=s3
+druid_storage_bucket=${analytics_bucket}
+druid_storage_baseKey=segments
+druid_indexer_logs_type=s3
+druid_indexer_logs_s3Bucket=${analytics_bucket}
+druid_indexer_logs_s3Prefix=indexing-logs
+druid_indexer_runner_javaOpts=-server -Xms256m -Xmx768m -XX:MaxDirectMemorySize=768m -Duser.timezone=UTC
+druid_indexer_fork_property_druid_processing_buffer_sizeBytes=100000000
+druid_processing_numThreads=2
+druid_processing_numMergeBuffers=2
+druid_processing_buffer_sizeBytes=100000000
+druid_router_managementProxy_enabled=true
+EOF
+
+cat >compose.yaml <<'COMPOSE'
+services:
+  zookeeper:
+    image: zookeeper:3.9.3-jre-17
+    restart: unless-stopped
+    volumes: ["zk:/data"]
+  coordinator:
+    image: academic-druid:38.0.0
+    restart: unless-stopped
+    command: ["coordinator"]
+    env_file: [environment]
+    volumes: ["shared:/opt/shared", "coordinator:/opt/druid/var"]
+    depends_on: [zookeeper]
+  broker:
+    image: academic-druid:38.0.0
+    restart: unless-stopped
+    command: ["broker"]
+    env_file: [environment]
+    environment: {DRUID_XMX: 768m, DRUID_XMS: 768m}
+    volumes: ["broker:/opt/druid/var"]
+    depends_on: [coordinator]
+  historical:
+    image: academic-druid:38.0.0
+    restart: unless-stopped
+    command: ["historical"]
+    env_file: [environment]
+    environment: {DRUID_XMX: 768m, DRUID_XMS: 768m}
+    volumes: ["shared:/opt/shared", "historical:/opt/druid/var"]
+    depends_on: [coordinator]
+  middlemanager:
+    image: academic-druid:38.0.0
+    restart: unless-stopped
+    command: ["middleManager"]
+    env_file: [environment]
+    environment: {DRUID_XMX: 768m, DRUID_XMS: 768m}
+    volumes: ["shared:/opt/shared", "middle:/opt/druid/var"]
+    depends_on: [coordinator]
+  router:
+    image: academic-druid:38.0.0
+    restart: unless-stopped
+    command: ["router"]
+    env_file: [environment]
+    ports: ["8888:8888"]
+    volumes: ["router:/opt/druid/var"]
+    depends_on: [broker, coordinator]
+volumes: {zk: {}, shared: {}, coordinator: {}, broker: {}, historical: {}, middle: {}, router: {}}
+COMPOSE
+
+echo '${supervisor_base64}' | base64 -d >supervisor.json
+docker compose up -d
+until curl -fsS http://localhost:8888/status/health >/dev/null; do sleep 10; done
+until curl -fsS -X POST http://localhost:8888/druid/indexer/v1/supervisor \
+  -H 'Content-Type: application/json' --data-binary @supervisor.json; do sleep 15; done

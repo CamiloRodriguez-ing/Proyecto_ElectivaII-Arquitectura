@@ -10,7 +10,8 @@ COPY src/requirements.txt /app/src/requirements.txt
 RUN pip install --no-cache-dir --requirement /app/src/requirements.txt
 
 COPY src /app/src
-COPY local/api_server.py /app/local/api_server.py
+COPY local /app/local
+COPY scripts /app/scripts
 
 EXPOSE 8080
 CMD ["python", "/app/local/api_server.py"]

@@ -1,7 +1,7 @@
 from typing import Any
 
 from .enums import RequestStatus, RequestType, ReviewDecision
-from .errors import StateTransitionError, ValidationError
+from .errors import StateTransitionError
 
 REQUIRED_FIELDS = {RequestType.CREDIT_TRANSFER: ("source_course", "target_course", "source_credits", "target_credits")}
 ALLOWED_MIME_TYPES = {"application/pdf"}

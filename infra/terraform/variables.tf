@@ -39,6 +39,20 @@ variable "keycloak_audience" {
   default     = "academic-api"
 }
 
+variable "keycloak_bff_client_secret" {
+  description = "Secret of the external academic-bff Keycloak client when deploy_full_stack is false."
+  type        = string
+  sensitive   = true
+  default     = "replace-with-at-least-32-characters"
+}
+
+variable "auth_csrf_secret" {
+  description = "HMAC secret for browser CSRF tokens when deploy_full_stack is false."
+  type        = string
+  sensitive   = true
+  default     = "replace-with-at-least-32-characters"
+}
+
 variable "kafka_enabled" {
   description = "Publish successful protected operations to Kafka."
   type        = bool
@@ -107,19 +121,44 @@ variable "persistence_enabled" {
 variable "database_instance_class" {
   description = "RDS PostgreSQL instance class."
   type        = string
-  default     = "db.t4g.micro"
+  default     = "db.t4g.small"
 }
 
 variable "analytics_enabled" {
-  description = "Provision the S3/Glue/Redshift Serverless OLAP platform."
+  description = "Provision the S3 archive and Apache Druid OLAP platform."
   type        = bool
-  default     = false
+  default     = true
 }
 
-variable "redshift_base_capacity" {
-  description = "Base RPUs for the Redshift Serverless workgroup."
-  type        = number
-  default     = 8
+variable "deploy_full_stack" {
+  description = "Deploy the ephemeral frontend, Keycloak, and Druid demonstration stack."
+  type        = bool
+  default     = true
+}
+
+variable "load_demo_dataset" {
+  description = "Load the deterministic 300-request OLAP dataset. Restricted to the dev environment."
+  type        = bool
+  default     = false
+
+}
+
+variable "druid_instance_type" {
+  description = "Cost-oriented Druid EC2 instance type."
+  type        = string
+  default     = "t3.large"
+}
+
+variable "keycloak_instance_type" {
+  description = "Cost-oriented ARM Keycloak EC2 instance type."
+  type        = string
+  default     = "t4g.small"
+}
+
+variable "budget_notification_email" {
+  description = "Email that receives the USD 25, 50, and 80 budget alerts. Empty disables notifications."
+  type        = string
+  default     = ""
 }
 
 variable "analytics_pseudonym_salt" {
@@ -127,4 +166,5 @@ variable "analytics_pseudonym_salt" {
   type        = string
   sensitive   = true
   default     = "replace-before-enabling-analytics"
+
 }

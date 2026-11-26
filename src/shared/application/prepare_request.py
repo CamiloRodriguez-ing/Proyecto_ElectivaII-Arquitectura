@@ -1,10 +1,10 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
-from shared.domain.rules import validate_request
 from shared.domain.enums import RequestStatus
 from shared.domain.errors import ValidationError
+from shared.domain.rules import validate_request
 
 
 def prepare_request(payload: dict[str, Any]) -> dict[str, Any]:
@@ -27,7 +27,7 @@ def prepare_request(payload: dict[str, Any]) -> dict[str, Any]:
     errors = validate_request(normalized)
     if errors:
         raise ValidationError("VALIDATION_ERROR", "The request contains invalid data", errors)
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     return {
         **normalized,
         "request_id": str(uuid4()),

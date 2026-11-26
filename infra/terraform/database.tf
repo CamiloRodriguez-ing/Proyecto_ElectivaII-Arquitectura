@@ -31,7 +31,7 @@ resource "aws_db_instance" "this" {
   count                       = var.persistence_enabled ? 1 : 0
   identifier                  = "${local.name_prefix}-postgres"
   engine                      = "postgres"
-  engine_version              = "16.6"
+  engine_version              = "16"
   instance_class              = var.database_instance_class
   allocated_storage           = 20
   max_allocated_storage       = 100

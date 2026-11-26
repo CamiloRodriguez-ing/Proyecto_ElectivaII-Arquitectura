@@ -1,15 +1,16 @@
 ﻿import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 import { Observable, catchError, throwError, switchMap, map } from 'rxjs';
 import { AcademicRequestPayload, ApiResponse, ValidateResponseData, AcademicRequestResponseData, ApiError, DocumentUploadResponse } from './request.types';
 import { AuthService } from '../../auth/services/auth.service';
+import { RuntimeConfigService } from '../../core/services/runtime-config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RequestService {
-  private apiUrl = environment.apiUrl || '/v1';
+  private runtimeConfig = inject(RuntimeConfigService);
+  private apiUrl = this.runtimeConfig.config.apiUrl || '/v1';
   private authService = inject(AuthService);
   private http = inject(HttpClient);
 
@@ -54,7 +55,7 @@ export class RequestService {
 
   // --- MultiTenant Helper ---
   public getCurrentTenant(): string {
-    return environment.tenantId;
+    return this.runtimeConfig.config.tenantId;
   }
 
   private handleError(error: HttpErrorResponse) {
@@ -64,4 +65,3 @@ export class RequestService {
     return throwError(() => error);
   }
 }
-

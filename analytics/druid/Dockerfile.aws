@@ -1,0 +1,10 @@
+ARG DRUID_VERSION=38.0.0
+FROM apache/druid:${DRUID_VERSION}
+
+ARG AWS_MSK_IAM_AUTH_VERSION=2.4.0
+USER root
+RUN curl --fail --location --retry 3 \
+      "https://github.com/aws/aws-msk-iam-auth/releases/download/v${AWS_MSK_IAM_AUTH_VERSION}/aws-msk-iam-auth-${AWS_MSK_IAM_AUTH_VERSION}-all.jar" \
+      --output "/opt/druid/extensions/druid-kafka-indexing-service/aws-msk-iam-auth-${AWS_MSK_IAM_AUTH_VERSION}-all.jar" \
+    && chown druid:druid "/opt/druid/extensions/druid-kafka-indexing-service/aws-msk-iam-auth-${AWS_MSK_IAM_AUTH_VERSION}-all.jar"
+USER druid

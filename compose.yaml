@@ -118,13 +118,140 @@ services:
       - /bin/sh
       - -ec
       - |
-        rpk topic create academic-requests academic-reviews academic-notifications academic-analytics -X brokers=kafka:9092 || true
-        for topic in academic-requests academic-reviews academic-notifications academic-analytics; do
+        rpk topic create academic-requests academic-reviews academic-notifications -X brokers=kafka:9092 || true
+        for topic in academic-requests academic-reviews academic-notifications; do
           rpk topic describe "$$topic" -X brokers=kafka:9092 >/dev/null
         done
     depends_on:
       kafka:
         condition: service_healthy
+    networks: [application]
+
+  druid-postgres:
+    image: postgres:16.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: druid
+      POSTGRES_USER: druid
+      POSTGRES_PASSWORD: local-druid-db
+    volumes:
+      - druid_metadata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U druid -d druid"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [application]
+
+  druid-zookeeper:
+    image: zookeeper:3.9.3-jre-17
+    restart: unless-stopped
+    environment:
+      ZOO_MY_ID: "1"
+    volumes:
+      - druid_zookeeper:/data
+    healthcheck:
+      test: ["CMD-SHELL", "echo srvr | nc 127.0.0.1 2181 | grep -q 'Mode:'"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [application]
+
+  druid-coordinator:
+    image: apache/druid:38.0.0
+    restart: unless-stopped
+    command: ["coordinator"]
+    env_file: [./analytics/druid/environment]
+    environment:
+      DRUID_XMX: 512m
+      DRUID_XMS: 512m
+    volumes:
+      - druid_shared:/opt/shared
+      - druid_coordinator:/opt/druid/var
+    depends_on:
+      druid-postgres:
+        condition: service_healthy
+      druid-zookeeper:
+        condition: service_healthy
+    networks: [application]
+
+  druid-broker:
+    image: apache/druid:38.0.0
+    restart: unless-stopped
+    command: ["broker"]
+    env_file: [./analytics/druid/environment]
+    environment:
+      DRUID_XMX: 768m
+      DRUID_XMS: 768m
+    volumes:
+      - druid_broker:/opt/druid/var
+    depends_on:
+      - druid-coordinator
+    networks: [application]
+
+  druid-historical:
+    image: apache/druid:38.0.0
+    restart: unless-stopped
+    command: ["historical"]
+    env_file: [./analytics/druid/environment]
+    environment:
+      DRUID_XMX: 768m
+      DRUID_XMS: 768m
+    volumes:
+      - druid_shared:/opt/shared
+      - druid_historical:/opt/druid/var
+    depends_on:
+      - druid-coordinator
+    networks: [application]
+
+  druid-middlemanager:
+    image: apache/druid:38.0.0
+    restart: unless-stopped
+    command: ["middleManager"]
+    env_file: [./analytics/druid/environment]
+    environment:
+      DRUID_XMX: 768m
+      DRUID_XMS: 768m
+    volumes:
+      - druid_shared:/opt/shared
+      - druid_middlemanager:/opt/druid/var
+    depends_on:
+      - druid-coordinator
+      - kafka-init
+    networks: [application]
+
+  druid-router:
+    image: apache/druid:38.0.0
+    restart: unless-stopped
+    command: ["router"]
+    env_file: [./analytics/druid/environment]
+    environment:
+      DRUID_XMX: 512m
+      DRUID_XMS: 512m
+    volumes:
+      - druid_router:/opt/druid/var
+    ports:
+      - "8888:8888"
+    depends_on:
+      - druid-broker
+      - druid-coordinator
+    networks: [application]
+
+  druid-bootstrap:
+    image: curlimages/curl:8.11.1
+    restart: "no"
+    volumes:
+      - ./analytics/druid/supervisor-local.json:/config/supervisor.json:ro
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        until curl -fsS http://druid-coordinator:8081/status/health >/dev/null; do sleep 3; done
+        curl -fsS -X POST http://druid-coordinator:8081/druid/indexer/v1/supervisor \
+          -H 'Content-Type: application/json' --data-binary @/config/supervisor.json
+    depends_on:
+      - druid-router
+      - druid-middlemanager
     networks: [application]
 
   s3mock:
@@ -146,17 +273,25 @@ services:
     networks: [application]
 
   api:
+    image: academic-api:local
     build:
       context: .
       dockerfile: Dockerfile.api
     restart: unless-stopped
     environment:
       APP_ENV: local
+      TENANT_ID: sistemas
       PORT: "8080"
       FRONTEND_ORIGIN: http://localhost:4200
       KEYCLOAK_ISSUER: http://localhost:8081/realms/academic-requests
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/academic-requests/protocol/openid-connect/certs
       KEYCLOAK_AUDIENCE: academic-api
+      KEYCLOAK_TOKEN_URL: http://keycloak:8080/realms/academic-requests/protocol/openid-connect/token
+      KEYCLOAK_LOGOUT_URL: http://keycloak:8080/realms/academic-requests/protocol/openid-connect/logout
+      KEYCLOAK_BFF_CLIENT_ID: academic-bff
+      KEYCLOAK_BFF_CLIENT_SECRET: ${KEYCLOAK_BFF_CLIENT_SECRET:-local-academic-bff-secret}
+      AUTH_CSRF_SECRET: ${AUTH_CSRF_SECRET:-local-csrf-signing-secret-change-before-production}
+      AUTH_COOKIE_SECURE: "false"
       KAFKA_ENABLED: "true"
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_SECURITY_PROTOCOL: PLAINTEXT
@@ -164,7 +299,6 @@ services:
       KAFKA_TOPIC_REQUESTS: academic-requests
       KAFKA_TOPIC_REVIEWS: academic-reviews
       KAFKA_TOPIC_NOTIFICATIONS: academic-notifications
-      KAFKA_TOPIC_ANALYTICS: academic-analytics
       PERSISTENCE_ENABLED: "true"
       DATABASE_URL: postgresql://academic_app:${APP_DB_PASSWORD:-local-academic-db}@app-postgres:5432/academic_requests
       DOCUMENT_BUCKET: academic-documents
@@ -175,6 +309,7 @@ services:
       AWS_DEFAULT_REGION: us-east-1
       S3_ENDPOINT_URL: http://s3mock:9090
       S3_PUBLIC_ENDPOINT_URL: http://localhost:9090
+      DRUID_SQL_URL: http://druid-router:8888/druid/v2/sql
     ports:
       - "8080:8080"
     depends_on:
@@ -186,6 +321,8 @@ services:
         condition: service_completed_successfully
       s3mock:
         condition: service_healthy
+      druid-bootstrap:
+        condition: service_completed_successfully
     healthcheck:
       test:
         [
@@ -199,13 +336,68 @@ services:
       retries: 10
     networks: [application]
 
+  outbox-publisher:
+    image: academic-api:local
+    restart: unless-stopped
+    command: ["python", "local/outbox_worker.py"]
+    environment:
+      KAFKA_ENABLED: "true"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_SECURITY_PROTOCOL: PLAINTEXT
+      KAFKA_SASL_MECHANISM: NONE
+      DATABASE_URL: postgresql://academic_app:${APP_DB_PASSWORD:-local-academic-db}@app-postgres:5432/academic_requests
+    depends_on:
+      app-migrate:
+        condition: service_completed_successfully
+      kafka-init:
+        condition: service_completed_successfully
+      api:
+        condition: service_started
+    networks: [application]
+
+  analytics-archive:
+    image: academic-api:local
+    restart: unless-stopped
+    command: ["python", "local/archive_consumer.py"]
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC_REQUESTS: academic-requests
+      KAFKA_TOPIC_REVIEWS: academic-reviews
+      ANALYTICS_BUCKET: academic-analytics
+      ANALYTICS_PSEUDONYM_SALT: local-analytics-only
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      S3_ENDPOINT_URL: http://s3mock:9090
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      s3mock:
+        condition: service_healthy
+      api:
+        condition: service_started
+    networks: [application]
+
+  demo-seed:
+    image: academic-api:local
+    profiles: ["seed"]
+    restart: "no"
+    command: ["python", "scripts/seed_demo.py"]
+    environment:
+      APP_ENV: local
+      DATABASE_URL: postgresql://academic_app:${APP_DB_PASSWORD:-local-academic-db}@app-postgres:5432/academic_requests
+    depends_on:
+      app-migrate:
+        condition: service_completed_successfully
+    networks: [application]
+
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "4200:4000"
+      - "4200:8080"
     depends_on:
       api:
         condition: service_healthy
@@ -216,6 +408,14 @@ volumes:
   keycloak_data:
   kafka_data:
   s3mock_data:
+  druid_metadata:
+  druid_zookeeper:
+  druid_shared:
+  druid_coordinator:
+  druid_broker:
+  druid_historical:
+  druid_middlemanager:
+  druid_router:
 
 networks:
   application:

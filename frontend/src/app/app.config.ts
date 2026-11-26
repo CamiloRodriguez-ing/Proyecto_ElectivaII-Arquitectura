@@ -1,17 +1,15 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
-import { provideClientHydration } from '@angular/platform-browser';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
-import { provideOAuthClient } from 'angular-oauth2-oidc';
+import { RuntimeConfigService } from './core/services/runtime-config.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes), 
-    provideClientHydration(),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
-    provideOAuthClient()
+    provideAppInitializer(() => inject(RuntimeConfigService).load())
   ]
 };

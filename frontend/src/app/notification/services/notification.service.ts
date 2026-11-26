@@ -1,16 +1,16 @@
 ﻿import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../../request/services/request.types';
 import { NotificationItem, PreviewPayload, PreviewResponse } from './notification.types';
+import { RuntimeConfigService } from '../../core/services/runtime-config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
   private http = inject(HttpClient);
-  private apiUrl = environment.apiUrl;
+  private apiUrl = inject(RuntimeConfigService).config.apiUrl;
 
   getNotifications(): Observable<ApiResponse<NotificationItem[]>> {
     return this.http.get<ApiResponse<NotificationItem[]>>(`${this.apiUrl}/notifications`)

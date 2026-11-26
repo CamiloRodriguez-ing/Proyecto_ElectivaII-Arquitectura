@@ -6,8 +6,10 @@ from typing import Any
 import requests
 from jose import JWTError, jwt
 
+from shared.security.browser_session import CsrfError, access_token, require_csrf
 
 ROLE_MATRIX = {
+    "GET /v1/auth/me": {"STUDENT", "REVIEWER", "ANALYST", "ADMINISTRATOR"},
     "POST /v1/requests/validate": {"STUDENT", "ADMINISTRATOR"},
     "POST /v1/requests/prepare": {"STUDENT", "ADMINISTRATOR"},
     "GET /v1/requests": {"STUDENT", "REVIEWER", "ANALYST", "ADMINISTRATOR"},
@@ -18,7 +20,7 @@ ROLE_MATRIX = {
     "POST /v1/notifications/preview": {"REVIEWER", "NOTIFICATION_SERVICE", "ADMINISTRATOR"},
     "GET /v1/notifications": {"STUDENT", "REVIEWER", "NOTIFICATION_SERVICE", "ADMINISTRATOR"},
     "PATCH /v1/notifications/{notification_id}/read": {"STUDENT", "REVIEWER", "ADMINISTRATOR"},
-    "POST /v1/analytics/summary": {"ANALYST", "ADMINISTRATOR"},
+    "GET /v1/analytics/summary": {"ANALYST", "ADMINISTRATOR"},
     "GET /v1/analytics/cube/requests": {"ANALYST", "ADMINISTRATOR"},
     "GET /v1/analytics/cube/equivalences": {"ANALYST", "ADMINISTRATOR"},
     "GET /v1/analytics/cube/processing-times": {"ANALYST", "ADMINISTRATOR"},
@@ -29,11 +31,13 @@ _jwks_cache: dict[str, Any] | None = None
 
 def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     try:
-        claims = _verified_claims(_bearer_token(event))
+        token, source = access_token(event)
+        claims = _verified_claims(token)
         roles = _client_roles(claims)
         allowed_roles = ROLE_MATRIX.get(event.get("routeKey", ""), set())
         authorized = bool(roles.intersection(allowed_roles))
-        print(f"Roles: {roles}, Allowed: {allowed_roles}, Authorized: {authorized}")
+        if authorized and source == "cookie" and _is_unsafe(event):
+            require_csrf(event)
         return {
             "isAuthorized": authorized,
             "context": {
@@ -43,16 +47,8 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         }
     except requests.RequestException:
         return {"isAuthorized": False, "context": {"authorization_error": "identity_provider_unavailable"}}
-    except (JWTError, KeyError, TypeError, ValueError):
+    except (CsrfError, JWTError, KeyError, RuntimeError, TypeError, ValueError):
         return {"isAuthorized": False, "context": {}}
-
-
-def _bearer_token(event: dict[str, Any]) -> str:
-    headers = {key.lower(): value for key, value in event.get("headers", {}).items()}
-    scheme, _, token = str(headers.get("authorization", "")).partition(" ")
-    if scheme.lower() != "bearer" or not token:
-        raise ValueError("A bearer access token is required")
-    return token
 
 
 def _verified_claims(token: str) -> dict[str, Any]:
@@ -86,15 +82,17 @@ def _jwks(force_refresh: bool = False) -> dict[str, Any]:
 
 
 def _client_roles(claims: dict[str, Any]) -> set[str]:
-    roles = []
     resource_access = claims.get('resource_access') or {}
-    access = resource_access.get('academic-api')
-    if not access:
-        access = resource_access.get('academic-frontend') or {}
-    roles.extend(access.get('roles') or [])
-    realm_access = claims.get('realm_access') or {}
-    roles.extend(realm_access.get('roles') or [])
+    access = resource_access.get('academic-api') or {}
+    roles = access.get('roles') or []
     return {str(role).upper() for role in roles}
+
+
+def _is_unsafe(event: dict[str, Any]) -> bool:
+    method = ((event.get("requestContext") or {}).get("http") or {}).get("method")
+    if not method:
+        method = str(event.get("routeKey", "")).partition(" ")[0]
+    return str(method).upper() in {"POST", "PUT", "PATCH", "DELETE"}
 
 def _guess_tenant(claims: dict) -> str:
     email = str(claims.get('email') or '').lower()

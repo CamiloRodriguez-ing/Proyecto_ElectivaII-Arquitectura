@@ -1,9 +1,12 @@
 import json
+import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from threading import Lock
 from typing import Any
 from uuid import uuid4
+
+logger = logging.getLogger(__name__)
 
 
 class KafkaPublishError(Exception):
@@ -33,6 +36,7 @@ class KafkaEventPublisher:
         data: dict[str, Any],
         correlation_id: str,
         aggregate_id: str | None = None,
+        schema_version: int = 1,
     ) -> dict[str, Any] | None:
         if os.environ.get("KAFKA_ENABLED", "false").lower() != "true":
             return None
@@ -40,9 +44,9 @@ class KafkaEventPublisher:
         event = {
             "event_id": str(uuid4()),
             "event_type": event_type,
-            "occurred_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "occurred_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             "source": "academic-requests-api",
-            "schema_version": 1,
+            "schema_version": schema_version,
             "correlation_id": correlation_id,
             "actor": {"id": actor_id, "roles": sorted(actor_roles)},
             "data": data,
@@ -54,13 +58,7 @@ class KafkaEventPublisher:
             future.get(timeout=float(os.environ.get("KAFKA_ACK_TIMEOUT_SECONDS", "10")))
             return event
         except Exception as error:
-            with self._lock:
-                if self._producer is not None:
-                    try:
-                        self._producer.close(timeout=0)
-                    except Exception:
-                        pass
-                    self._producer = None
+            self._discard_producer()
             raise KafkaPublishError(f"Kafka did not acknowledge {event_type}") from error
 
     def publish_envelope(self, *, topic: str, event: dict[str, Any], key: str) -> None:
@@ -73,14 +71,18 @@ class KafkaEventPublisher:
                 timeout=float(os.environ.get("KAFKA_ACK_TIMEOUT_SECONDS", "10"))
             )
         except Exception as error:
-            with self._lock:
-                if self._producer is not None:
-                    try:
-                        self._producer.close(timeout=0)
-                    except Exception:
-                        pass
-                    self._producer = None
+            self._discard_producer()
             raise KafkaPublishError(f"Kafka did not acknowledge {event.get('event_type', 'outbox event')}") from error
+
+    def _discard_producer(self) -> None:
+        with self._lock:
+            if self._producer is None:
+                return
+            try:
+                self._producer.close(timeout=0)
+            except Exception as error:  # noqa: BLE001 - cleanup must preserve the publish failure
+                logger.warning("Could not close failed Kafka producer: %s", error)
+            self._producer = None
 
     def _get_producer(self):
         if self._producer is not None:

@@ -1,0 +1,1 @@
+"""MSK topic bootstrap Lambda."""

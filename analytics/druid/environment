@@ -1,0 +1,24 @@
+DRUID_SINGLE_NODE_CONF=micro-quickstart
+DRUID_XMX=512m
+DRUID_XMS=512m
+DRUID_MAXNEWSIZE=250m
+DRUID_NEWSIZE=250m
+DRUID_MAXDIRECTMEMORYSIZE=1024m
+druid_emitter_logging_logLevel=info
+druid_extensions_loadList=["druid-kafka-indexing-service","druid-datasketches","druid-histogram","postgresql-metadata-storage"]
+druid_zk_service_host=druid-zookeeper
+druid_metadata_storage_type=postgresql
+druid_metadata_storage_connector_connectURI=jdbc:postgresql://druid-postgres:5432/druid
+druid_metadata_storage_connector_user=druid
+druid_metadata_storage_connector_password=local-druid-db
+druid_coordinator_balancer_strategy=cachingCost
+druid_indexer_runner_javaOpts=-server -Xms256m -Xmx768m -XX:MaxDirectMemorySize=768m -Duser.timezone=UTC -Dfile.encoding=UTF-8
+druid_indexer_fork_property_druid_processing_buffer_sizeBytes=100000000
+druid_storage_type=local
+druid_storage_storageDirectory=/opt/shared/segments
+druid_indexer_logs_type=file
+druid_indexer_logs_directory=/opt/shared/indexing-logs
+druid_processing_numThreads=2
+druid_processing_numMergeBuffers=2
+druid_processing_buffer_sizeBytes=100000000
+druid_router_managementProxy_enabled=true

@@ -2,7 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../auth/services/auth.service';
-import { environment } from '../../../../environments/environment';
+import { RuntimeConfigService } from '../../services/runtime-config.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -28,6 +28,9 @@ import { environment } from '../../../../environments/environment';
           <a *ngIf="!isEstudiante" routerLink="/validation" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="bg-primary-container text-on-primary font-label-md rounded-lg shadow-sm border-l-4 border-surface-container-lowest" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md">
             <span class="material-symbols-outlined text-[20px]">fact_check</span><span>Revisión / Validación</span>
           </a>
+          <a *ngIf="canViewReports" routerLink="/reports" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="bg-primary-container text-on-primary font-label-md rounded-lg shadow-sm border-l-4 border-surface-container-lowest" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-body-md text-body-md">
+            <span class="material-symbols-outlined text-[20px]">analytics</span><span>Cubo OLAP</span>
+          </a>
         </nav>
       </div>
       <div class="p-4 bg-tertiary/60 flex flex-col gap-3">
@@ -44,16 +47,21 @@ import { environment } from '../../../../environments/environment';
 })
 export class SidebarComponent {
   private authService = inject(AuthService);
+  private runtimeConfig = inject(RuntimeConfigService);
 
   get isEstudiante(): boolean {
     return this.authService.currentUser()?.id === 'estudiante';
   }
 
+  get canViewReports(): boolean {
+    return ['analista', 'admin'].includes(this.authService.currentUser()?.id || '');
+  }
+
   getTenantLogo(): string {
-    return environment.logo;
+    return this.runtimeConfig.config.logo;
   }
 
   getTenantName(): string {
-    return environment.tenantName;
+    return this.runtimeConfig.config.tenantName;
   }
 }

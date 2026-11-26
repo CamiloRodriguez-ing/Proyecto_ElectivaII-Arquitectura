@@ -1,0 +1,17 @@
+{
+  "dataset_version": "olap-demo-v1",
+  "requests": 300,
+  "reviews": 270,
+  "changes_requested_events": 90,
+  "by_status": {
+    "APPROVED": 120,
+    "REJECTED": 60,
+    "CHANGES_REQUESTED": 60,
+    "SUBMITTED": 60
+  },
+  "by_tenant": {
+    "sistemas": 100,
+    "minas": 100,
+    "electronica": 100
+  }
+}
